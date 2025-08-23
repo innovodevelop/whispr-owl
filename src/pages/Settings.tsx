@@ -9,17 +9,27 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { useNotifications } from "@/hooks/useNotifications";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { ThemeDialog } from "@/components/dialogs/ThemeDialog";
+import { PhoneNumberDialog } from "@/components/dialogs/PhoneNumberDialog";
+import { BlockedUsersDialog } from "@/components/dialogs/BlockedUsersDialog";
 
 const Settings = () => {
   const { user, signOut } = useAuth();
   const { profile, updateProfile, checkUsernameAvailable } = useProfile();
   const { settings, updateSetting, loading: settingsLoading } = useUserSettings();
+  const { requestNotificationPermission } = useNotifications();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isEditingUsername, setIsEditingUsername] = useState(false);
+  
+  // Dialog states
+  const [themeDialogOpen, setThemeDialogOpen] = useState(false);
+  const [phoneDialogOpen, setPhoneDialogOpen] = useState(false);
+  const [blockedUsersDialogOpen, setBlockedUsersDialogOpen] = useState(false);
   
   useEffect(() => {
     // Debug render to ensure preview refreshes and to verify settings state
@@ -112,13 +122,24 @@ const Settings = () => {
     await updateSetting(key as any, value);
   };
 
+  const handleMessageNotificationToggle = async (value: boolean) => {
+    if (value) {
+      const granted = await requestNotificationPermission();
+      if (granted) {
+        await updateSetting('message_notifications', true);
+      }
+    } else {
+      await updateSetting('message_notifications', false);
+    }
+  };
+
   const settingsSections = [
     {
       title: "Account",
       icon: User,
       items: [
         { name: "Profile", description: "Update your profile information", action: () => setIsEditingProfile(true) },
-        { name: "Phone Number", description: user?.phone || "Add phone number", action: () => {} },
+        { name: "Phone Number", description: profile?.phone_number || "Add phone number", action: () => setPhoneDialogOpen(true) },
         { name: "Username", description: profile?.username || "Set a unique username", action: () => setIsEditingUsername(true) },
       ]
     },
@@ -127,7 +148,7 @@ const Settings = () => {
       icon: Lock,
       items: [
         { name: "Two-Factor Authentication", description: "Add an extra layer of security", action: () => {} },
-        { name: "Blocked Users", description: "Manage blocked contacts", action: () => {} },
+        { name: "Blocked Users", description: "Manage blocked contacts", action: () => setBlockedUsersDialogOpen(true) },
         { name: "Privacy Settings", description: "Control who can see your information", action: () => {} },
       ]
     },
@@ -135,7 +156,7 @@ const Settings = () => {
       title: "Notifications",
       icon: Bell,
       items: [
-        { name: "Message Notifications", description: "Get notified of new messages", toggle: settings?.message_notifications ?? true, onToggle: (value: boolean) => handleToggleSetting('message_notifications', value) },
+        { name: "Message Notifications", description: "Get notified of new messages", toggle: settings?.message_notifications ?? true, onToggle: handleMessageNotificationToggle },
         { name: "Call Notifications", description: "Get notified of incoming calls", toggle: settings?.call_notifications ?? true, onToggle: (value: boolean) => handleToggleSetting('call_notifications', value) },
         { name: "Group Notifications", description: "Notifications for group messages", toggle: settings?.group_notifications ?? true, onToggle: (value: boolean) => handleToggleSetting('group_notifications', value) },
       ]
@@ -153,7 +174,7 @@ const Settings = () => {
       title: "Appearance",
       icon: Palette,
       items: [
-        { name: "Theme", description: "Choose your preferred theme", action: () => {} },
+        { name: "Theme", description: "Choose your preferred theme", action: () => setThemeDialogOpen(true) },
         { name: "Chat Wallpaper", description: "Customize your chat background", action: () => {} },
         { name: "Font Size", description: "Adjust text size", action: () => {} },
       ]
@@ -398,6 +419,11 @@ const Settings = () => {
           </Card>
         </div>
       </div>
+
+      {/* Dialogs */}
+      <ThemeDialog open={themeDialogOpen} onOpenChange={setThemeDialogOpen} />
+      <PhoneNumberDialog open={phoneDialogOpen} onOpenChange={setPhoneDialogOpen} />
+      <BlockedUsersDialog open={blockedUsersDialogOpen} onOpenChange={setBlockedUsersDialogOpen} />
     </div>
   );
 };

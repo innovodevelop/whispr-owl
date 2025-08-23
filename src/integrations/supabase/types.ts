@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      blocked_users: {
+        Row: {
+          blocked_user_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          blocked_user_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          blocked_user_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       contacts: {
         Row: {
           contact_user_id: string
@@ -41,6 +62,7 @@ export type Database = {
           bio: string | null
           created_at: string
           display_name: string | null
+          phone_number: string | null
           updated_at: string
           user_id: string
           username: string | null
@@ -50,6 +72,7 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name?: string | null
+          phone_number?: string | null
           updated_at?: string
           user_id: string
           username?: string | null
@@ -59,6 +82,7 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name?: string | null
+          phone_number?: string | null
           updated_at?: string
           user_id?: string
           username?: string | null
@@ -73,7 +97,9 @@ export type Database = {
           group_notifications: boolean
           link_previews: boolean
           message_notifications: boolean
+          notification_permission: string | null
           read_receipts: boolean
+          theme: string | null
           updated_at: string
           user_id: string
         }
@@ -84,7 +110,9 @@ export type Database = {
           group_notifications?: boolean
           link_previews?: boolean
           message_notifications?: boolean
+          notification_permission?: string | null
           read_receipts?: boolean
+          theme?: string | null
           updated_at?: string
           user_id: string
         }
@@ -95,7 +123,9 @@ export type Database = {
           group_notifications?: boolean
           link_previews?: boolean
           message_notifications?: boolean
+          notification_permission?: string | null
           read_receipts?: boolean
+          theme?: string | null
           updated_at?: string
           user_id?: string
         }

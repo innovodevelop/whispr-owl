@@ -11,6 +11,8 @@ interface UserSettings {
   read_receipts: boolean;
   disappearing_messages: boolean;
   link_previews: boolean;
+  notification_permission: string;
+  theme: string;
   created_at: string;
   updated_at: string;
 }
@@ -84,7 +86,7 @@ export const useUserSettings = () => {
     }
   };
 
-  const updateSetting = async (key: keyof Omit<UserSettings, 'user_id' | 'created_at' | 'updated_at'>, value: boolean) => {
+  const updateSetting = async (key: keyof Omit<UserSettings, 'user_id' | 'created_at' | 'updated_at'>, value: boolean | string) => {
     if (!user || !settings) return false;
 
     try {
