@@ -83,7 +83,6 @@ export type Database = {
           bio: string | null
           created_at: string
           display_name: string | null
-          phone_number: string | null
           updated_at: string
           user_id: string
           username: string | null
@@ -93,7 +92,6 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name?: string | null
-          phone_number?: string | null
           updated_at?: string
           user_id: string
           username?: string | null
@@ -103,7 +101,6 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name?: string | null
-          phone_number?: string | null
           updated_at?: string
           user_id?: string
           username?: string | null
@@ -157,11 +154,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      search_users_by_query: {
+      search_users_by_query_secure: {
         Args: { search_term: string }
         Returns: {
           display_name: string
-          phone_number: string
           user_id: string
           username: string
         }[]
