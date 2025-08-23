@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ArrowLeft, User, Lock, Bell, Palette, Shield, HelpCircle, LogOut, Camera, Edit2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, User, Lock, Bell, Palette, Shield, HelpCircle, LogOut, Camera, Edit2, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,18 +7,34 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
+import { useUserSettings } from "@/hooks/useUserSettings";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 const Settings = () => {
   const { user, signOut } = useAuth();
+  const { profile, updateProfile, checkUsernameAvailable } = useProfile();
+  const { settings, updateSetting } = useUserSettings();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [notifications, setNotifications] = useState(true);
-  const [readReceipts, setReadReceipts] = useState(true);
-  const [disappearingMessages, setDisappearingMessages] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [displayName, setDisplayName] = useState(user?.user_metadata?.display_name || user?.email || "");
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  
+  // Form states
+  const [displayName, setDisplayName] = useState("");
+  const [bio, setBio] = useState("");
+  const [username, setUsername] = useState("");
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [checkingUsername, setCheckingUsername] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      setDisplayName(profile.display_name || user?.email || "");
+      setBio(profile.bio || "");
+      setUsername(profile.username || "");
+    }
+  }, [profile, user]);
 
   const handleSignOut = async () => {
     try {
@@ -36,13 +52,59 @@ const Settings = () => {
     }
   };
 
-  const saveProfile = () => {
-    // In a real app, you would update the user profile here
-    setIsEditingProfile(false);
-    toast({
-      title: "Profile updated",
-      description: "Your profile has been saved successfully",
+  const saveProfile = async () => {
+    const success = await updateProfile({
+      display_name: displayName,
+      bio: bio,
     });
+
+    if (success) {
+      setIsEditingProfile(false);
+    }
+  };
+
+  const saveUsername = async () => {
+    if (!username.trim()) {
+      toast({
+        title: "Error",
+        description: "Username cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (usernameAvailable === false) {
+      toast({
+        title: "Error",
+        description: "Username is not available",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const success = await updateProfile({
+      username: username.trim(),
+    });
+
+    if (success) {
+      setIsEditingUsername(false);
+    }
+  };
+
+  const checkUsername = async (newUsername: string) => {
+    if (!newUsername.trim() || newUsername === profile?.username) {
+      setUsernameAvailable(null);
+      return;
+    }
+
+    setCheckingUsername(true);
+    const available = await checkUsernameAvailable(newUsername.trim());
+    setUsernameAvailable(available);
+    setCheckingUsername(false);
+  };
+
+  const handleToggleSetting = async (key: string, value: boolean) => {
+    await updateSetting(key as any, value);
   };
 
   const settingsSections = [
@@ -52,7 +114,7 @@ const Settings = () => {
       items: [
         { name: "Profile", description: "Update your profile information", action: () => setIsEditingProfile(true) },
         { name: "Phone Number", description: user?.phone || "Add phone number", action: () => {} },
-        { name: "Username", description: "Set a unique username", action: () => {} },
+        { name: "Username", description: profile?.username || "Set a unique username", action: () => setIsEditingUsername(true) },
       ]
     },
     {
@@ -68,18 +130,18 @@ const Settings = () => {
       title: "Notifications",
       icon: Bell,
       items: [
-        { name: "Message Notifications", description: "Get notified of new messages", toggle: notifications, onToggle: setNotifications },
-        { name: "Call Notifications", description: "Get notified of incoming calls", toggle: true, onToggle: () => {} },
-        { name: "Group Notifications", description: "Notifications for group messages", toggle: true, onToggle: () => {} },
+        { name: "Message Notifications", description: "Get notified of new messages", toggle: settings?.message_notifications || false, onToggle: (value: boolean) => handleToggleSetting('message_notifications', value) },
+        { name: "Call Notifications", description: "Get notified of incoming calls", toggle: settings?.call_notifications || false, onToggle: (value: boolean) => handleToggleSetting('call_notifications', value) },
+        { name: "Group Notifications", description: "Notifications for group messages", toggle: settings?.group_notifications || false, onToggle: (value: boolean) => handleToggleSetting('group_notifications', value) },
       ]
     },
     {
       title: "Messaging",
       icon: Shield,
       items: [
-        { name: "Read Receipts", description: "Let others know when you've read their messages", toggle: readReceipts, onToggle: setReadReceipts },
-        { name: "Disappearing Messages", description: "Messages disappear after a set time", toggle: disappearingMessages, onToggle: setDisappearingMessages },
-        { name: "Link Previews", description: "Show previews for shared links", toggle: true, onToggle: () => {} },
+        { name: "Read Receipts", description: "Let others know when you've read their messages", toggle: settings?.read_receipts || false, onToggle: (value: boolean) => handleToggleSetting('read_receipts', value) },
+        { name: "Disappearing Messages", description: "Messages disappear after a set time", toggle: settings?.disappearing_messages || false, onToggle: (value: boolean) => handleToggleSetting('disappearing_messages', value) },
+        { name: "Link Previews", description: "Show previews for shared links", toggle: settings?.link_previews || false, onToggle: (value: boolean) => handleToggleSetting('link_previews', value) },
       ]
     },
     {
@@ -101,6 +163,73 @@ const Settings = () => {
       ]
     },
   ];
+
+  if (isEditingUsername) {
+    return (
+      <div className="h-screen flex flex-col bg-background">
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" onClick={() => setIsEditingUsername(false)}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <h1 className="text-xl font-semibold">Edit Username</h1>
+            </div>
+            <Button onClick={saveUsername} disabled={usernameAvailable === false || checkingUsername}>
+              Save
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="max-w-md mx-auto space-y-6">
+            <Card>
+              <CardContent className="p-6 space-y-4">
+                <div>
+                  <Label htmlFor="username">Username</Label>
+                  <div className="relative">
+                    <Input
+                      id="username"
+                      value={username}
+                      onChange={(e) => {
+                        setUsername(e.target.value);
+                        checkUsername(e.target.value);
+                      }}
+                      placeholder="Enter your username"
+                      className="pr-10"
+                    />
+                    {checkingUsername && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                      </div>
+                    )}
+                    {!checkingUsername && usernameAvailable !== null && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        {usernameAvailable ? (
+                          <Check className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <X className="h-4 w-4 text-red-500" />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {usernameAvailable === false && (
+                    <p className="text-sm text-red-500 mt-1">Username is not available</p>
+                  )}
+                  {usernameAvailable === true && (
+                    <p className="text-sm text-green-500 mt-1">Username is available</p>
+                  )}
+                  <p className="text-sm text-muted-foreground mt-1">
+                    This is how others can find and message you
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isEditingProfile) {
     return (
@@ -165,6 +294,8 @@ const Settings = () => {
                   <Label htmlFor="bio">Bio</Label>
                   <Input
                     id="bio"
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
                     placeholder="Add a bio (optional)"
                   />
                 </div>
@@ -200,8 +331,9 @@ const Settings = () => {
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <h2 className="text-lg font-semibold">{displayName}</h2>
-              <p className="text-sm text-muted-foreground">{user?.email}</p>
+              <h2 className="text-lg font-semibold">{profile?.display_name || user?.email}</h2>
+              <p className="text-sm text-muted-foreground">{profile?.username ? `@${profile.username}` : "No username set"}</p>
+              <p className="text-xs text-muted-foreground">{user?.email}</p>
             </div>
             <Button variant="ghost" size="icon" onClick={() => setIsEditingProfile(true)}>
               <Edit2 className="h-4 w-4" />
