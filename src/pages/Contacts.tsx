@@ -88,7 +88,20 @@ const Contacts = () => {
           <Input
             placeholder="Search by username or name..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              setSearchQuery(val);
+              if (val.trim().length >= 2) setActiveTab("find");
+              if (val.trim().length === 0) setActiveTab("contacts");
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                if (searchQuery.trim().length >= 2) {
+                  setActiveTab('find');
+                  handleSearch();
+                }
+              }
+            }}
             className="pl-10 h-9 md:h-10"
           />
         </div>
