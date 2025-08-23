@@ -34,8 +34,10 @@ const Contacts = () => {
     }
 
     setSearching(true);
+    console.log('Starting search for:', searchQuery);
     const results = await searchUsersByUsername(searchQuery);
-    setSearchResults(results);
+    console.log('Search results received:', results);
+    setSearchResults(results || []);
     setSearching(false);
   };
 
@@ -204,8 +206,8 @@ const Contacts = () => {
                 </Card>
               )}
 
-
-              {searchResults.map((user, index) => (
+              {/* Search Results */}
+              {searchResults.length > 0 && searchResults.map((user, index) => (
                 <Card key={user.user_id} className="hover:bg-muted/50 transition-colors hover-lift touch-feedback stagger-item" style={{ animationDelay: `${index * 0.05}s` }}>
                   <CardContent className="p-3 md:p-4">
                     <div className="flex items-center justify-between">
