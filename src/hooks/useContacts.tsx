@@ -158,7 +158,7 @@ export const useContacts = () => {
       searchTimeoutRef.current = setTimeout(async () => {
         try {
           const { data, error } = await supabase
-            .rpc('search_users_by_query_secure' as any, { search_term: sanitizedTerm });
+            .rpc('search_users_by_query_secure', { search_term: sanitizedTerm });
 
           if (error) {
             console.error('Search error occurred');

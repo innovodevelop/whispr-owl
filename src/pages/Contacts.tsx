@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import BottomNavigation from "@/components/BottomNavigation";
 import { ArrowLeft, Search, Plus, UserPlus, Users, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -203,19 +204,6 @@ const Contacts = () => {
                 </Card>
               )}
 
-              {!searching && searchResults.length === 0 && searchQuery && (
-                <Card className="border-dashed border-2 fade-in">
-                  <CardContent className="p-6 md:p-8">
-                    <div className="text-center">
-                      <Users className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 text-muted-foreground" />
-                       <h3 className="font-medium mb-1 text-sm md:text-base">No users found</h3>
-                       <p className="text-xs md:text-sm text-muted-foreground">
-                         Try searching with a different username or display name
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
 
               {searchResults.map((user, index) => (
                 <Card key={user.user_id} className="hover:bg-muted/50 transition-colors hover-lift touch-feedback stagger-item" style={{ animationDelay: `${index * 0.05}s` }}>
@@ -230,9 +218,9 @@ const Contacts = () => {
                         
                          <div className="flex-1">
                            <h3 className="font-medium text-sm md:text-base">{user.display_name || user.username}</h3>
-                            <p className="text-xs md:text-sm text-muted-foreground">
-                              {user.username && `@${user.username}`}
-                            </p>
+                           <p className="text-xs md:text-sm text-muted-foreground">
+                             {user.username && `@${user.username}`}
+                           </p>
                         </div>
                       </div>
 
@@ -249,14 +237,28 @@ const Contacts = () => {
                 </Card>
               ))}
 
-              {!searchQuery && (
+              {/* No search results */}
+              {!searching && searchResults.length === 0 && searchQuery && (
                 <Card className="border-dashed border-2 fade-in">
                   <CardContent className="p-6 md:p-8">
                     <div className="text-center">
                       <Users className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 text-muted-foreground" />
-                      <h3 className="font-medium mb-1 text-sm md:text-base">No suggestions yet</h3>
+                       <h3 className="font-medium mb-1 text-sm md:text-base">No users found</h3>
+                       <p className="text-xs md:text-sm text-muted-foreground">
+                         Try searching with a different username or display name
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              {!searchQuery && (
+                <Card className="border-dashed border-2 scale-in">
+                  <CardContent className="p-6 md:p-8">
+                    <div className="text-center">
+                      <Users className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 text-muted-foreground" />
+                      <h3 className="font-medium mb-1 text-sm md:text-base">Start searching</h3>
                       <p className="text-xs md:text-sm text-muted-foreground">
-                        We'll suggest contacts when you start connecting with people
+                        Enter a username or display name to find people
                       </p>
                     </div>
                   </CardContent>
@@ -279,6 +281,12 @@ const Contacts = () => {
           </div>
         )}
       </div>
+      
+      {/* Bottom spacing for mobile navigation */}
+      <div className="md:hidden h-16"></div>
+      
+      {/* Mobile Bottom Navigation */}
+      <BottomNavigation />
     </div>
   );
 };

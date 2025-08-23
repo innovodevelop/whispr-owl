@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import BottomNavigation from "@/components/BottomNavigation";
 
 interface Message {
   id: string;
@@ -124,7 +125,7 @@ const Index = () => {
         {/* Header */}
         <div className="p-3 md:p-4 border-b border-border slide-down">
           <div className="flex items-center justify-between mb-3 md:mb-4">
-            <h1 className="text-lg md:text-xl font-semibold">Signal</h1>
+            <h1 className="text-lg md:text-xl font-semibold">Whispr</h1>
             <div className="flex items-center gap-1 md:gap-2">
               <Button variant="ghost" size="icon" onClick={() => navigate("/contacts")} className="touch-feedback h-8 w-8 md:h-10 md:w-10">
                 <UserPlus className="h-4 w-4 md:h-5 md:w-5" />
@@ -272,12 +273,15 @@ const Index = () => {
           <div className="flex-1 flex items-center justify-center p-4">
             <div className="text-center fade-in">
               <MessageCircle className="h-12 w-12 md:h-16 md:w-16 mx-auto mb-3 md:mb-4 text-muted-foreground" />
-              <h2 className="text-lg md:text-xl font-semibold mb-2">Welcome to Signal</h2>
+              <h2 className="text-lg md:text-xl font-semibold mb-2">Welcome to Whispr</h2>
               <p className="text-sm md:text-base text-muted-foreground">Select a conversation to start messaging</p>
             </div>
           </div>
         )}
       </div>
+      
+      {/* Mobile Bottom Navigation */}
+      <BottomNavigation />
     </div>
   );
 };

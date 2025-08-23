@@ -215,7 +215,7 @@ const Auth = () => {
           <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 bg-primary rounded-2xl mb-3 md:mb-4 bounce-in">
             <MessageCircle className="h-6 w-6 md:h-8 md:w-8 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold">Signal</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">Whispr</h1>
           <p className="text-muted-foreground mt-2 text-sm md:text-base">
             Secure messaging for everyone
           </p>
@@ -229,7 +229,7 @@ const Auth = () => {
             <CardDescription className="text-sm md:text-base">
               {isLogin
                 ? "Sign in to your account to continue"
-                : "Join millions who trust Signal for secure communication"}
+                : "Join millions who trust Whispr for secure communication"}
             </CardDescription>
           </CardHeader>
 
@@ -419,7 +419,7 @@ const Auth = () => {
 
         <div className="text-center mt-4 md:mt-6 fade-in">
           <p className="text-xs text-muted-foreground">
-            By continuing, you agree to Signal's{" "}
+            By continuing, you agree to Whispr's{" "}
             <Button variant="link" className="p-0 h-auto text-xs touch-feedback">
               Terms of Service
             </Button>{" "}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import BottomNavigation from "@/components/BottomNavigation";
 import { ArrowLeft, User, Lock, Bell, Palette, Shield, HelpCircle, LogOut, Camera, Edit2, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -424,6 +425,9 @@ const Settings = () => {
       <ThemeDialog open={themeDialogOpen} onOpenChange={setThemeDialogOpen} />
       <PhoneNumberDialog open={phoneDialogOpen} onOpenChange={setPhoneDialogOpen} />
       <BlockedUsersDialog open={blockedUsersDialogOpen} onOpenChange={setBlockedUsersDialogOpen} />
+      
+      {/* Mobile Bottom Navigation */}
+      <BottomNavigation />
     </div>
   );
 };
