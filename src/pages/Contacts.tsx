@@ -21,10 +21,7 @@ const Contacts = () => {
     { id: "3", name: "Carol White", username: "@carol", avatar: "", isOnline: true, lastSeen: "Online" },
   ]);
 
-  const [suggestedUsers, setSuggestedUsers] = useState([
-    { id: "6", name: "Frank Miller", username: "@frank", avatar: "", mutualFriends: 3 },
-    { id: "7", name: "Grace Davis", username: "@grace", avatar: "", mutualFriends: 1 },
-  ]);
+  const [suggestedUsers, setSuggestedUsers] = useState([]);
 
   const filteredContacts = contacts.filter(
     contact =>
@@ -175,45 +172,23 @@ const Contacts = () => {
           </div>
         ) : (
           <div className="p-4 space-y-4">
-            {/* Search Results */}
+            {/* No suggested users message */}
             <div className="space-y-2">
               <h2 className="font-medium text-sm text-muted-foreground mb-3">Suggested Contacts</h2>
               
-              {filteredSuggested.map((user) => (
-                <Card key={user.id} className="hover:bg-muted/50 transition-colors">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-12 w-12">
-                          <AvatarImage src={user.avatar} />
-                          <AvatarFallback>
-                            {user.name.split(" ").map(n => n[0]).join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        
-                        <div className="flex-1">
-                          <h3 className="font-medium">{user.name}</h3>
-                          <p className="text-sm text-muted-foreground">{user.username}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="secondary" className="text-xs">
-                              {user.mutualFriends} mutual contacts
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => handleAddContact(user.id)}
-                      >
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        Add
-                      </Button>
+              {filteredSuggested.length === 0 && (
+                <Card className="border-dashed border-2">
+                  <CardContent className="p-8">
+                    <div className="text-center">
+                      <Users className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                      <h3 className="font-medium mb-1">No suggestions yet</h3>
+                      <p className="text-sm text-muted-foreground">
+                        We'll suggest contacts when you start connecting with people
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+              )}
             </div>
 
             {/* Manual Search */}
