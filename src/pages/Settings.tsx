@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 const Settings = () => {
   const { user, signOut } = useAuth();
   const { profile, updateProfile, checkUsernameAvailable } = useProfile();
-  const { settings, updateSetting } = useUserSettings();
+  const { settings, updateSetting, loading: settingsLoading } = useUserSettings();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -130,18 +130,18 @@ const Settings = () => {
       title: "Notifications",
       icon: Bell,
       items: [
-        { name: "Message Notifications", description: "Get notified of new messages", toggle: settings?.message_notifications || false, onToggle: (value: boolean) => handleToggleSetting('message_notifications', value) },
-        { name: "Call Notifications", description: "Get notified of incoming calls", toggle: settings?.call_notifications || false, onToggle: (value: boolean) => handleToggleSetting('call_notifications', value) },
-        { name: "Group Notifications", description: "Notifications for group messages", toggle: settings?.group_notifications || false, onToggle: (value: boolean) => handleToggleSetting('group_notifications', value) },
+        { name: "Message Notifications", description: "Get notified of new messages", toggle: settings?.message_notifications ?? true, onToggle: (value: boolean) => handleToggleSetting('message_notifications', value) },
+        { name: "Call Notifications", description: "Get notified of incoming calls", toggle: settings?.call_notifications ?? true, onToggle: (value: boolean) => handleToggleSetting('call_notifications', value) },
+        { name: "Group Notifications", description: "Notifications for group messages", toggle: settings?.group_notifications ?? true, onToggle: (value: boolean) => handleToggleSetting('group_notifications', value) },
       ]
     },
     {
       title: "Messaging",
       icon: Shield,
       items: [
-        { name: "Read Receipts", description: "Let others know when you've read their messages", toggle: settings?.read_receipts || false, onToggle: (value: boolean) => handleToggleSetting('read_receipts', value) },
-        { name: "Disappearing Messages", description: "Messages disappear after a set time", toggle: settings?.disappearing_messages || false, onToggle: (value: boolean) => handleToggleSetting('disappearing_messages', value) },
-        { name: "Link Previews", description: "Show previews for shared links", toggle: settings?.link_previews || false, onToggle: (value: boolean) => handleToggleSetting('link_previews', value) },
+        { name: "Read Receipts", description: "Let others know when you've read their messages", toggle: settings?.read_receipts ?? true, onToggle: (value: boolean) => handleToggleSetting('read_receipts', value) },
+        { name: "Disappearing Messages", description: "Messages disappear after a set time", toggle: settings?.disappearing_messages ?? false, onToggle: (value: boolean) => handleToggleSetting('disappearing_messages', value) },
+        { name: "Link Previews", description: "Show previews for shared links", toggle: settings?.link_previews ?? true, onToggle: (value: boolean) => handleToggleSetting('link_previews', value) },
       ]
     },
     {
