@@ -14,12 +14,8 @@ const Contacts = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"contacts" | "find">("contacts");
 
-  // Contact data - would come from backend/Supabase in real app
-  const [contacts, setContacts] = useState([
-    { id: "1", name: "Alice Cooper", username: "@alice", avatar: "", isOnline: true, lastSeen: "Online" },
-    { id: "2", name: "Bob Smith", username: "@bob", avatar: "", isOnline: false, lastSeen: "2 hours ago" },
-    { id: "3", name: "Carol White", username: "@carol", avatar: "", isOnline: true, lastSeen: "Online" },
-  ]);
+  // Contact data will be loaded from backend in the future
+  const [contacts, setContacts] = useState<any[]>([]);
 
   const [suggestedUsers, setSuggestedUsers] = useState([]);
 
@@ -132,42 +128,56 @@ const Contacts = () => {
 
             {/* Contacts List */}
             <div className="space-y-2">
-              {filteredContacts.map((contact) => (
-                <Card key={contact.id} className="hover:bg-muted/50 transition-colors">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="relative">
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={contact.avatar} />
-                            <AvatarFallback>
-                              {contact.name.split(" ").map(n => n[0]).join("")}
-                            </AvatarFallback>
-                          </Avatar>
-                          {contact.isOnline && (
-                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-background"></div>
-                          )}
-                        </div>
-                        
-                        <div className="flex-1">
-                          <h3 className="font-medium">{contact.name}</h3>
-                          <p className="text-sm text-muted-foreground">{contact.username}</p>
-                          <p className="text-xs text-muted-foreground">{contact.lastSeen}</p>
-                        </div>
-                      </div>
-
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => handleStartChat(contact.id)}
-                        className="shrink-0"
-                      >
-                        <MessageCircle className="h-4 w-4" />
-                      </Button>
+              {filteredContacts.length === 0 ? (
+                <Card className="border-dashed border-2">
+                  <CardContent className="p-8">
+                    <div className="text-center">
+                      <Users className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                      <h3 className="font-medium mb-1">No contacts yet</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Add contacts to start chatting
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+              ) : (
+                filteredContacts.map((contact) => (
+                  <Card key={contact.id} className="hover:bg-muted/50 transition-colors">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="relative">
+                            <Avatar className="h-12 w-12">
+                              <AvatarImage src={contact.avatar} />
+                              <AvatarFallback>
+                                {contact.name.split(" ").map(n => n[0]).join("")}
+                              </AvatarFallback>
+                            </Avatar>
+                            {contact.isOnline && (
+                              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-background"></div>
+                            )}
+                          </div>
+                          
+                          <div className="flex-1">
+                            <h3 className="font-medium">{contact.name}</h3>
+                            <p className="text-sm text-muted-foreground">{contact.username}</p>
+                            <p className="text-xs text-muted-foreground">{contact.lastSeen}</p>
+                          </div>
+                        </div>
+    
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleStartChat(contact.id)}
+                          className="shrink-0"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
         ) : (
