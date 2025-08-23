@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { MessageCircle, Users, Settings, Search, Plus } from "lucide-react";
+import { MessageCircle, Users, Settings, Search, Plus, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
+  const { signOut, user } = useAuth();
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
 
   // Mock data for conversations
@@ -37,6 +39,9 @@ const Index = () => {
               </Button>
               <Button variant="ghost" size="icon">
                 <Settings className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={signOut}>
+                <LogOut className="h-5 w-5" />
               </Button>
             </div>
           </div>
