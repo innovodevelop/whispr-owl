@@ -24,6 +24,7 @@ const Settings = () => {
   useEffect(() => {
     // Debug render to ensure preview refreshes and to verify settings state
     console.log('Settings render', { settingsLoading, hasSettings: !!settings });
+    console.log('Settings sections count', 6);
   }, [settingsLoading, settings]);
   // Form states
   const [displayName, setDisplayName] = useState("");
@@ -350,8 +351,9 @@ const Settings = () => {
         {/* Settings Sections */}
         <div className="p-3 md:p-4 space-y-4 md:space-y-6">
           {settingsLoading && <p className="text-sm text-muted-foreground">Loading settings…</p>}
+          <p className="text-xs text-muted-foreground">Debug: sections 6</p>
           {settingsSections.map((section, index) => (
-            <Card key={section.title} className="stagger-item hover-lift" style={{ animationDelay: `${index * 0.1}s` }}>
+            <Card key={section.title} className="hover-lift" style={{ animationDelay: `${index * 0.1}s` }}>
               <CardHeader className="pb-3 p-4 md:p-6">
                 <CardTitle className="flex items-center gap-2 text-sm md:text-base">
                   <section.icon className="h-4 w-4 md:h-5 md:w-5" />
