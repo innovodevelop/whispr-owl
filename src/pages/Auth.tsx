@@ -184,32 +184,32 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-3 md:p-4 page-enter">
       <div className="w-full max-w-md">
         {/* Logo/Brand */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-4">
-            <MessageCircle className="h-8 w-8 text-primary-foreground" />
+        <div className="text-center mb-6 md:mb-8 scale-in">
+          <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 bg-primary rounded-2xl mb-3 md:mb-4 bounce-in">
+            <MessageCircle className="h-6 w-6 md:h-8 md:w-8 text-primary-foreground" />
           </div>
-          <h1 className="text-3xl font-bold">Signal</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl md:text-3xl font-bold">Signal</h1>
+          <p className="text-muted-foreground mt-2 text-sm md:text-base">
             Secure messaging for everyone
           </p>
         </div>
 
-        <Card className="border-0 shadow-lg">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">
+        <Card className="border-0 shadow-lg fade-in hover-lift">
+          <CardHeader className="text-center p-4 md:p-6">
+            <CardTitle className="text-xl md:text-2xl">
               {isLogin ? "Welcome back" : "Create account"}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-sm md:text-base">
               {isLogin
                 ? "Sign in to your account to continue"
                 : "Join millions who trust Signal for secure communication"}
             </CardDescription>
           </CardHeader>
 
-          <CardContent>
+          <CardContent className="p-4 md:p-6">
             {awaitingSms ? (
               <form onSubmit={handleSmsVerification} className="space-y-4">
                 <div className="text-center mb-4">
@@ -234,7 +234,7 @@ const Auth = () => {
 
                 <Button
                   type="submit"
-                  className="w-full h-12 text-base font-medium"
+                  className="w-full h-10 md:h-12 text-sm md:text-base font-medium touch-feedback btn-press"
                   disabled={loading}
                 >
                   {loading ? "Verifying..." : "Verify"}
@@ -243,7 +243,7 @@ const Auth = () => {
                 <Button
                   type="button"
                   variant="ghost"
-                  className="w-full"
+                  className="w-full touch-feedback"
                   onClick={() => {
                     setAwaitingSms(false);
                     setSmsCode("");
@@ -255,25 +255,25 @@ const Auth = () => {
             ) : (
               <>
                 {/* Auth Method Toggle */}
-                <div className="flex rounded-lg bg-muted p-1 mb-4">
+                <div className="flex rounded-lg bg-muted p-1 mb-4 slide-down">
                   <Button
                     type="button"
                     variant={authMethod === "email" ? "default" : "ghost"}
                     size="sm"
-                    className="flex-1 h-8"
+                    className="flex-1 h-7 md:h-8 text-xs md:text-sm touch-feedback"
                     onClick={() => setAuthMethod("email")}
                   >
-                    <Mail className="h-4 w-4 mr-2" />
+                    <Mail className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
                     Email
                   </Button>
                   <Button
                     type="button"
                     variant={authMethod === "phone" ? "default" : "ghost"}
                     size="sm"
-                    className="flex-1 h-8"
+                    className="flex-1 h-7 md:h-8 text-xs md:text-sm touch-feedback"
                     onClick={() => setAuthMethod("phone")}
                   >
-                    <Phone className="h-4 w-4 mr-2" />
+                    <Phone className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
                     Phone
                   </Button>
                 </div>
@@ -283,15 +283,15 @@ const Auth = () => {
                     <>
                       <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          placeholder="Enter your email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          required
-                          className="h-12"
-                        />
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="Enter your email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            className="h-10 md:h-12"
+                          />
                       </div>
 
                       <div className="space-y-2">
@@ -304,13 +304,13 @@ const Auth = () => {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
-                            className="h-12 pr-10"
+                            className="h-10 md:h-12 pr-10"
                           />
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="absolute right-0 top-0 h-12 w-10"
+                            className="absolute right-0 top-0 h-10 md:h-12 w-10 touch-feedback"
                             onClick={() => setShowPassword(!showPassword)}
                           >
                             {showPassword ? (
@@ -332,7 +332,7 @@ const Auth = () => {
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             required
-                            className="h-12"
+                            className="h-10 md:h-12"
                           />
                         </div>
                       )}
@@ -347,7 +347,7 @@ const Auth = () => {
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         required
-                        className="h-12"
+                        className="h-10 md:h-12"
                       />
                       <p className="text-xs text-muted-foreground">
                         We'll send you a verification code via SMS
@@ -357,7 +357,7 @@ const Auth = () => {
 
                   <Button
                     type="submit"
-                    className="w-full h-12 text-base font-medium"
+                    className="w-full h-10 md:h-12 text-sm md:text-base font-medium touch-feedback btn-press"
                     disabled={loading}
                   >
                     {loading
@@ -373,12 +373,12 @@ const Auth = () => {
             )}
 
             {!awaitingSms && authMethod === "email" && (
-              <div className="mt-6 text-center">
+              <div className="mt-4 md:mt-6 text-center slide-up">
                 <p className="text-sm text-muted-foreground">
                   {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
                   <Button
                     variant="link"
-                    className="p-0 h-auto font-medium text-primary"
+                    className="p-0 h-auto font-medium text-primary touch-feedback"
                     onClick={() => {
                       setIsLogin(!isLogin);
                       setPassword("");
@@ -393,14 +393,14 @@ const Auth = () => {
           </CardContent>
         </Card>
 
-        <div className="text-center mt-6">
+        <div className="text-center mt-4 md:mt-6 fade-in">
           <p className="text-xs text-muted-foreground">
             By continuing, you agree to Signal's{" "}
-            <Button variant="link" className="p-0 h-auto text-xs">
+            <Button variant="link" className="p-0 h-auto text-xs touch-feedback">
               Terms of Service
             </Button>{" "}
             and{" "}
-            <Button variant="link" className="p-0 h-auto text-xs">
+            <Button variant="link" className="p-0 h-auto text-xs touch-feedback">
               Privacy Policy
             </Button>
           </p>

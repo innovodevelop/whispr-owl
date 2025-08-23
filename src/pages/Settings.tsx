@@ -166,25 +166,25 @@ const Settings = () => {
 
   if (isEditingUsername) {
     return (
-      <div className="h-screen flex flex-col bg-background">
-        <div className="p-4 border-b border-border">
+      <div className="h-screen flex flex-col bg-background page-enter">
+        <div className="p-3 md:p-4 border-b border-border slide-down">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => setIsEditingUsername(false)}>
-                <ArrowLeft className="h-5 w-5" />
+              <Button variant="ghost" size="icon" onClick={() => setIsEditingUsername(false)} className="touch-feedback h-8 w-8 md:h-10 md:w-10">
+                <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
               </Button>
-              <h1 className="text-xl font-semibold">Edit Username</h1>
+              <h1 className="text-lg md:text-xl font-semibold">Edit Username</h1>
             </div>
-            <Button onClick={saveUsername} disabled={usernameAvailable === false || checkingUsername}>
+            <Button onClick={saveUsername} disabled={usernameAvailable === false || checkingUsername} className="touch-feedback btn-press">
               Save
             </Button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="max-w-md mx-auto space-y-6">
-            <Card>
-              <CardContent className="p-6 space-y-4">
+        <div className="flex-1 overflow-y-auto p-3 md:p-4">
+          <div className="max-w-md mx-auto space-y-4 md:space-y-6">
+            <Card className="fade-in hover-lift">
+              <CardContent className="p-4 md:p-6 space-y-4">
                 <div>
                   <Label htmlFor="username">Username</Label>
                   <div className="relative">
@@ -196,7 +196,7 @@ const Settings = () => {
                         checkUsername(e.target.value);
                       }}
                       placeholder="Enter your username"
-                      className="pr-10"
+                      className="pr-10 h-9 md:h-10"
                     />
                     {checkingUsername && (
                       <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -233,43 +233,43 @@ const Settings = () => {
 
   if (isEditingProfile) {
     return (
-      <div className="h-screen flex flex-col bg-background">
-        <div className="p-4 border-b border-border">
+      <div className="h-screen flex flex-col bg-background page-enter">
+        <div className="p-3 md:p-4 border-b border-border slide-down">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => setIsEditingProfile(false)}>
-                <ArrowLeft className="h-5 w-5" />
+              <Button variant="ghost" size="icon" onClick={() => setIsEditingProfile(false)} className="touch-feedback h-8 w-8 md:h-10 md:w-10">
+                <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
               </Button>
-              <h1 className="text-xl font-semibold">Edit Profile</h1>
+              <h1 className="text-lg md:text-xl font-semibold">Edit Profile</h1>
             </div>
-            <Button onClick={saveProfile}>Save</Button>
+            <Button onClick={saveProfile} className="touch-feedback btn-press">Save</Button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="max-w-md mx-auto space-y-6">
+        <div className="flex-1 overflow-y-auto p-3 md:p-4">
+          <div className="max-w-md mx-auto space-y-4 md:space-y-6">
             {/* Profile Picture */}
-            <div className="text-center">
+            <div className="text-center scale-in">
               <div className="relative inline-block">
-                <Avatar className="h-24 w-24">
+                <Avatar className="h-20 w-20 md:h-24 md:w-24">
                   <AvatarImage src="" />
-                  <AvatarFallback className="text-2xl">
+                  <AvatarFallback className="text-lg md:text-2xl">
                     {displayName.split(" ").map(n => n[0]).join("").toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <Button
                   size="icon"
                   variant="secondary"
-                  className="absolute -bottom-2 -right-2 rounded-full h-8 w-8"
+                  className="absolute -bottom-2 -right-2 rounded-full h-7 w-7 md:h-8 md:w-8 touch-feedback"
                 >
-                  <Camera className="h-4 w-4" />
+                  <Camera className="h-3 w-3 md:h-4 md:w-4" />
                 </Button>
               </div>
             </div>
 
             {/* Profile Info */}
-            <Card>
-              <CardContent className="p-6 space-y-4">
+            <Card className="fade-in hover-lift">
+              <CardContent className="p-4 md:p-6 space-y-4">
                 <div>
                   <Label htmlFor="displayName">Display Name</Label>
                   <Input
@@ -277,6 +277,7 @@ const Settings = () => {
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     placeholder="Enter your display name"
+                    className="h-9 md:h-10"
                   />
                 </div>
                 
@@ -286,7 +287,7 @@ const Settings = () => {
                     id="email"
                     value={user?.email || ""}
                     disabled
-                    className="bg-muted"
+                    className="bg-muted h-9 md:h-10"
                   />
                 </div>
 
@@ -297,6 +298,7 @@ const Settings = () => {
                     value={bio}
                     onChange={(e) => setBio(e.target.value)}
                     placeholder="Add a bio (optional)"
+                    className="h-9 md:h-10"
                   />
                 </div>
               </CardContent>
@@ -308,63 +310,64 @@ const Settings = () => {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="h-screen flex flex-col bg-background page-enter">
       {/* Header */}
-      <div className="p-4 border-b border-border">
+      <div className="p-3 md:p-4 border-b border-border slide-down">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-            <ArrowLeft className="h-5 w-5" />
+          <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="touch-feedback h-8 w-8 md:h-10 md:w-10">
+            <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
           </Button>
-          <h1 className="text-xl font-semibold">Settings</h1>
+          <h1 className="text-lg md:text-xl font-semibold">Settings</h1>
         </div>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
         {/* Profile Header */}
-        <div className="p-6 border-b border-border">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
+        <div className="p-4 md:p-6 border-b border-border fade-in">
+          <div className="flex items-center gap-3 md:gap-4">
+            <Avatar className="h-12 w-12 md:h-16 md:w-16">
               <AvatarImage src="" />
-              <AvatarFallback className="text-xl">
+              <AvatarFallback className="text-base md:text-xl">
                 {user?.email?.substring(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <h2 className="text-lg font-semibold">{profile?.display_name || user?.email}</h2>
-              <p className="text-sm text-muted-foreground">{profile?.username ? `@${profile.username}` : "No username set"}</p>
+              <h2 className="text-base md:text-lg font-semibold">{profile?.display_name || user?.email}</h2>
+              <p className="text-xs md:text-sm text-muted-foreground">{profile?.username ? `@${profile.username}` : "No username set"}</p>
               <p className="text-xs text-muted-foreground">{user?.email}</p>
             </div>
-            <Button variant="ghost" size="icon" onClick={() => setIsEditingProfile(true)}>
-              <Edit2 className="h-4 w-4" />
+            <Button variant="ghost" size="icon" onClick={() => setIsEditingProfile(true)} className="touch-feedback h-8 w-8 md:h-10 md:w-10">
+              <Edit2 className="h-3 w-3 md:h-4 md:w-4" />
             </Button>
           </div>
         </div>
 
         {/* Settings Sections */}
-        <div className="p-4 space-y-6">
-          {settingsSections.map((section) => (
-            <Card key={section.title}>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <section.icon className="h-5 w-5" />
+        <div className="p-3 md:p-4 space-y-4 md:space-y-6">
+          {settingsSections.map((section, index) => (
+            <Card key={section.title} className="stagger-item hover-lift" style={{ animationDelay: `${index * 0.1}s` }}>
+              <CardHeader className="pb-3 p-4 md:p-6">
+                <CardTitle className="flex items-center gap-2 text-sm md:text-base">
+                  <section.icon className="h-4 w-4 md:h-5 md:w-5" />
                   {section.title}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 p-4 md:p-6 pt-0">
                 {section.items.map((item) => (
-                  <div key={item.name} className="flex items-center justify-between py-2">
+                  <div key={item.name} className="flex items-center justify-between py-2 touch-feedback">
                     <div className="flex-1">
-                      <p className="font-medium">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">{item.description}</p>
+                      <p className="font-medium text-sm md:text-base">{item.name}</p>
+                      <p className="text-xs md:text-sm text-muted-foreground">{item.description}</p>
                     </div>
                     {item.toggle !== undefined ? (
                       <Switch
                         checked={item.toggle}
                         onCheckedChange={item.onToggle}
+                        className="touch-feedback"
                       />
                     ) : (
-                      <Button variant="ghost" size="sm" onClick={item.action}>
+                      <Button variant="ghost" size="sm" onClick={item.action} className="touch-feedback">
                         Configure
                       </Button>
                     )}
@@ -375,11 +378,11 @@ const Settings = () => {
           ))}
 
           {/* Sign Out */}
-          <Card className="border-destructive/20">
-            <CardContent className="p-4">
+          <Card className="border-destructive/20 hover-lift fade-in">
+            <CardContent className="p-3 md:p-4">
               <Button
                 variant="ghost"
-                className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+                className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 touch-feedback"
                 onClick={handleSignOut}
               >
                 <LogOut className="h-4 w-4 mr-3" />
