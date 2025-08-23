@@ -21,6 +21,10 @@ const Settings = () => {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isEditingUsername, setIsEditingUsername] = useState(false);
   
+  useEffect(() => {
+    // Debug render to ensure preview refreshes and to verify settings state
+    console.log('Settings render', { settingsLoading, hasSettings: !!settings });
+  }, [settingsLoading, settings]);
   // Form states
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
@@ -345,6 +349,7 @@ const Settings = () => {
 
         {/* Settings Sections */}
         <div className="p-3 md:p-4 space-y-4 md:space-y-6">
+          {settingsLoading && <p className="text-sm text-muted-foreground">Loading settings…</p>}
           {settingsSections.map((section, index) => (
             <Card key={section.title} className="stagger-item hover-lift" style={{ animationDelay: `${index * 0.1}s` }}>
               <CardHeader className="pb-3 p-4 md:p-6">
