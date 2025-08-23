@@ -89,6 +89,10 @@ export const useUserSettings = () => {
   const updateSetting = async (key: keyof Omit<UserSettings, 'user_id' | 'created_at' | 'updated_at'>, value: boolean | string) => {
     if (!user || !settings) return false;
 
+    const previous = settings;
+    // Optimistic update for snappy UI
+    setSettings({ ...settings, [key]: value } as UserSettings);
+
     try {
       const { data, error } = await supabase
         .from('user_settings')
@@ -98,6 +102,7 @@ export const useUserSettings = () => {
         .single();
 
       if (error) {
+        setSettings(previous);
         toast({
           title: "Error",
           description: error.message,
@@ -109,6 +114,7 @@ export const useUserSettings = () => {
       setSettings(data);
       return true;
     } catch (error) {
+      setSettings(previous);
       toast({
         title: "Error",
         description: "Failed to update setting",
