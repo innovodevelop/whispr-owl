@@ -24,10 +24,12 @@ const Auth = () => {
     e.preventDefault();
     
     if (authMethod === "phone") {
-      if (!phone) {
+      // Enhanced phone validation
+      const phoneRegex = /^\+?[1-9]\d{10,14}$/;
+      if (!phone || !phoneRegex.test(phone.replace(/\s/g, ''))) {
         toast({
           title: "Error",
-          description: "Please enter your phone number",
+          description: "Please enter a valid phone number with country code",
           variant: "destructive",
         });
         return;
@@ -53,10 +55,10 @@ const Auth = () => {
             description: "Please check your phone for the verification code",
           });
         }
-      } catch (error) {
+      } catch (error: any) {
         toast({
           title: "Error",
-          description: "Something went wrong. Please try again.",
+          description: error.message || "Something went wrong. Please try again.",
           variant: "destructive",
         });
       } finally {
@@ -65,23 +67,45 @@ const Auth = () => {
       return;
     }
 
-    // Email authentication
-    if (!email || !password) {
+    // Enhanced email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
       toast({
         title: "Error",
-        description: "Please fill in all fields",
+        description: "Please enter a valid email address",
         variant: "destructive",
       });
       return;
     }
 
-    if (!isLogin && password !== confirmPassword) {
+    if (!password) {
       toast({
         title: "Error",
-        description: "Passwords do not match",
+        description: "Please enter a password",
         variant: "destructive",
       });
       return;
+    }
+
+    // Enhanced password validation for sign up
+    if (!isLogin) {
+      if (password.length < 8) {
+        toast({
+          title: "Error",
+          description: "Password must be at least 8 characters long",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        toast({
+          title: "Error",
+          description: "Passwords do not match",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setLoading(true);
@@ -128,10 +152,10 @@ const Auth = () => {
           });
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Something went wrong. Please try again.",
+        description: error.message || "Something went wrong. Please try again.",
         variant: "destructive",
       });
     } finally {

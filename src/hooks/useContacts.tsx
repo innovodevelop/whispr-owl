@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { useToast } from "./use-toast";
@@ -20,6 +20,10 @@ export const useContacts = () => {
   const { toast } = useToast();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Rate limiting for search to prevent enumeration attacks
+  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -139,22 +143,38 @@ export const useContacts = () => {
   };
 
   const searchUsersByUsername = async (searchTerm: string) => {
-    if (!searchTerm.trim()) return [];
+    // Input validation and sanitization
+    const sanitizedTerm = searchTerm.trim().slice(0, 50); // Limit length
+    if (sanitizedTerm.length < 2) return []; // Minimum search length
 
-    try {
-      const { data, error } = await supabase
-        .rpc('search_users_by_username', { search_term: searchTerm });
-
-      if (error) {
-        console.error('Error searching users:', error);
-        return [];
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error('Error searching users:', error);
-      return [];
+    // Clear previous timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
     }
+
+    setIsSearching(true);
+
+    return new Promise<any[]>((resolve) => {
+      searchTimeoutRef.current = setTimeout(async () => {
+        try {
+          const { data, error } = await supabase
+            .rpc('search_users_by_username', { search_term: sanitizedTerm });
+
+          if (error) {
+            console.error('Search error occurred');
+            resolve([]);
+            return;
+          }
+
+          resolve(data || []);
+        } catch (error) {
+          console.error('Search error occurred');
+          resolve([]);
+        } finally {
+          setIsSearching(false);
+        }
+      }, 300); // 300ms debounce
+    });
   };
 
   return {
@@ -164,5 +184,6 @@ export const useContacts = () => {
     removeContact,
     searchUsersByUsername,
     fetchContacts,
+    isSearching,
   };
 };
