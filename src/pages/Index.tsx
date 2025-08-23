@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { MessageCircle, Users, Settings, Search, Plus, LogOut } from "lucide-react";
+import { MessageCircle, Users, Settings, Search, Plus, LogOut, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const { signOut, user } = useAuth();
+  const navigate = useNavigate();
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
 
   // Mock data for conversations
@@ -34,10 +36,13 @@ const Index = () => {
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-xl font-semibold">Signal</h1>
             <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={() => navigate("/contacts")}>
+                <UserPlus className="h-5 w-5" />
+              </Button>
               <Button variant="ghost" size="icon">
                 <Plus className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" onClick={() => navigate("/settings")}>
                 <Settings className="h-5 w-5" />
               </Button>
               <Button variant="ghost" size="icon" onClick={signOut}>

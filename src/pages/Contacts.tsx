@@ -1,0 +1,216 @@
+import { useState } from "react";
+import { ArrowLeft, Search, Plus, UserPlus, Users, MessageCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+
+const Contacts = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<"contacts" | "find">("contacts");
+
+  // Mock data for contacts
+  const contacts = [
+    { id: "1", name: "Alice Cooper", username: "@alice", avatar: "", isOnline: true, lastSeen: "Online" },
+    { id: "2", name: "Bob Smith", username: "@bob", avatar: "", isOnline: false, lastSeen: "2 hours ago" },
+    { id: "3", name: "Carol White", username: "@carol", avatar: "", isOnline: true, lastSeen: "Online" },
+    { id: "4", name: "David Brown", username: "@david", avatar: "", isOnline: false, lastSeen: "1 day ago" },
+    { id: "5", name: "Eve Wilson", username: "@eve", avatar: "", isOnline: true, lastSeen: "Online" },
+  ];
+
+  // Mock data for finding new users
+  const suggestedUsers = [
+    { id: "6", name: "Frank Miller", username: "@frank", avatar: "", mutualFriends: 3 },
+    { id: "7", name: "Grace Davis", username: "@grace", avatar: "", mutualFriends: 1 },
+    { id: "8", name: "Henry Taylor", username: "@henry", avatar: "", mutualFriends: 2 },
+  ];
+
+  const filteredContacts = contacts.filter(
+    contact =>
+      contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      contact.username.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredSuggested = suggestedUsers.filter(
+    user =>
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.username.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleStartChat = (contactId: string) => {
+    // Navigate back to main chat with selected contact
+    navigate("/", { state: { selectedContact: contactId } });
+  };
+
+  return (
+    <div className="h-screen flex flex-col bg-background">
+      {/* Header */}
+      <div className="p-4 border-b border-border">
+        <div className="flex items-center gap-3 mb-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-xl font-semibold">Contacts</h1>
+        </div>
+
+        {/* Search */}
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search contacts..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-2">
+          <Button
+            variant={activeTab === "contacts" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setActiveTab("contacts")}
+            className="flex items-center gap-2"
+          >
+            <Users className="h-4 w-4" />
+            My Contacts
+          </Button>
+          <Button
+            variant={activeTab === "find" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setActiveTab("find")}
+            className="flex items-center gap-2"
+          >
+            <UserPlus className="h-4 w-4" />
+            Find People
+          </Button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto">
+        {activeTab === "contacts" ? (
+          <div className="p-4 space-y-4">
+            {/* Add Contact Button */}
+            <Card className="border-dashed border-2 hover:bg-muted/50 transition-colors cursor-pointer">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Plus className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium">Add New Contact</h3>
+                    <p className="text-sm text-muted-foreground">Invite friends to Signal</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Contacts List */}
+            <div className="space-y-2">
+              {filteredContacts.map((contact) => (
+                <Card key={contact.id} className="hover:bg-muted/50 transition-colors">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <Avatar className="h-12 w-12">
+                            <AvatarImage src={contact.avatar} />
+                            <AvatarFallback>
+                              {contact.name.split(" ").map(n => n[0]).join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          {contact.isOnline && (
+                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-background"></div>
+                          )}
+                        </div>
+                        
+                        <div className="flex-1">
+                          <h3 className="font-medium">{contact.name}</h3>
+                          <p className="text-sm text-muted-foreground">{contact.username}</p>
+                          <p className="text-xs text-muted-foreground">{contact.lastSeen}</p>
+                        </div>
+                      </div>
+
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleStartChat(contact.id)}
+                        className="shrink-0"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="p-4 space-y-4">
+            {/* Search Results */}
+            <div className="space-y-2">
+              <h2 className="font-medium text-sm text-muted-foreground mb-3">Suggested Contacts</h2>
+              
+              {filteredSuggested.map((user) => (
+                <Card key={user.id} className="hover:bg-muted/50 transition-colors">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-12 w-12">
+                          <AvatarImage src={user.avatar} />
+                          <AvatarFallback>
+                            {user.name.split(" ").map(n => n[0]).join("")}
+                          </AvatarFallback>
+                        </Avatar>
+                        
+                        <div className="flex-1">
+                          <h3 className="font-medium">{user.name}</h3>
+                          <p className="text-sm text-muted-foreground">{user.username}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="secondary" className="text-xs">
+                              {user.mutualFriends} mutual contacts
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+
+                      <Button size="sm" variant="outline">
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Add
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Manual Search */}
+            <Card className="border-dashed border-2">
+              <CardContent className="p-4">
+                <div className="text-center">
+                  <Search className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                  <h3 className="font-medium mb-1">Search by Username</h3>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Enter a Signal username to find and add people
+                  </p>
+                  <div className="flex gap-2">
+                    <Input placeholder="@username" className="flex-1" />
+                    <Button>Search</Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Contacts;
