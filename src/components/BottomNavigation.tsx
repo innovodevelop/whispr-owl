@@ -1,8 +1,9 @@
-import { MessageCircle, Users, Settings, User } from "lucide-react";
+import React from "react";
+import { MessageCircle, Users, Settings } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
-const BottomNavigation = () => {
+const BottomNavigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
