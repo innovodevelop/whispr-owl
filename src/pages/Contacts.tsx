@@ -37,7 +37,9 @@ const Contacts = () => {
     console.log('Starting search for:', term);
     const results = await searchUsersByUsername(term);
     console.log('Search results received:', results);
-    setSearchResults(results || []);
+    const safeResults = Array.isArray(results) ? results : [];
+    setSearchResults(safeResults);
+    setActiveTab('find');
     setSearching(false);
   };
 
