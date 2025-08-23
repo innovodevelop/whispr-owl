@@ -41,8 +41,7 @@ const Contacts = () => {
   const filteredContacts = contacts.filter(
     contact =>
       contact.profile?.display_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.profile?.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.profile?.phone_number?.includes(searchQuery)
+      contact.profile?.username?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleStartChat = (contactId: string) => {
@@ -84,7 +83,7 @@ const Contacts = () => {
         <div className="relative mb-3 md:mb-4">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by username, name, or phone..."
+            placeholder="Search by username or name..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 h-9 md:h-10"
@@ -211,7 +210,7 @@ const Contacts = () => {
                       <Users className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 text-muted-foreground" />
                        <h3 className="font-medium mb-1 text-sm md:text-base">No users found</h3>
                        <p className="text-xs md:text-sm text-muted-foreground">
-                         Try searching with a different username, name, or phone number
+                         Try searching with a different username or display name
                       </p>
                     </div>
                   </CardContent>
@@ -231,11 +230,9 @@ const Contacts = () => {
                         
                          <div className="flex-1">
                            <h3 className="font-medium text-sm md:text-base">{user.display_name || user.username}</h3>
-                           <p className="text-xs md:text-sm text-muted-foreground">
-                             {user.username && `@${user.username}`}
-                             {user.phone_number && user.username && " • "}
-                             {user.phone_number}
-                           </p>
+                            <p className="text-xs md:text-sm text-muted-foreground">
+                              {user.username && `@${user.username}`}
+                            </p>
                         </div>
                       </div>
 
@@ -272,9 +269,9 @@ const Contacts = () => {
               <CardContent className="p-3 md:p-4">
                 <div className="text-center">
                   <Search className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 text-muted-foreground" />
-                   <h3 className="font-medium mb-1 text-sm md:text-base">Search by Username or Phone</h3>
-                   <p className="text-xs md:text-sm text-muted-foreground mb-3">
-                     Enter a username, name, or phone number to find people
+                    <h3 className="font-medium mb-1 text-sm md:text-base">Search by Username</h3>
+                    <p className="text-xs md:text-sm text-muted-foreground mb-3">
+                      Enter a username or display name to find people
                   </p>
                 </div>
               </CardContent>

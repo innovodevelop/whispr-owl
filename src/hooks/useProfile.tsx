@@ -9,6 +9,12 @@ interface Profile {
   display_name?: string;
   bio?: string;
   avatar_url?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface PrivateProfileData {
+  user_id: string;
   phone_number?: string;
   created_at: string;
   updated_at: string;
@@ -18,6 +24,7 @@ export const useProfile = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [privateData, setPrivateData] = useState<PrivateProfileData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,18 +37,31 @@ export const useProfile = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      // Fetch public profile data
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching profile:', error);
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
         return;
       }
 
-      setProfile(data);
+      // Fetch private profile data
+      const { data: privateProfileData, error: privateError } = await supabase
+        .from('private_profile_data')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (privateError) {
+        console.error('Error fetching private profile data:', privateError);
+      }
+
+      setProfile(profileData);
+      setPrivateData(privateProfileData);
     } catch (error) {
       console.error('Error fetching profile:', error);
     } finally {
@@ -87,6 +107,44 @@ export const useProfile = () => {
     }
   };
 
+  const updatePrivateData = async (updates: Partial<PrivateProfileData>) => {
+    if (!user) return false;
+
+    try {
+      const { data, error } = await supabase
+        .from('private_profile_data')
+        .upsert({
+          user_id: user.id,
+          ...updates,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      setPrivateData(data);
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been updated successfully",
+      });
+      return true;
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update profile",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
   const checkUsernameAvailable = async (username: string) => {
     if (!username) return false;
     
@@ -107,8 +165,10 @@ export const useProfile = () => {
 
   return {
     profile,
+    privateData,
     loading,
     updateProfile,
+    updatePrivateData,
     checkUsernameAvailable,
     fetchProfile,
   };

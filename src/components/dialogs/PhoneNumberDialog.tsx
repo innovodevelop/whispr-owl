@@ -11,13 +11,13 @@ interface PhoneNumberDialogProps {
 }
 
 export const PhoneNumberDialog = ({ open, onOpenChange }: PhoneNumberDialogProps) => {
-  const { profile, updateProfile } = useProfile();
-  const [phoneNumber, setPhoneNumber] = useState(profile?.phone_number || "");
+  const { privateData, updatePrivateData } = useProfile();
+  const [phoneNumber, setPhoneNumber] = useState(privateData?.phone_number || "");
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
     setLoading(true);
-    const success = await updateProfile({ phone_number: phoneNumber });
+    const success = await updatePrivateData({ phone_number: phoneNumber });
     if (success) {
       onOpenChange(false);
     }

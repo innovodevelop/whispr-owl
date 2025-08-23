@@ -18,7 +18,7 @@ import { BlockedUsersDialog } from "@/components/dialogs/BlockedUsersDialog";
 
 const Settings = () => {
   const { user, signOut } = useAuth();
-  const { profile, updateProfile, checkUsernameAvailable } = useProfile();
+  const { profile, privateData, updateProfile, checkUsernameAvailable } = useProfile();
   const { settings, updateSetting, loading: settingsLoading } = useUserSettings();
   const { requestNotificationPermission } = useNotifications();
   const navigate = useNavigate();
@@ -139,7 +139,7 @@ const Settings = () => {
       icon: User,
       items: [
         { name: "Profile", description: "Update your profile information", action: () => setIsEditingProfile(true) },
-        { name: "Phone Number", description: profile?.phone_number || "Add phone number", action: () => setPhoneDialogOpen(true) },
+        { name: "Phone Number", description: privateData?.phone_number || "Add phone number", action: () => setPhoneDialogOpen(true) },
         { name: "Username", description: profile?.username || "Set a unique username", action: () => setIsEditingUsername(true) },
       ]
     },

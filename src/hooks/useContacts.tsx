@@ -12,7 +12,6 @@ interface Contact {
     username?: string;
     display_name?: string;
     avatar_url?: string;
-    phone_number?: string;
   };
 }
 
@@ -46,8 +45,7 @@ export const useContacts = () => {
           profiles!contacts_contact_user_id_fkey(
             username,
             display_name,
-            avatar_url,
-            phone_number
+            avatar_url
           )
         `)
         .eq('user_id', user.id);
@@ -160,7 +158,7 @@ export const useContacts = () => {
       searchTimeoutRef.current = setTimeout(async () => {
         try {
           const { data, error } = await supabase
-            .rpc('search_users_by_query', { search_term: sanitizedTerm });
+            .rpc('search_users_by_query_secure' as any, { search_term: sanitizedTerm });
 
           if (error) {
             console.error('Search error occurred');
