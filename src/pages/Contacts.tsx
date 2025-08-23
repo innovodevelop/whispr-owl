@@ -14,21 +14,17 @@ const Contacts = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"contacts" | "find">("contacts");
 
-  // Mock data for contacts
-  const contacts = [
+  // Contact data - would come from backend/Supabase in real app
+  const [contacts, setContacts] = useState([
     { id: "1", name: "Alice Cooper", username: "@alice", avatar: "", isOnline: true, lastSeen: "Online" },
     { id: "2", name: "Bob Smith", username: "@bob", avatar: "", isOnline: false, lastSeen: "2 hours ago" },
     { id: "3", name: "Carol White", username: "@carol", avatar: "", isOnline: true, lastSeen: "Online" },
-    { id: "4", name: "David Brown", username: "@david", avatar: "", isOnline: false, lastSeen: "1 day ago" },
-    { id: "5", name: "Eve Wilson", username: "@eve", avatar: "", isOnline: true, lastSeen: "Online" },
-  ];
+  ]);
 
-  // Mock data for finding new users
-  const suggestedUsers = [
+  const [suggestedUsers, setSuggestedUsers] = useState([
     { id: "6", name: "Frank Miller", username: "@frank", avatar: "", mutualFriends: 3 },
     { id: "7", name: "Grace Davis", username: "@grace", avatar: "", mutualFriends: 1 },
-    { id: "8", name: "Henry Taylor", username: "@henry", avatar: "", mutualFriends: 2 },
-  ];
+  ]);
 
   const filteredContacts = contacts.filter(
     contact =>
@@ -43,8 +39,34 @@ const Contacts = () => {
   );
 
   const handleStartChat = (contactId: string) => {
-    // Navigate back to main chat with selected contact
-    navigate("/", { state: { selectedContact: contactId } });
+    const contact = contacts.find(c => c.id === contactId);
+    if (contact) {
+      // Create new conversation and navigate back
+      navigate("/", { 
+        state: { 
+          newConversation: {
+            id: contactId,
+            name: contact.name,
+            avatar: contact.avatar
+          }
+        }
+      });
+    }
+  };
+
+  const handleAddContact = (userId: string) => {
+    const userToAdd = suggestedUsers.find(u => u.id === userId);
+    if (userToAdd) {
+      setContacts(prev => [...prev, {
+        id: userToAdd.id,
+        name: userToAdd.name,
+        username: userToAdd.username,
+        avatar: userToAdd.avatar,
+        isOnline: false,
+        lastSeen: "Just added"
+      }]);
+      setSuggestedUsers(prev => prev.filter(u => u.id !== userId));
+    }
   };
 
   return (
@@ -180,7 +202,11 @@ const Contacts = () => {
                         </div>
                       </div>
 
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleAddContact(user.id)}
+                      >
                         <UserPlus className="h-4 w-4 mr-2" />
                         Add
                       </Button>

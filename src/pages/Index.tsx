@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { MessageCircle, Users, Settings, Search, Plus, LogOut, UserPlus } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { MessageCircle, Users, Settings, Search, Plus, LogOut, UserPlus, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,25 +7,115 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
+interface Message {
+  id: string;
+  content: string;
+  timestamp: Date;
+  isOwn: boolean;
+  sender?: string;
+}
+
+interface Conversation {
+  id: string;
+  name: string;
+  avatar: string;
+  isGroup?: boolean;
+  participants?: string[];
+}
+
 const Index = () => {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [messages, setMessages] = useState<{ [chatId: string]: Message[] }>({});
+  const [newMessage, setNewMessage] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Mock data for conversations
-  const conversations = [
-    { id: "1", name: "Alice Cooper", lastMessage: "Hey, how are you?", time: "2m", unread: 2, avatar: "" },
-    { id: "2", name: "Bob Smith", lastMessage: "Thanks for the help!", time: "1h", unread: 0, avatar: "" },
-    { id: "3", name: "Team Chat", lastMessage: "Meeting at 3pm", time: "3h", unread: 5, avatar: "", isGroup: true },
-    { id: "4", name: "Carol White", lastMessage: "See you tomorrow", time: "1d", unread: 0, avatar: "" },
-  ];
+  // Handle new conversation from contacts page
+  useEffect(() => {
+    const state = window.history.state?.usr;
+    if (state?.newConversation) {
+      const newConv = state.newConversation;
+      setConversations(prev => {
+        const exists = prev.find(c => c.id === newConv.id);
+        if (!exists) {
+          return [...prev, newConv];
+        }
+        return prev;
+      });
+      setSelectedChat(newConv.id);
+      // Clear the state
+      window.history.replaceState({}, document.title);
+    }
+  }, []);
 
-  const messages = [
-    { id: "1", sender: "Alice Cooper", content: "Hey, how are you doing today?", time: "2:30 PM", isOwn: false },
-    { id: "2", sender: "You", content: "I'm doing great! Thanks for asking. How about you?", time: "2:32 PM", isOwn: true },
-    { id: "3", sender: "Alice Cooper", content: "I'm good too! Working on some exciting projects.", time: "2:35 PM", isOwn: false },
-    { id: "4", sender: "You", content: "That sounds awesome! Would love to hear more about it.", time: "2:37 PM", isOwn: true },
-  ];
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, selectedChat]);
+
+  const sendMessage = () => {
+    if (!newMessage.trim() || !selectedChat) return;
+
+    const message: Message = {
+      id: Date.now().toString(),
+      content: newMessage,
+      timestamp: new Date(),
+      isOwn: true,
+      sender: user?.email || "You"
+    };
+
+    setMessages(prev => ({
+      ...prev,
+      [selectedChat]: [...(prev[selectedChat] || []), message]
+    }));
+
+    setNewMessage("");
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  const getLastMessage = (chatId: string) => {
+    const chatMessages = messages[chatId] || [];
+    const lastMessage = chatMessages[chatMessages.length - 1];
+    return lastMessage ? lastMessage.content : "No messages yet";
+  };
+
+  const getLastMessageTime = (chatId: string) => {
+    const chatMessages = messages[chatId] || [];
+    const lastMessage = chatMessages[chatMessages.length - 1];
+    if (!lastMessage) return "";
+    
+    const now = new Date();
+    const messageTime = lastMessage.timestamp;
+    const diffMs = now.getTime() - messageTime.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    
+    if (diffMinutes < 1) return "now";
+    if (diffMinutes < 60) return `${diffMinutes}m`;
+    if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)}h`;
+    return `${Math.floor(diffMinutes / 1440)}d`;
+  };
+
+  const selectedConversation = conversations.find(c => c.id === selectedChat);
+
+  const filteredConversations = conversations.filter(conv =>
+    conv.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const startNewChat = () => {
+    navigate("/contacts");
+  };
 
   return (
     <div className="h-screen flex bg-background">
@@ -39,7 +129,7 @@ const Index = () => {
               <Button variant="ghost" size="icon" onClick={() => navigate("/contacts")}>
                 <UserPlus className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" onClick={startNewChat}>
                 <Plus className="h-5 w-5" />
               </Button>
               <Button variant="ghost" size="icon" onClick={() => navigate("/settings")}>
@@ -56,6 +146,8 @@ const Index = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search conversations..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
             />
           </div>
@@ -63,16 +155,26 @@ const Index = () => {
 
         {/* Conversations List */}
         <div className="flex-1 overflow-y-auto">
-          {conversations.map((conversation) => (
-            <div
-              key={conversation.id}
-              onClick={() => setSelectedChat(conversation.id)}
-              className={`p-4 border-b border-border cursor-pointer hover:bg-muted/50 transition-colors ${
-                selectedChat === conversation.id ? "bg-muted" : ""
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className="relative">
+          {filteredConversations.length === 0 ? (
+            <div className="p-8 text-center">
+              <MessageCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="font-medium mb-2">No conversations yet</h3>
+              <p className="text-sm text-muted-foreground mb-4">Start chatting with your contacts</p>
+              <Button onClick={startNewChat} size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Start New Chat
+              </Button>
+            </div>
+          ) : (
+            filteredConversations.map((conversation) => (
+              <div
+                key={conversation.id}
+                onClick={() => setSelectedChat(conversation.id)}
+                className={`p-4 border-b border-border cursor-pointer hover:bg-muted/50 transition-colors ${
+                  selectedChat === conversation.id ? "bg-muted" : ""
+                }`}
+              >
+                <div className="flex items-center gap-3">
                   <Avatar className="h-12 w-12">
                     <AvatarImage src={conversation.avatar} />
                     <AvatarFallback>
@@ -83,23 +185,18 @@ const Index = () => {
                       )}
                     </AvatarFallback>
                   </Avatar>
-                  {conversation.unread > 0 && (
-                    <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
-                      {conversation.unread}
-                    </Badge>
-                  )}
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-medium truncate">{conversation.name}</h3>
-                    <span className="text-xs text-muted-foreground">{conversation.time}</span>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-medium truncate">{conversation.name}</h3>
+                      <span className="text-xs text-muted-foreground">{getLastMessageTime(conversation.id)}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground truncate">{getLastMessage(conversation.id)}</p>
                   </div>
-                  <p className="text-sm text-muted-foreground truncate">{conversation.lastMessage}</p>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 
@@ -111,10 +208,17 @@ const Index = () => {
             <div className="p-4 border-b border-border">
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10">
-                  <AvatarFallback>AC</AvatarFallback>
+                  <AvatarImage src={selectedConversation?.avatar} />
+                  <AvatarFallback>
+                    {selectedConversation?.isGroup ? (
+                      <Users className="h-6 w-6" />
+                    ) : (
+                      selectedConversation?.name.split(" ").map(n => n[0]).join("")
+                    )}
+                  </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h2 className="font-semibold">Alice Cooper</h2>
+                  <h2 className="font-semibold">{selectedConversation?.name}</h2>
                   <p className="text-sm text-muted-foreground">Online</p>
                 </div>
               </div>
@@ -122,7 +226,7 @@ const Index = () => {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.map((message) => (
+              {(messages[selectedChat] || []).map((message) => (
                 <div
                   key={message.id}
                   className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}
@@ -138,11 +242,12 @@ const Index = () => {
                     <p className={`text-xs mt-1 ${
                       message.isOwn ? "text-primary-foreground/70" : "text-muted-foreground"
                     }`}>
-                      {message.time}
+                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                 </div>
               ))}
+              <div ref={messagesEndRef} />
             </div>
 
             {/* Message Input */}
@@ -150,10 +255,13 @@ const Index = () => {
               <div className="flex items-center gap-2">
                 <Input
                   placeholder="Type a message..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
                   className="flex-1"
                 />
-                <Button size="icon">
-                  <MessageCircle className="h-4 w-4" />
+                <Button onClick={sendMessage} size="icon" disabled={!newMessage.trim()}>
+                  <Send className="h-4 w-4" />
                 </Button>
               </div>
             </div>
