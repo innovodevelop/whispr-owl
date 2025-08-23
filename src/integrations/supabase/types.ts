@@ -136,10 +136,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      search_users_by_username: {
+      search_users_by_query: {
         Args: { search_term: string }
         Returns: {
           display_name: string
+          phone_number: string
           user_id: string
           username: string
         }[]

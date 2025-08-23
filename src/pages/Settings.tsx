@@ -185,7 +185,7 @@ const Settings = () => {
       items: [
         { name: "Help Center", description: "Get help and support", action: () => {} },
         { name: "Contact Support", description: "Report issues or get assistance", action: () => {} },
-        { name: "About Signal", description: "App version and information", action: () => {} },
+        { name: "About Whispr", description: "App version and information", action: () => {} },
       ]
     },
   ];
