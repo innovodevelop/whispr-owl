@@ -21,21 +21,21 @@ const Contacts = () => {
 
   useEffect(() => {
     if (activeTab === "find" && searchQuery.trim()) {
-      handleSearch();
+      performSearch(searchQuery);
     } else {
       setSearchResults([]);
     }
   }, [searchQuery, activeTab]);
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
+  const performSearch = async (term: string) => {
+    if (!term.trim()) {
       setSearchResults([]);
       return;
     }
 
     setSearching(true);
-    console.log('Starting search for:', searchQuery);
-    const results = await searchUsersByUsername(searchQuery);
+    console.log('Starting search for:', term);
+    const results = await searchUsersByUsername(term);
     console.log('Search results received:', results);
     setSearchResults(results || []);
     setSearching(false);
@@ -98,7 +98,7 @@ const Contacts = () => {
               if (e.key === 'Enter') {
                 if (searchQuery.trim().length >= 2) {
                   setActiveTab('find');
-                  handleSearch();
+                  performSearch(searchQuery);
                 }
               }
             }}
