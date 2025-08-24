@@ -8,14 +8,25 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useContacts } from "@/hooks/useContacts";
+import { useConversations } from "@/hooks/useConversations";
 import { useNavigate } from "react-router-dom";
+import ContactCard from "@/components/ContactCard";
+import ChatRequestCard from "@/components/ChatRequestCard";
 
 const Contacts = () => {
   const { user } = useAuth();
   const { contacts, addContact, removeContact, searchUsersByUsername } = useContacts();
+  const { 
+    conversations, 
+    pendingRequests, 
+    startConversation, 
+    acceptConversation, 
+    rejectConversation, 
+    getConversationStatus 
+  } = useConversations();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<"contacts" | "find">("contacts");
+  const [activeTab, setActiveTab] = useState<"contacts" | "find" | "requests">("contacts");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
 
@@ -52,10 +63,10 @@ const Contacts = () => {
   const handleStartChat = (contactId: string) => {
     const contact = contacts.find(c => c.contact_user_id === contactId);
     if (contact) {
-      // Create new conversation and navigate back
+      // Navigate to chat with this contact
       navigate("/", { 
         state: { 
-          newConversation: {
+          selectedContact: {
             id: contactId,
             name: contact.profile?.display_name || contact.profile?.username || "Unknown",
             avatar: contact.profile?.avatar_url
@@ -71,6 +82,18 @@ const Contacts = () => {
       // Remove from search results
       setSearchResults(prev => prev.filter(u => u.user_id !== userId));
     }
+  };
+
+  const handleStartConversation = async (contactUserId: string) => {
+    await startConversation(contactUserId);
+  };
+
+  const handleAcceptRequest = async (conversationId: string) => {
+    await acceptConversation(conversationId);
+  };
+
+  const handleRejectRequest = async (conversationId: string) => {
+    await rejectConversation(conversationId);
   };
 
   return (
@@ -128,6 +151,20 @@ const Contacts = () => {
             <UserPlus className="h-3 w-3 md:h-4 md:w-4" />
             Find People
           </Button>
+          <Button
+            variant={activeTab === "requests" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setActiveTab("requests")}
+            className="flex items-center gap-1 md:gap-2 text-xs md:text-sm h-7 md:h-8 touch-feedback relative"
+          >
+            <MessageCircle className="h-3 w-3 md:h-4 md:w-4" />
+            Requests
+            {pendingRequests.length > 0 && (
+              <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs bg-red-500">
+                {pendingRequests.length}
+              </Badge>
+            )}
+          </Button>
         </div>
       </div>
 
@@ -166,41 +203,49 @@ const Contacts = () => {
                 </Card>
               ) : (
                 filteredContacts.map((contact, index) => (
-                  <Card key={contact.id} className="hover:bg-muted/50 transition-colors hover-lift touch-feedback stagger-item" style={{ animationDelay: `${index * 0.05}s` }}>
-                    <CardContent className="p-3 md:p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="relative">
-                            <Avatar className="h-10 w-10 md:h-12 md:w-12">
-                              <AvatarImage src={contact.profile?.avatar_url} />
-                              <AvatarFallback>
-                                {(contact.profile?.display_name || contact.profile?.username || "?").substring(0, 2).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                          </div>
-                          
-                          <div className="flex-1">
-                            <h3 className="font-medium text-sm md:text-base">{contact.profile?.display_name || contact.profile?.username || "Unknown"}</h3>
-                            {contact.profile?.username && (
-                              <p className="text-xs md:text-sm text-muted-foreground">@{contact.profile.username}</p>
-                            )}
-                          </div>
-                        </div>
-    
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => handleStartChat(contact.contact_user_id)}
-                          className="shrink-0 touch-feedback h-8 w-8 md:h-10 md:w-10"
-                        >
-                          <MessageCircle className="h-3 w-3 md:h-4 md:w-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <ContactCard
+                    key={contact.id}
+                    contact={contact}
+                    conversationStatus={getConversationStatus(contact.contact_user_id)}
+                    onStartChat={handleStartChat}
+                    onAcceptRequest={handleAcceptRequest}
+                    onRejectRequest={handleRejectRequest}
+                    onStartConversation={handleStartConversation}
+                  />
                 ))
               )}
             </div>
+          </div>
+        ) : activeTab === "requests" ? (
+          <div className="p-3 md:p-4 space-y-3 md:space-y-4">
+            <h2 className="font-medium text-sm text-muted-foreground mb-3">
+              Chat Requests ({pendingRequests.length})
+            </h2>
+            
+            {pendingRequests.length === 0 ? (
+              <Card className="border-dashed border-2 fade-in">
+                <CardContent className="p-6 md:p-8">
+                  <div className="text-center">
+                    <MessageCircle className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 text-muted-foreground" />
+                    <h3 className="font-medium mb-1 text-sm md:text-base">No chat requests</h3>
+                    <p className="text-xs md:text-sm text-muted-foreground">
+                      When someone wants to chat with you, their request will appear here
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {pendingRequests.map((request, index) => (
+                  <ChatRequestCard
+                    key={request.id}
+                    request={request}
+                    onAccept={handleAcceptRequest}
+                    onReject={handleRejectRequest}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <div className="p-3 md:p-4 space-y-3 md:space-y-4 slide-left">
