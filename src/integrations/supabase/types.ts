@@ -56,6 +56,44 @@ export type Database = {
         }
         Relationships: []
       }
+      conversation_settings: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          disappearing_duration: number | null
+          disappearing_enabled: boolean
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          disappearing_duration?: number | null
+          disappearing_enabled?: boolean
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          disappearing_duration?: number | null
+          disappearing_enabled?: boolean
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_settings_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           created_at: string

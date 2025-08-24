@@ -54,23 +54,22 @@ export const ChatSettingsDrawer: React.FC<ChatSettingsDrawerProps> = ({
     if (!user || !conversationId) return;
 
     try {
-      // Check if conversation_settings table exists, if not we'll use default values
-      const { data, error } = await supabase
-        .from('conversation_settings')
-        .select('*')
-        .eq('conversation_id', conversationId)
-        .eq('user_id', user.id)
-        .maybeSingle();
+      // Use rpc call to query conversation_settings since it's not in types yet
+      const { data, error } = await supabase.rpc('get_conversation_settings', {
+        p_conversation_id: conversationId,
+        p_user_id: user.id
+      });
 
-      if (error && !error.message.includes('relation "conversation_settings" does not exist')) {
+      if (error) {
         console.error('Error fetching conversation settings:', error);
         return;
       }
 
-      if (data) {
+      if (data && data.length > 0) {
+        const setting = data[0];
         setSettings({
-          disappearing_enabled: data.disappearing_enabled || false,
-          disappearing_duration: data.disappearing_duration,
+          disappearing_enabled: setting.disappearing_enabled || false,
+          disappearing_duration: setting.disappearing_duration,
         });
       }
     } catch (error) {
@@ -85,17 +84,13 @@ export const ChatSettingsDrawer: React.FC<ChatSettingsDrawerProps> = ({
     try {
       const updatedSettings = { ...settings, ...newSettings };
       
-      // Try to upsert the settings
-      const { error } = await supabase
-        .from('conversation_settings')
-        .upsert({
-          conversation_id: conversationId,
-          user_id: user.id,
-          disappearing_enabled: updatedSettings.disappearing_enabled,
-          disappearing_duration: updatedSettings.disappearing_duration,
-        }, {
-          onConflict: 'conversation_id,user_id'
-        });
+      // Use rpc call to upsert conversation_settings
+      const { error } = await supabase.rpc('upsert_conversation_settings', {
+        p_conversation_id: conversationId,
+        p_user_id: user.id,
+        p_disappearing_enabled: updatedSettings.disappearing_enabled,
+        p_disappearing_duration: updatedSettings.disappearing_duration,
+      });
 
       if (error) {
         console.error('Error updating conversation settings:', error);
