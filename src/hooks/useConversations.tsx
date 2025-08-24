@@ -11,6 +11,8 @@ interface Conversation {
   created_by: string;
   created_at: string;
   updated_at: string;
+  last_message?: string;
+  last_message_at?: string;
   otherParticipant?: {
     username?: string;
     display_name?: string;
@@ -65,10 +67,30 @@ export const useConversations = () => {
           .select('username, display_name, avatar_url')
           .eq('user_id', otherUserId)
           .maybeSingle();
+
+        // Fetch last message for accepted conversations
+        let lastMessage = null;
+        let lastMessageAt = null;
+        if (conv.status === 'accepted') {
+          const { data: messageData } = await supabase
+            .from('messages')
+            .select('content, created_at')
+            .eq('conversation_id', conv.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (messageData) {
+            lastMessage = messageData.content;
+            lastMessageAt = messageData.created_at;
+          }
+        }
         
         return {
           ...conv,
           status: conv.status as 'pending' | 'accepted' | 'rejected' | 'blocked',
+          last_message: lastMessage,
+          last_message_at: lastMessageAt,
           otherParticipant: profileData
         };
       }));

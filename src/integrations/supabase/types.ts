@@ -91,8 +91,10 @@ export type Database = {
           content: string
           conversation_id: string
           created_at: string
+          expires_at: string | null
           id: string
           message_type: string
+          read_at: string | null
           sender_id: string
           updated_at: string
         }
@@ -100,8 +102,10 @@ export type Database = {
           content: string
           conversation_id: string
           created_at?: string
+          expires_at?: string | null
           id?: string
           message_type?: string
+          read_at?: string | null
           sender_id: string
           updated_at?: string
         }
@@ -109,8 +113,10 @@ export type Database = {
           content?: string
           conversation_id?: string
           created_at?: string
+          expires_at?: string | null
           id?: string
           message_type?: string
+          read_at?: string | null
           sender_id?: string
           updated_at?: string
         }
@@ -179,6 +185,7 @@ export type Database = {
         Row: {
           call_notifications: boolean
           created_at: string
+          disappearing_message_duration: number | null
           disappearing_messages: boolean
           group_notifications: boolean
           link_previews: boolean
@@ -192,6 +199,7 @@ export type Database = {
         Insert: {
           call_notifications?: boolean
           created_at?: string
+          disappearing_message_duration?: number | null
           disappearing_messages?: boolean
           group_notifications?: boolean
           link_previews?: boolean
@@ -205,6 +213,7 @@ export type Database = {
         Update: {
           call_notifications?: boolean
           created_at?: string
+          disappearing_message_duration?: number | null
           disappearing_messages?: boolean
           group_notifications?: boolean
           link_previews?: boolean
@@ -222,6 +231,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_messages: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       search_users_by_query_secure: {
         Args: { search_term: string }
         Returns: {
