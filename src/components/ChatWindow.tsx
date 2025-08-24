@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, ArrowLeft, Phone, Video, Settings } from "lucide-react";
+import { Send, ArrowLeft, Phone, Video, Settings, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -173,7 +173,7 @@ export const ChatWindow = ({
                     "max-w-[75%] md:max-w-[60%] px-3 py-2 rounded-2xl shadow-sm transition-all duration-200",
                     isOwn
                       ? "bg-primary text-primary-foreground rounded-br-md"
-                      : "bg-muted rounded-bl-md",
+                      : "bg-card border border-border rounded-bl-md",
                     isExpiring && "ring-2 ring-destructive/50 animate-pulse"
                   )}
                 >
@@ -199,13 +199,23 @@ export const ChatWindow = ({
                   </div>
                   
                   {/* Burn on Read Timer */}
-                  {message.burn_on_read_duration && message.burn_on_read_starts_at && (
-                    <BurnTimer
-                      startsAt={message.burn_on_read_starts_at}
-                      duration={message.burn_on_read_duration}
-                      onExpire={() => handleBurnExpire(message.id)}
-                      className={isOwn ? "justify-end" : "justify-start"}
-                    />
+                  {message.burn_on_read_duration && (
+                    (message.burn_on_read_starts_at ? (
+                      <BurnTimer
+                        startsAt={message.burn_on_read_starts_at}
+                        duration={message.burn_on_read_duration}
+                        onExpire={() => handleBurnExpire(message.id)}
+                        className={isOwn ? "justify-end" : "justify-start"}
+                      />
+                    ) : message.sender_id === user?.id ? (
+                      <div className={cn(
+                        "flex items-center gap-1 text-xs mt-1 text-orange-400",
+                        isOwn ? "justify-end" : "justify-start"
+                      )}>
+                        <Flame className="h-3 w-3" />
+                        <span>Burns when read</span>
+                      </div>
+                    ) : null)
                   )}
                 </div>
                 

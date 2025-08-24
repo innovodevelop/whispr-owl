@@ -93,18 +93,12 @@ const Index = () => {
             <h1 className="text-lg md:text-xl font-semibold">Whispr</h1>
             <div className="flex items-center gap-1 md:gap-2" role="toolbar" aria-label="Main actions">
               <Button variant="ghost" size="icon" onClick={() => navigate("/contacts")} className="touch-feedback h-8 w-8 md:h-10 md:w-10" aria-label="Contacts">
-                <UserPlus className="h-4 w-4 md:h-5 md:w-5" />
+                <Users className="h-4 w-4 md:h-5 md:w-5" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={() => navigate("/contacts")} className="touch-feedback h-8 w-8 md:h-10 md:w-10">
-                <UserPlus className="h-4 w-4 md:h-5 md:w-5" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={startNewChat} className="touch-feedback h-8 w-8 md:h-10 md:w-10">
-                <Plus className="h-4 w-4 md:h-5 md:w-5" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="touch-feedback h-8 w-8 md:h-10 md:w-10">
+              <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="touch-feedback h-8 w-8 md:h-10 md:w-10" aria-label="Settings">
                 <Settings className="h-4 w-4 md:h-5 md:w-5" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={signOut} className="touch-feedback h-8 w-8 md:h-10 md:w-10">
+              <Button variant="ghost" size="icon" onClick={signOut} className="touch-feedback h-8 w-8 md:h-10 md:w-10" aria-label="Sign out">
                 <LogOut className="h-4 w-4 md:h-5 md:w-5" />
               </Button>
             </div>
@@ -124,7 +118,7 @@ const Index = () => {
         </div>
 
         {/* Conversations List */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto relative">
           {loading ? (
             <div className="p-6 text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-3"></div>
@@ -157,6 +151,18 @@ const Index = () => {
                 onClick={() => setSelectedChat(conversation.id)}
               />
             ))
+          )}
+          
+          {/* Floating New Chat Button */}
+          {filteredConversations.length > 0 && (
+            <Button
+              onClick={startNewChat}
+              size="icon"
+              className="fixed bottom-20 md:bottom-4 left-4 z-40 h-12 w-12 rounded-full shadow-lg bg-primary hover:bg-primary/90 touch-feedback"
+              aria-label="Start new chat"
+            >
+              <Plus className="h-5 w-5" />
+            </Button>
           )}
         </div>
       </div>

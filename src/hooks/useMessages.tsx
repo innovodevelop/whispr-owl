@@ -225,7 +225,7 @@ export const useMessages = (conversationId: string | null) => {
     };
   }, [conversationId, fetchMessages]);
 
-  // Mark messages as read when they come into view
+  // Mark messages as read when they come into view and start burn timers
   useEffect(() => {
     if (!user || messages.length === 0) return;
 
@@ -233,8 +233,25 @@ export const useMessages = (conversationId: string | null) => {
       !msg.read_at && msg.sender_id !== user.id
     );
 
+    const burnMessages = messages.filter(msg => 
+      msg.burn_on_read_duration && 
+      msg.sender_id === user.id && 
+      !msg.burn_on_read_starts_at &&
+      msg.read_at // Message has been read by recipient
+    );
+
     unreadMessages.forEach(msg => {
       markAsRead(msg.id);
+    });
+
+    // Start burn timers for sent messages that were just read
+    burnMessages.forEach(msg => {
+      const updateData = { burn_on_read_starts_at: new Date().toISOString() };
+      supabase
+        .from('messages')
+        .update(updateData)
+        .eq('id', msg.id)
+        .then(() => fetchMessages()); // Refresh to show timer
     });
   }, [messages, user]);
 
