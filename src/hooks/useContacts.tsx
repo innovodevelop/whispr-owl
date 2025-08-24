@@ -81,6 +81,19 @@ export const useContacts = () => {
         });
 
       if (error) {
+        // Handle unique constraint violation gracefully (already added)
+        // Postgres error code 23505 = unique_violation
+        // Treat as success: refresh list and notify
+        // @ts-ignore - supabase error has 'code'
+        const code = (error as any)?.code;
+        if (code === '23505') {
+          await fetchContacts();
+          toast({
+            title: "Already in contacts",
+            description: "This user is already in your contacts.",
+          });
+          return true;
+        }
         toast({
           title: "Error",
           description: error.message,
