@@ -67,7 +67,7 @@ export const BurnTimer = ({ startsAt, duration, onExpire, isOwnMessage, classNam
     )}>
       <Flame className="h-3 w-3 animate-pulse" />
       <span className="font-mono">
-        Burns in {formatTime(timeLeft)}
+        {formatTime(timeLeft)}
       </span>
     </div>
   );
