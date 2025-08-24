@@ -42,7 +42,10 @@ export const ContactCard: React.FC<ContactCardProps> = ({
       return (
         <Button
           size="sm"
-          onClick={() => onStartConversation(contact.contact_user_id)}
+          onClick={() => {
+            console.log('ContactCard: Start chat button clicked for user:', contact.contact_user_id);
+            onStartConversation(contact.contact_user_id);
+          }}
           className="shrink-0 touch-feedback btn-press"
           aria-label="Start chat"
         >

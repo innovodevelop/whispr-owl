@@ -220,6 +220,7 @@ export const useConversations = () => {
   const startConversation = async (contactUserId: string) => {
     if (!user) return { success: false, conversationId: null };
 
+    console.log('Starting conversation with user ID:', contactUserId);
     try {
       // Check if conversation already exists
       const { data: existing } = await supabase

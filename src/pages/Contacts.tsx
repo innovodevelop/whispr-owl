@@ -45,7 +45,9 @@ const Contacts = () => {
   };
 
   const handleStartConversation = async (contactUserId: string) => {
+    console.log('Contacts: handleStartConversation called with userId:', contactUserId);
     const result = await startConversation(contactUserId);
+    console.log('Contacts: startConversation result:', result);
     if (result.success && result.conversationId) {
       // Navigate to main page with conversation selected (whether new or existing)
       navigate('/', { state: { newConversation: { id: result.conversationId } } });
