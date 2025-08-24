@@ -69,9 +69,9 @@ export const useMessages = (conversationId: string | null) => {
         
         // Decrypt message content if it's encrypted using Signal Protocol
         let decryptedContent = msg.content;
-        if (msg.encrypted_content) {
+        if (msg.encrypted_content && signalProtocol.initialized) {
           try {
-            // Always decrypt encrypted messages, even our own (since content is redacted in DB)
+            // Decrypt all encrypted messages regardless of sender since content is redacted in DB
             const decrypted = await signalProtocol.decryptMessage(
               msg.encrypted_content,
               conversationId,

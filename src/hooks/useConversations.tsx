@@ -33,11 +33,11 @@ export const useConversations = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
+    if (user && signalProtocol.initialized) {
       fetchConversations();
       setupRealtimeSubscription();
     }
-  }, [user]);
+  }, [user, signalProtocol.initialized]);
 
   const fetchConversations = async () => {
     if (!user) return;
@@ -88,20 +88,16 @@ export const useConversations = () => {
           if (messageData) {
             if (messageData.encrypted_content && signalProtocol.initialized) {
               try {
-                // For messages we sent, use the plain content; for received, decrypt
-                if (messageData.sender_id === user.id) {
-                  lastMessage = messageData.content || 'New message';
-                } else {
-                  const decrypted = await signalProtocol.decryptMessage(
-                    messageData.encrypted_content,
-                    conv.id,
-                    messageData.sender_id
-                  );
-                  lastMessage = decrypted || messageData.content || 'New message';
-                }
+                // Decrypt all encrypted messages regardless of sender
+                const decrypted = await signalProtocol.decryptMessage(
+                  messageData.encrypted_content,
+                  conv.id,
+                  messageData.sender_id
+                );
+                lastMessage = decrypted || 'New message';
               } catch (error) {
                 console.error('Failed to decrypt last message:', error);
-                lastMessage = messageData.content || 'New message';
+                lastMessage = 'New message';
               }
             } else {
               lastMessage = messageData.content || 'New message';
@@ -124,19 +120,15 @@ export const useConversations = () => {
             recentMessages = await Promise.all(recentMessagesData.map(async (msg) => {
               if (msg.encrypted_content && signalProtocol.initialized) {
                 try {
-                  // For messages we sent, use content; for received, decrypt  
-                  if (msg.sender_id === user.id) {
-                    return msg.content || "New message";
-                  } else {
-                    const decrypted = await signalProtocol.decryptMessage(
-                      msg.encrypted_content,
-                      conv.id,
-                      msg.sender_id
-                    );
-                    return decrypted || msg.content || "New message";
-                  }
+                  // Decrypt all encrypted messages regardless of sender
+                  const decrypted = await signalProtocol.decryptMessage(
+                    msg.encrypted_content,
+                    conv.id,
+                    msg.sender_id
+                  );
+                  return decrypted || "New message";
                 } catch {
-                  return msg.content || "New message";
+                  return "New message";
                 }
               }
               return msg.content || "New message";
@@ -191,6 +183,24 @@ export const useConversations = () => {
           filter: `participant_two=eq.${user.id}`
         },
         () => fetchConversations()
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages'
+        },
+        (payload) => {
+          // Check if this message is for any of our conversations
+          const isOurMessage = conversations.some(conv => 
+            conv.id === payload.new.conversation_id
+          );
+          if (isOurMessage) {
+            // Delay refresh to allow for encryption processing
+            setTimeout(() => fetchConversations(), 1000);
+          }
+        }
       )
       .subscribe();
 
