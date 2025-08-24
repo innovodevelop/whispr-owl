@@ -86,25 +86,25 @@ export const useConversations = () => {
             .maybeSingle();
 
           if (messageData) {
-            if (messageData.encrypted_content) {
+            if (messageData.encrypted_content && signalProtocol.initialized) {
               try {
-                // Decrypt last message if it exists and is encrypted using Signal Protocol
-                if (signalProtocol.initialized) {
+                // For messages we sent, use the plain content; for received, decrypt
+                if (messageData.sender_id === user.id) {
+                  lastMessage = messageData.content || 'New message';
+                } else {
                   const decrypted = await signalProtocol.decryptMessage(
                     messageData.encrypted_content,
                     conv.id,
                     messageData.sender_id
                   );
-                  lastMessage = decrypted || '[Encrypted message]';
-                } else {
-                  lastMessage = '[Encrypted message]';
+                  lastMessage = decrypted || messageData.content || 'New message';
                 }
               } catch (error) {
                 console.error('Failed to decrypt last message:', error);
-                lastMessage = '[Encrypted message]';
+                lastMessage = messageData.content || 'New message';
               }
             } else {
-              lastMessage = messageData.content;
+              lastMessage = messageData.content || 'New message';
             }
             lastMessageAt = messageData.created_at;
           }
@@ -122,22 +122,24 @@ export const useConversations = () => {
 
           if (recentMessagesData) {
             recentMessages = await Promise.all(recentMessagesData.map(async (msg) => {
-              if (msg.encrypted_content) {
+              if (msg.encrypted_content && signalProtocol.initialized) {
                 try {
-                  if (signalProtocol.initialized) {
+                  // For messages we sent, use content; for received, decrypt  
+                  if (msg.sender_id === user.id) {
+                    return msg.content || "New message";
+                  } else {
                     const decrypted = await signalProtocol.decryptMessage(
                       msg.encrypted_content,
                       conv.id,
                       msg.sender_id
                     );
-                    return decrypted || "New message";
+                    return decrypted || msg.content || "New message";
                   }
-                  return "New message";
                 } catch {
-                  return "New message";
+                  return msg.content || "New message";
                 }
               }
-              return msg.content;
+              return msg.content || "New message";
             }));
           }
         }

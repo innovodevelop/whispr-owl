@@ -69,21 +69,24 @@ export const useMessages = (conversationId: string | null) => {
         
         // Decrypt message content if it's encrypted using Signal Protocol
         let decryptedContent = msg.content;
-        if (msg.encrypted_content && msg.sender_id !== user?.id) {
+        if (msg.encrypted_content) {
           try {
-            const decrypted = await signalProtocol.decryptMessage(
-              msg.encrypted_content,
-              conversationId,
-              msg.sender_id
-            );
-            decryptedContent = decrypted || '[Decryption failed]';
+            // For messages we sent, don't try to decrypt - use the original content stored in DB
+            if (msg.sender_id === user?.id) {
+              decryptedContent = msg.content;
+            } else {
+              // For messages we received, decrypt them
+              const decrypted = await signalProtocol.decryptMessage(
+                msg.encrypted_content,
+                conversationId,
+                msg.sender_id
+              );
+              decryptedContent = decrypted || msg.content || '[Decryption failed]';
+            }
           } catch (error) {
             console.error('Failed to decrypt message:', error);
-            decryptedContent = '[Decryption failed]';
+            decryptedContent = msg.content || '[Decryption failed]';
           }
-        } else if (msg.encrypted_content && msg.sender_id === user?.id) {
-          // For our own messages, we can read the original content
-          decryptedContent = msg.content || msg.encrypted_content;
         }
 
         return {
@@ -154,8 +157,8 @@ export const useMessages = (conversationId: string | null) => {
               remoteUserId
             );
             encryptedContent = encrypted;
-            // Clear the plain text content for security
-            finalContent = encrypted ? "[Encrypted Message]" : content;
+            // Keep original content for our own messages, but it will be redacted by trigger
+            finalContent = content;
           }
         }
       }

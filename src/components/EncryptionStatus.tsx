@@ -1,6 +1,6 @@
 import React from 'react';
 import { Shield, ShieldCheck, Loader2 } from 'lucide-react';
-import { useEncryption } from '@/hooks/useEncryption';
+import { useSignalProtocol } from '@/hooks/useSignalProtocol';
 import { cn } from '@/lib/utils';
 
 interface EncryptionStatusProps {
@@ -12,7 +12,7 @@ export const EncryptionStatus: React.FC<EncryptionStatusProps> = ({
   className,
   showText = false
 }) => {
-  const { loading, encryptionReady } = useEncryption();
+  const { loading, initialized } = useSignalProtocol();
 
   if (loading) {
     return (
@@ -23,7 +23,7 @@ export const EncryptionStatus: React.FC<EncryptionStatusProps> = ({
     );
   }
 
-  if (encryptionReady) {
+  if (initialized) {
     return (
       <div className={cn("flex items-center gap-1 text-green-600 dark:text-green-400", className)}>
         <ShieldCheck className="h-4 w-4" />
