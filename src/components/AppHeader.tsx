@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Settings, UserPlus, LogOut, Moon, Sun, Monitor, User, Edit } from "lucide-react";
+import { Settings, UserPlus, LogOut, Moon, Sun, Monitor, User, Edit, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -14,19 +14,36 @@ interface AppHeaderProps {
   showSearch?: boolean;
   searchValue?: string;
   onSearchChange?: (value: string) => void;
+  showBackButton?: boolean;
+  onBack?: () => void;
 }
 
 const AppHeader: React.FC<AppHeaderProps> = ({ 
   title, 
   showSearch = false, 
   searchValue = "", 
-  onSearchChange 
+  onSearchChange,
+  showBackButton = false,
+  onBack
 }) => {
   const { signOut, user } = useAuth();
   const { profile } = useProfile();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const [showProfileEdit, setShowProfileEdit] = useState(false);
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      // Default behavior: go back in history or to home
+      if (window.history.length > 1) {
+        navigate(-1);
+      } else {
+        navigate('/');
+      }
+    }
+  };
 
   const getThemeIcon = () => {
     switch (theme) {
@@ -43,7 +60,20 @@ const AppHeader: React.FC<AppHeaderProps> = ({
     <>
       <div className="p-3 md:p-4 border-b border-border bg-background/95 backdrop-blur-sm sticky top-0 z-50">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg md:text-xl font-semibold">{title}</h1>
+          <div className="flex items-center gap-3">
+            {showBackButton && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={handleBack}
+                className="hidden md:flex h-8 w-8 hover:bg-accent"
+                aria-label="Go back"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            )}
+            <h1 className="text-lg md:text-xl font-semibold">{title}</h1>
+          </div>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

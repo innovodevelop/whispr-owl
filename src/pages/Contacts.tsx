@@ -64,7 +64,7 @@ const Contacts = () => {
   return (
     <div className="h-screen flex flex-col bg-background page-enter">
       {/* Header */}
-      <AppHeader title="Contacts" />
+      <AppHeader title="Contacts" showBackButton={true} />
       
       {/* Content */}
       <div className="p-4 flex-1 overflow-auto">
