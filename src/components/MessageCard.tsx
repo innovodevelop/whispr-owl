@@ -35,7 +35,7 @@ export const MessageCard: React.FC<MessageCardProps> = ({
       <div className="flex items-center gap-3">
         <Avatar className="h-10 w-10 md:h-12 md:w-12 ring-2 ring-primary/20">
           <AvatarImage src={avatarUrl} alt={`${name} avatar`} />
-          <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground font-medium">
+          <AvatarFallback className="bg-secondary text-secondary-foreground font-medium">
             {name?.[0]?.toUpperCase() || "U"}
           </AvatarFallback>
         </Avatar>

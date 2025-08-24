@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { useToast } from "./use-toast";
+import { useEncryption } from "./useEncryption";
+import { decryptMessage } from "@/lib/encryption";
 
 interface Conversation {
   id: string;
@@ -24,6 +26,7 @@ interface Conversation {
 export const useConversations = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { getConversationKey } = useEncryption();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [pendingRequests, setPendingRequests] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,14 +85,18 @@ export const useConversations = () => {
             .maybeSingle();
 
           if (messageData) {
-            // For previews, show the unencrypted content (since we can't decrypt without conversation key here)
-            // We'll show a generic preview for encrypted messages
             if (messageData.encrypted_content && !messageData.content) {
-              // This is an encrypted message
-              if (messageData.message_type === 'financial_notification') {
-                lastMessage = "Financial activity";
-              } else {
-                lastMessage = "New message";
+              try {
+                const conversationKey = await getConversationKey(conv.id);
+                if (conversationKey) {
+                  lastMessage = decryptMessage(messageData.encrypted_content, conversationKey);
+                } else if (messageData.message_type === 'financial_notification') {
+                  lastMessage = "Financial activity";
+                } else {
+                  lastMessage = "New message";
+                }
+              } catch {
+                lastMessage = messageData.message_type === 'financial_notification' ? "Financial activity" : "New message";
               }
             } else {
               lastMessage = messageData.content;
@@ -109,12 +116,20 @@ export const useConversations = () => {
             .limit(3);
 
           if (recentMessagesData) {
-            recentMessages = recentMessagesData.map(msg => {
+            recentMessages = await Promise.all(recentMessagesData.map(async (msg) => {
               if (msg.encrypted_content && !msg.content) {
-                return "New message";
+                try {
+                  const conversationKey = await getConversationKey(conv.id);
+                  if (conversationKey) {
+                    return decryptMessage(msg.encrypted_content, conversationKey);
+                  }
+                  return "New message";
+                } catch {
+                  return "New message";
+                }
               }
               return msg.content;
-            });
+            }));
           }
         }
 

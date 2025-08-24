@@ -120,7 +120,7 @@ export const ChatWindow = ({
   };
 
   return (
-    <div className={cn("flex flex-col h-full bg-gradient-to-br from-background to-background/95", className)}>
+    <div className={cn("flex flex-col h-full bg-background", className)}>
       {/* Chat Header */}
       <div className="p-3 md:p-4 glass-card border-b border-border/30 slide-down">
         <div className="flex items-center gap-3">
@@ -132,7 +132,7 @@ export const ChatWindow = ({
           
           <Avatar className="h-10 w-10 ring-2 ring-primary/20 shadow-md">
             <AvatarImage src={conversationAvatar} />
-            <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground font-semibold">
+            <AvatarFallback className="bg-secondary text-secondary-foreground font-semibold">
               {conversationName.split(" ").map(n => n[0]).join("").toUpperCase()}
             </AvatarFallback>
           </Avatar>
@@ -165,7 +165,7 @@ export const ChatWindow = ({
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-4 bg-gradient-to-b from-background/50 to-background">
+      <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-4 bg-background">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="loading-pulse rounded-full h-8 w-8 border-2 border-primary bg-primary/20"></div>
@@ -191,7 +191,7 @@ export const ChatWindow = ({
                   className="flex justify-center my-6"
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
-                  <div className="max-w-sm mx-auto bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 dark:from-amber-950/20 dark:via-yellow-950/20 dark:to-orange-950/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl p-4 shadow-lg backdrop-blur-sm animate-fade-in">
+                  <div className="max-w-sm mx-auto bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl p-4 shadow-lg backdrop-blur-sm animate-fade-in">
                     <div className="flex items-start gap-3">
                       <div className="relative">
                         <Avatar className="h-10 w-10 border-2 border-amber-300 dark:border-amber-600 shadow-sm">
@@ -252,7 +252,7 @@ export const ChatWindow = ({
                   className={cn(
                     "max-w-[75%] md:max-w-[60%] px-4 py-3 rounded-2xl shadow-lg transition-all duration-300 message-bubble backdrop-blur-sm",
                     isOwn
-                      ? "bg-gradient-to-r from-primary to-secondary text-primary-foreground rounded-br-md shadow-[var(--shadow-glow)]"
+                      ? "bg-primary text-primary-foreground rounded-br-md shadow-[var(--shadow-glow)]"
                       : "glass-card border border-primary/20 rounded-bl-md hover:border-primary/40",
                     isExpiring && "ring-2 ring-destructive/50 animate-pulse"
                   )}
