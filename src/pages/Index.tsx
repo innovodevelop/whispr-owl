@@ -153,7 +153,6 @@ const Index = () => {
                 avatarUrl={conversation.otherParticipant?.avatar_url}
                 lastMessage={conversation.last_message}
                 lastMessageTime={getLastMessageTime(conversation)}
-                recentMessages={conversation.recent_messages}
                 selected={selectedChat === conversation.id}
                 onClick={() => setSelectedChat(conversation.id)}
               />

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, ArrowLeft, Phone, Video, Settings, Flame, DollarSign } from "lucide-react";
+import { Send, ArrowLeft, Phone, Video, Settings, Flame, DollarSign, Banknote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -198,7 +198,7 @@ export const ChatWindow = ({
                           </AvatarFallback>
                         </Avatar>
                         <div className="absolute -bottom-1 -right-1 bg-amber-400 dark:bg-amber-500 rounded-full p-1 shadow-sm">
-                          <DollarSign className="h-3 w-3 text-amber-900 dark:text-amber-100" />
+                          <Banknote className="h-3 w-3 text-amber-900 dark:text-amber-100" />
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">

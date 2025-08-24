@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
@@ -10,7 +10,7 @@ interface MessageCardProps {
   lastMessageTime?: string;
   selected?: boolean;
   onClick?: () => void;
-  recentMessages?: string[];
+  
 }
 
 export const MessageCard: React.FC<MessageCardProps> = ({
@@ -21,23 +21,7 @@ export const MessageCard: React.FC<MessageCardProps> = ({
   lastMessageTime,
   selected,
   onClick,
-  recentMessages = [],
 }) => {
-  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
-  const messagesToShow = recentMessages.length > 0 ? recentMessages : [lastMessage || "No messages yet"];
-
-  // Rotate through recent messages every 3 seconds
-  useEffect(() => {
-    if (messagesToShow.length <= 1) return;
-    
-    const interval = setInterval(() => {
-      setCurrentMessageIndex((prev) => (prev + 1) % messagesToShow.length);
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [messagesToShow.length]);
-
-  const displayMessage = messagesToShow[currentMessageIndex];
   return (
     <div
       onClick={onClick}
@@ -61,7 +45,7 @@ export const MessageCard: React.FC<MessageCardProps> = ({
             )}
           </div>
           <p className="text-xs md:text-sm text-muted-foreground truncate">
-            {displayMessage}
+            {lastMessage || "No messages yet"}
           </p>
         </div>
       </div>
