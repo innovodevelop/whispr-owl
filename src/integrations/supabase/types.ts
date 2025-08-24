@@ -56,36 +56,6 @@ export type Database = {
         }
         Relationships: []
       }
-      conversation_encryption_keys: {
-        Row: {
-          conversation_id: string
-          created_at: string
-          encrypted_key_for_participant_one: string
-          encrypted_key_for_participant_two: string
-          id: string
-          key_version: number
-          updated_at: string
-        }
-        Insert: {
-          conversation_id: string
-          created_at?: string
-          encrypted_key_for_participant_one: string
-          encrypted_key_for_participant_two: string
-          id?: string
-          key_version?: number
-          updated_at?: string
-        }
-        Update: {
-          conversation_id?: string
-          created_at?: string
-          encrypted_key_for_participant_one?: string
-          encrypted_key_for_participant_two?: string
-          id?: string
-          key_version?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
       conversation_settings: {
         Row: {
           conversation_id: string
@@ -448,36 +418,6 @@ export type Database = {
           private_key?: string
           public_key?: string
           signature?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_encryption_keys: {
-        Row: {
-          created_at: string
-          encrypted_private_key: string
-          id: string
-          key_version: number
-          public_key: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          encrypted_private_key: string
-          id?: string
-          key_version?: number
-          public_key: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          encrypted_private_key?: string
-          id?: string
-          key_version?: number
-          public_key?: string
-          updated_at?: string
           user_id?: string
         }
         Relationships: []

@@ -18,7 +18,7 @@ export const EncryptionStatus: React.FC<EncryptionStatusProps> = ({
     return (
       <div className={cn("flex items-center gap-2 text-muted-foreground", className)}>
         <Loader2 className="h-4 w-4 animate-spin" />
-        {showText && <span className="text-xs">Setting up encryption...</span>}
+        {showText && <span className="text-xs">Setting up Signal Protocol...</span>}
       </div>
     );
   }
@@ -27,7 +27,7 @@ export const EncryptionStatus: React.FC<EncryptionStatusProps> = ({
     return (
       <div className={cn("flex items-center gap-2 text-green-600 dark:text-green-400", className)}>
         <ShieldCheck className="h-4 w-4" />
-        {showText && <span className="text-xs">End-to-end encrypted</span>}
+        {showText && <span className="text-xs">Signal Protocol Active</span>}
       </div>
     );
   }
