@@ -14,14 +14,14 @@ export interface SignalPreKeyBundle {
   identityKey: Uint8Array;
 }
 
-// Native Signal Protocol loader
+// Web-compatible Signal Protocol loader
 const loadSignal = async () => {
   try {
-    const mod = await import('@/lib/nativeSignalProtocol');
-    console.info('[Signal] Native libsignal loaded successfully');
+    const mod = await import('@/lib/webSignalProtocol');
+    console.info('[Signal] Web Signal Protocol loaded successfully');
     return mod;
   } catch (err) {
-    console.error('[Signal] Failed to load native Signal Protocol:', err);
+    console.error('[Signal] Failed to load web Signal Protocol:', err);
     return null as any;
   }
 };

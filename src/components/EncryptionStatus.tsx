@@ -1,19 +1,20 @@
 import React from 'react';
 import { Shield, ShieldCheck, Loader2 } from 'lucide-react';
-import { useSignalProtocol } from '@/hooks/useSignalProtocol';
 import { cn } from '@/lib/utils';
 
 interface EncryptionStatusProps {
   className?: string;
   showText?: boolean;
+  loading?: boolean;
+  initialized?: boolean;
 }
 
 export const EncryptionStatus: React.FC<EncryptionStatusProps> = ({
   className,
-  showText = false
+  showText = false,
+  loading = false,
+  initialized = false
 }) => {
-  const { loading, initialized } = useSignalProtocol();
-
   if (loading) {
     return (
       <div className={cn("flex items-center gap-2 text-muted-foreground", className)}>

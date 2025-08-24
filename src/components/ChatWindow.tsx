@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useMessages } from "@/hooks/useMessages";
 import { useAuth } from "@/hooks/useAuth";
+import { useEncryption } from "@/hooks/useEncryption";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ChatSettingsDrawer } from "./ChatSettingsDrawer";
@@ -23,7 +24,7 @@ interface ChatWindowProps {
   className?: string;
 }
 
-export const ChatWindow = ({ 
+const ChatWindow = ({ 
   conversationId, 
   conversationName, 
   conversationAvatar,
@@ -32,6 +33,7 @@ export const ChatWindow = ({
 }: ChatWindowProps) => {
   const { user } = useAuth();
   const { messages, loading, sendMessage, deleteMessage } = useMessages(conversationId);
+  const { isReady: encryptionReady, getEncryptionStatus } = useEncryption();
   const { visibleMessages, hideMessageForSender } = useBurnMessages(messages, user?.id);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -140,7 +142,12 @@ export const ChatWindow = ({
           <div className="flex-1 min-w-0">
             <h2 className="font-bold text-sm md:text-base truncate text-foreground">{conversationName}</h2>
             <div className="flex items-center gap-2">
-              <EncryptionStatus showText className="shrink-0" />
+              <EncryptionStatus 
+                showText 
+                className="shrink-0"
+                loading={!encryptionReady}
+                initialized={encryptionReady}
+              />
             </div>
           </div>
           
@@ -369,3 +376,5 @@ export const ChatWindow = ({
     </div>
   );
 };
+
+export { ChatWindow };
