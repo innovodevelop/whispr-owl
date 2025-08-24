@@ -130,34 +130,32 @@ export const useMessages = (conversationId: string | null) => {
         expiresAt = new Date(now.getTime() + expiryMinutes * 60 * 1000);
       }
 
-      // For financial notifications, don't encrypt
+      // Encrypt all messages including financial notifications
       let encryptedContent = null;
       let finalContent = content;
 
-      if (messageType !== "financial_notification") {
-        // Get the other participant in the conversation
-        const { data: conversationData } = await supabase
-          .from('conversations')
-          .select('participant_one, participant_two')
-          .eq('id', conversationId)
-          .single();
+      // Get the other participant in the conversation
+      const { data: conversationData } = await supabase
+        .from('conversations')
+        .select('participant_one, participant_two')
+        .eq('id', conversationId)
+        .single();
 
-        if (conversationData) {
-          const remoteUserId = conversationData.participant_one === user.id 
-            ? conversationData.participant_two 
-            : conversationData.participant_one;
-          
-          if (remoteUserId) {
-            // Encrypt message using Signal Protocol
-            const encrypted = await signalProtocol.encryptMessage(
-              content,
-              conversationId,
-              remoteUserId
-            );
-            encryptedContent = encrypted;
-            // Set placeholder content since trigger will redact it anyway
-            finalContent = '[Encrypting...]';
-          }
+      if (conversationData) {
+        const remoteUserId = conversationData.participant_one === user.id 
+          ? conversationData.participant_two 
+          : conversationData.participant_one;
+        
+        if (remoteUserId) {
+          // Encrypt message using Signal Protocol
+          const encrypted = await signalProtocol.encryptMessage(
+            content,
+            conversationId,
+            remoteUserId
+          );
+          encryptedContent = encrypted;
+          // Set placeholder content since trigger will redact it anyway
+          finalContent = '[Encrypting...]';
         }
       }
 
