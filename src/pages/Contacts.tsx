@@ -44,10 +44,10 @@ const Contacts = () => {
   };
 
   const handleStartConversation = async (contactUserId: string) => {
-    const conversationId = await startConversation(contactUserId);
-    if (conversationId) {
-      // Navigate to main page with conversation selected
-      navigate('/', { state: { newConversation: { id: conversationId } } });
+    const result = await startConversation(contactUserId);
+    if (result.success && result.conversationId) {
+      // Navigate to main page with conversation selected (whether new or existing)
+      navigate('/', { state: { newConversation: { id: result.conversationId } } });
     }
   };
 

@@ -223,12 +223,17 @@ export const useConversations = () => {
         .maybeSingle();
 
       if (existing) {
-        toast({
-          title: "Conversation exists",
-          description: "You already have a conversation with this user",
-          variant: "destructive",
-        });
-        return { success: false, conversationId: existing.id };
+        // Instead of showing error, return success with existing conversation
+        if (existing.status === 'accepted') {
+          return { success: true, conversationId: existing.id, existing: true };
+        } else if (existing.status === 'pending') {
+          toast({
+            title: "Request pending",
+            description: "A chat request is already pending with this user",
+            variant: "default",
+          });
+          return { success: false, conversationId: existing.id, existing: true };
+        }
       }
 
       // Create new conversation request
