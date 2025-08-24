@@ -30,6 +30,7 @@ export const useConversations = () => {
   const signalProtocol = useSignalProtocol();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [pendingRequests, setPendingRequests] = useState<Conversation[]>([]);
+  const [pendingSentRequests, setPendingSentRequests] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -148,13 +149,17 @@ export const useConversations = () => {
 
       // Separate accepted conversations from pending requests
       const accepted = transformedConversations.filter(c => c.status === 'accepted');
-      // Pending requests are those where the current user did NOT create the conversation (they received the request)
-      const pending = transformedConversations.filter(c => c.status === 'pending' && c.created_by !== user.id);
+      // Pending requests incoming (user received the request)
+      const pendingIncoming = transformedConversations.filter(c => c.status === 'pending' && c.created_by !== user.id);
+      // Pending requests sent (user sent the request)
+      const pendingSent = transformedConversations.filter(c => c.status === 'pending' && c.created_by === user.id);
 
-      console.log('Pending requests found:', pending.length, pending);
+      console.log('Pending incoming:', pendingIncoming.length, pendingIncoming);
+      console.log('Pending sent:', pendingSent.length, pendingSent);
       
       setConversations(accepted);
-      setPendingRequests(pending);
+      setPendingRequests(pendingIncoming);
+      setPendingSentRequests(pendingSent);
     } catch (error) {
       console.error('Error fetching conversations:', error);
     } finally {
@@ -393,7 +398,7 @@ export const useConversations = () => {
     if (accepted) return { status: 'accepted', conversation: accepted };
 
     // Check in all conversations (including pending ones we sent)
-    const allConversations = [...conversations, ...pendingRequests];
+    const allConversations = [...conversations, ...pendingRequests, ...pendingSentRequests];
     const pending = allConversations.find(c => 
       (c.participant_one === contactUserId && c.participant_two === user.id) ||
       (c.participant_one === user.id && c.participant_two === contactUserId)
