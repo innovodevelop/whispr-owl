@@ -273,6 +273,13 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      get_conversation_settings: {
+        Args: { p_conversation_id: string; p_user_id: string }
+        Returns: {
+          disappearing_duration: number
+          disappearing_enabled: boolean
+        }[]
+      }
       search_users_by_query_secure: {
         Args: { search_term: string }
         Returns: {
@@ -280,6 +287,15 @@ export type Database = {
           user_id: string
           username: string
         }[]
+      }
+      upsert_conversation_settings: {
+        Args: {
+          p_conversation_id: string
+          p_disappearing_duration: number
+          p_disappearing_enabled: boolean
+          p_user_id: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

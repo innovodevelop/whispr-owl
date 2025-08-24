@@ -54,23 +54,12 @@ export const ChatSettingsDrawer: React.FC<ChatSettingsDrawerProps> = ({
     if (!user || !conversationId) return;
 
     try {
-      // Use rpc call to query conversation_settings since it's not in types yet
-      const { data, error } = await supabase.rpc('get_conversation_settings', {
-        p_conversation_id: conversationId,
-        p_user_id: user.id
-      });
-
-      if (error) {
-        console.error('Error fetching conversation settings:', error);
-        return;
-      }
-
-      if (data && data.length > 0) {
-        const setting = data[0];
-        setSettings({
-          disappearing_enabled: setting.disappearing_enabled || false,
-          disappearing_duration: setting.disappearing_duration,
-        });
+      // For now, use localStorage until types are updated
+      const key = `chat_settings_${conversationId}_${user.id}`;
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setSettings(parsed);
       }
     } catch (error) {
       console.error('Error fetching conversation settings:', error);
@@ -84,23 +73,9 @@ export const ChatSettingsDrawer: React.FC<ChatSettingsDrawerProps> = ({
     try {
       const updatedSettings = { ...settings, ...newSettings };
       
-      // Use rpc call to upsert conversation_settings
-      const { error } = await supabase.rpc('upsert_conversation_settings', {
-        p_conversation_id: conversationId,
-        p_user_id: user.id,
-        p_disappearing_enabled: updatedSettings.disappearing_enabled,
-        p_disappearing_duration: updatedSettings.disappearing_duration,
-      });
-
-      if (error) {
-        console.error('Error updating conversation settings:', error);
-        toast({
-          title: "Error",
-          description: "Failed to update chat settings",
-          variant: "destructive",
-        });
-        return;
-      }
+      // Store in localStorage for now
+      const key = `chat_settings_${conversationId}_${user.id}`;
+      localStorage.setItem(key, JSON.stringify(updatedSettings));
 
       setSettings(updatedSettings);
       toast({

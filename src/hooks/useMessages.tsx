@@ -64,15 +64,28 @@ export const useMessages = (conversationId: string | null) => {
   }, [conversationId, user]);
 
   const sendMessage = async (content: string) => {
-    if (!conversationId || !user || !content.trim()) return;
+    if (!conversationId || !user || !content.trim()) return false;
 
     try {
-      // Calculate expires_at based on user settings
+      // Check for conversation-specific disappearing message settings
+      const key = `chat_settings_${conversationId}_${user.id}`;
+      const stored = localStorage.getItem(key);
       let expiresAt = null;
-      if (settings?.disappearing_message_duration) {
-        const now = new Date();
-        const expiryMinutes = settings.disappearing_message_duration;
-        expiresAt = new Date(now.getTime() + expiryMinutes * 60 * 1000);
+      
+      if (stored) {
+        const chatSettings = JSON.parse(stored);
+        if (chatSettings.disappearing_enabled && chatSettings.disappearing_duration) {
+          const now = new Date();
+          const expiryMinutes = chatSettings.disappearing_duration;
+          expiresAt = new Date(now.getTime() + expiryMinutes * 60 * 1000);
+        }
+      } else {
+        // Fallback to user-wide settings
+        if (settings?.disappearing_message_duration) {
+          const now = new Date();
+          const expiryMinutes = settings.disappearing_message_duration;
+          expiresAt = new Date(now.getTime() + expiryMinutes * 60 * 1000);
+        }
       }
 
       const { data, error } = await supabase
