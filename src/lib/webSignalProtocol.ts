@@ -153,66 +153,31 @@ export const generatePreKeys = async (startId: number, count: number) => {
   return preKeys;
 };
 
-// Encryption with fallback to Web Crypto API
+// Enhanced encryption with proper session-based crypto
 export const encryptMessageWithSignalProtocol = async (
   plaintext: string,
-  recipientAddress: string,
-  senderIdentityKey: Uint8Array,
-  recipientBundle: SignalPreKeyBundle
+  conversationId: string,
+  senderUserId: string,
+  recipientUserId: string
 ): Promise<string> => {
-  const signal = await loadLibSignal();
-  
-  if (signal) {
-    try {
-      console.log('[Signal] Encrypting with libsignal');
-      
-      // This would be the real Signal Protocol implementation
-      // For now, we'll use a fallback since the API is complex
-      console.log('[Signal] libsignal encryption not yet fully implemented, using fallback');
-    } catch (error) {
-      console.warn('[Signal] libsignal encryption failed:', error);
-    }
-  }
-  
-  // Fallback to Web Crypto API encryption
-  console.log('[Signal] Using Web Crypto API fallback encryption');
-  
   try {
-    // Import sender's private key
-    const senderKey = await crypto.subtle.importKey(
-      'pkcs8',
-      senderIdentityKey,
-      { name: 'ECDH', namedCurve: 'P-256' },
-      false,
-      ['deriveKey']
-    );
+    console.log('[Signal] Encrypting message for conversation:', conversationId);
     
-    // Import recipient's public key
-    const recipientKey = await crypto.subtle.importKey(
-      'raw',
-      recipientBundle.identityKey,
-      { name: 'ECDH', namedCurve: 'P-256' },
-      false,
-      []
-    );
+    // Generate a unique session key for this conversation if not exists
+    const sessionKey = await getOrCreateSessionKey(conversationId, senderUserId, recipientUserId);
     
-    // Derive shared secret
-    const sharedSecret = await crypto.subtle.deriveKey(
-      { name: 'ECDH', public: recipientKey },
-      senderKey,
-      { name: 'AES-GCM', length: 256 },
-      false,
-      ['encrypt']
-    );
+    if (!sessionKey) {
+      throw new Error('Failed to establish session key');
+    }
     
     // Generate random IV
     const iv = crypto.getRandomValues(new Uint8Array(12));
     
-    // Encrypt the message
+    // Encrypt the message using AES-GCM
     const encoder = new TextEncoder();
     const encryptedData = await crypto.subtle.encrypt(
       { name: 'AES-GCM', iv },
-      sharedSecret,
+      sessionKey,
       encoder.encode(plaintext)
     );
     
@@ -221,35 +186,52 @@ export const encryptMessageWithSignalProtocol = async (
     combined.set(iv, 0);
     combined.set(new Uint8Array(encryptedData), iv.length);
     
+    // Return base64 encoded result
     return btoa(String.fromCharCode(...combined));
   } catch (error) {
-    console.error('[Signal] Fallback encryption failed:', error);
+    console.error('[Signal] Encryption failed:', error);
     throw error;
   }
 };
 
-// Decryption with fallback
+// Enhanced decryption with proper session-based crypto
 export const decryptMessageWithSignalProtocol = async (
   encryptedMessage: string,
-  senderAddress: string,
-  recipientIdentityKey: Uint8Array
+  conversationId: string,
+  senderUserId: string,
+  recipientUserId: string
 ): Promise<string> => {
-  const signal = await loadLibSignal();
-  
-  if (signal) {
-    try {
-      console.log('[Signal] Decrypting with libsignal');
-      // Real Signal Protocol decryption would go here
-      console.log('[Signal] libsignal decryption not yet fully implemented, using fallback');
-    } catch (error) {
-      console.warn('[Signal] libsignal decryption failed:', error);
+  try {
+    console.log('[Signal] Decrypting message for conversation:', conversationId);
+    
+    // Get the session key for this conversation
+    const sessionKey = await getOrCreateSessionKey(conversationId, recipientUserId, senderUserId);
+    
+    if (!sessionKey) {
+      throw new Error('Session key not found');
     }
+    
+    // Decode base64 message
+    const encryptedData = Uint8Array.from(atob(encryptedMessage), c => c.charCodeAt(0));
+    
+    // Extract IV and encrypted content
+    const iv = encryptedData.slice(0, 12);
+    const ciphertext = encryptedData.slice(12);
+    
+    // Decrypt the message
+    const decryptedData = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv },
+      sessionKey,
+      ciphertext
+    );
+    
+    // Convert back to string
+    const decoder = new TextDecoder();
+    return decoder.decode(decryptedData);
+  } catch (error) {
+    console.error('[Signal] Decryption failed:', error);
+    throw error;
   }
-  
-  // For now, return a placeholder since we need the sender's public key for ECDH
-  // In a real Signal Protocol implementation, this would use the session state
-  console.log('[Signal] Using fallback decryption (placeholder)');
-  return `[Encrypted message from ${senderAddress}]`;
 };
 
 // Session management for web storage
@@ -455,6 +437,87 @@ export const getUserPublicKey = async (userId: string): Promise<Uint8Array | nul
     return Uint8Array.from(atob(data.identity_key_public), c => c.charCodeAt(0));
   } catch (error) {
     console.error('Failed to get user public key:', error);
+    return null;
+  }
+};
+
+// Session key management for conversations
+const SESSION_KEY_CACHE = new Map<string, CryptoKey>();
+
+export const getOrCreateSessionKey = async (
+  conversationId: string,
+  userId1: string,
+  userId2: string
+): Promise<CryptoKey | null> => {
+  const sessionKeyId = `${conversationId}_${[userId1, userId2].sort().join('_')}`;
+  
+  // Check cache first
+  if (SESSION_KEY_CACHE.has(sessionKeyId)) {
+    return SESSION_KEY_CACHE.get(sessionKeyId)!;
+  }
+  
+  try {
+    // Check if we have a stored session key
+    const { data: sessionData } = await supabase
+      .from('signal_sessions')
+      .select('session_state')
+      .eq('conversation_id', conversationId)
+      .or(`local_user_id.eq.${userId1},local_user_id.eq.${userId2}`)
+      .single();
+    
+    if (sessionData?.session_state) {
+      // Deserialize the stored key
+      const keyData = JSON.parse(sessionData.session_state);
+      const sessionKey = await crypto.subtle.importKey(
+        'raw',
+        new Uint8Array(keyData.keyMaterial),
+        { name: 'AES-GCM' },
+        false,
+        ['encrypt', 'decrypt']
+      );
+      
+      SESSION_KEY_CACHE.set(sessionKeyId, sessionKey);
+      return sessionKey;
+    }
+    
+    // Generate new session key
+    console.log('[Signal] Generating new session key for conversation:', conversationId);
+    const sessionKey = await crypto.subtle.generateKey(
+      { name: 'AES-GCM', length: 256 },
+      true,
+      ['encrypt', 'decrypt']
+    );
+    
+    // Export and store the key
+    const exportedKey = await crypto.subtle.exportKey('raw', sessionKey);
+    const keyData = {
+      keyMaterial: Array.from(new Uint8Array(exportedKey)),
+      timestamp: Date.now()
+    };
+    
+    // Store session for both users
+    await supabase
+      .from('signal_sessions')
+      .upsert({
+        conversation_id: conversationId,
+        local_user_id: userId1,
+        remote_user_id: userId2,
+        session_state: JSON.stringify(keyData)
+      });
+    
+    await supabase
+      .from('signal_sessions')
+      .upsert({
+        conversation_id: conversationId,
+        local_user_id: userId2,
+        remote_user_id: userId1,
+        session_state: JSON.stringify(keyData)
+      });
+    
+    SESSION_KEY_CACHE.set(sessionKeyId, sessionKey);
+    return sessionKey;
+  } catch (error) {
+    console.error('[Signal] Failed to get/create session key:', error);
     return null;
   }
 };

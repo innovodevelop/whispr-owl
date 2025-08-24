@@ -71,22 +71,20 @@ export const useMessages = (conversationId: string | null) => {
         let decryptedContent = msg.content;
         if (msg.encrypted_content) {
           try {
-            // For messages we sent, don't try to decrypt - use the original content stored in DB
-            if (msg.sender_id === user?.id) {
-              decryptedContent = msg.content;
-            } else {
-              // For messages we received, decrypt them
-              const decrypted = await signalProtocol.decryptMessage(
-                msg.encrypted_content,
-                conversationId,
-                msg.sender_id
-              );
-              decryptedContent = decrypted || msg.content || '[Decryption failed]';
-            }
+            // Always decrypt encrypted messages, even our own (since content is redacted in DB)
+            const decrypted = await signalProtocol.decryptMessage(
+              msg.encrypted_content,
+              conversationId,
+              msg.sender_id
+            );
+            decryptedContent = decrypted || '[Decryption failed]';
           } catch (error) {
             console.error('Failed to decrypt message:', error);
-            decryptedContent = msg.content || '[Decryption failed]';
+            decryptedContent = '[Decryption failed]';
           }
+        } else if (msg.content === '[encrypted]') {
+          // If content is redacted but no encrypted_content, something went wrong
+          decryptedContent = '[Message unavailable]';
         }
 
         return {
@@ -157,8 +155,8 @@ export const useMessages = (conversationId: string | null) => {
               remoteUserId
             );
             encryptedContent = encrypted;
-            // Keep original content for our own messages, but it will be redacted by trigger
-            finalContent = content;
+            // Set placeholder content since trigger will redact it anyway
+            finalContent = '[Encrypting...]';
           }
         }
       }
@@ -189,9 +187,7 @@ export const useMessages = (conversationId: string | null) => {
       const { error: conversationError } = await supabase
         .from('conversations')
         .update({ 
-          updated_at: new Date().toISOString(),
-          last_message_content: messageType === "financial_notification" ? content : content.slice(0, 100),
-          last_message_at: new Date().toISOString()
+          updated_at: new Date().toISOString()
         })
         .eq('id', conversationId);
 
@@ -235,10 +231,14 @@ export const useMessages = (conversationId: string | null) => {
     try {
       // Find the message to check if it has burn_on_read
       const message = messages.find(msg => msg.id === messageId);
+      
+      // Only mark messages as read that we didn't send
+      if (message?.sender_id === user.id) return;
+      
       const updateData: any = { read_at: new Date().toISOString() };
       
       // If it's a burn_on_read message from another user and no timer started yet, start receiver timer
-      if (message?.burn_on_read_duration && message.sender_id !== user.id && !message.burn_on_read_starts_at) {
+      if (message?.burn_on_read_duration && !message.burn_on_read_starts_at) {
         updateData.burn_on_read_starts_at = new Date().toISOString();
       }
 
