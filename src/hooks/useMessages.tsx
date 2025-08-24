@@ -33,14 +33,7 @@ export const useMessages = (conversationId: string | null) => {
     try {
       const { data, error } = await supabase
         .from('messages')
-        .select(`
-          *,
-          sender:sender_id (
-            username,
-            display_name,
-            avatar_url
-          )
-        `)
+        .select('*')
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
 
@@ -49,11 +42,26 @@ export const useMessages = (conversationId: string | null) => {
         return;
       }
 
-      // Filter out expired messages on the client side too
+      // Fetch sender profiles separately
+      const senderIds = [...new Set((data || []).map(msg => msg.sender_id))];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, username, display_name, avatar_url')
+        .in('user_id', senderIds);
+
+      const profileMap = new Map();
+      (profiles || []).forEach(profile => {
+        profileMap.set(profile.user_id, profile);
+      });
+
+      // Filter out expired messages and add sender data
       const validMessages = (data || []).filter(msg => {
         if (!msg.expires_at) return true;
         return new Date(msg.expires_at) > new Date();
-      });
+      }).map(msg => ({
+        ...msg,
+        sender: profileMap.get(msg.sender_id)
+      }));
 
       setMessages(validMessages as Message[]);
     } catch (error) {
@@ -97,20 +105,19 @@ export const useMessages = (conversationId: string | null) => {
           message_type: 'text',
           expires_at: expiresAt?.toISOString()
         })
-        .select(`
-          *,
-          sender:sender_id (
-            username,
-            display_name,
-            avatar_url
-          )
-        `)
+        .select('*')
         .single();
 
       if (error) {
         console.error('Error sending message:', error);
         return false;
       }
+
+      // Update conversation's updated_at timestamp
+      await supabase
+        .from('conversations')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', conversationId);
 
       return true;
     } catch (error) {
@@ -156,7 +163,7 @@ export const useMessages = (conversationId: string | null) => {
         },
         (payload) => {
           console.log('New message received:', payload);
-          // Refetch to get populated sender data
+          // Refetch messages to get the message with sender profile data
           fetchMessages();
         }
       )
