@@ -69,31 +69,41 @@ export const useConversations = () => {
           .eq('user_id', otherUserId)
           .maybeSingle();
 
-        // Fetch last message for accepted conversations
+        // Fetch last message for accepted conversations (prioritize non-notification messages)
         let lastMessage = null;
         let lastMessageAt = null;
         if (conv.status === 'accepted') {
           const { data: messageData } = await supabase
             .from('messages')
-            .select('content, created_at')
+            .select('content, created_at, message_type')
             .eq('conversation_id', conv.id)
             .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
+            .limit(5); // Get more messages to find the best preview
 
-          if (messageData) {
-            lastMessage = messageData.content;
-            lastMessageAt = messageData.created_at;
+          if (messageData && messageData.length > 0) {
+            // Find the most recent regular message for preview, but keep latest timestamp
+            const latestMessage = messageData[0];
+            lastMessageAt = latestMessage.created_at;
+            
+            // For preview, prioritize regular messages over notifications
+            const regularMessage = messageData.find(msg => msg.message_type !== 'financial_notification');
+            lastMessage = regularMessage ? regularMessage.content : latestMessage.content;
+            
+            // If the most recent message is a financial notification, clean it up for preview
+            if (latestMessage.message_type === 'financial_notification') {
+              lastMessage = latestMessage.content.replace(/[📊💰✏️🗑️]/g, '').trim();
+            }
           }
         }
         
-        // Get recent messages for rotation (last 3)
+        // Get recent messages for rotation (last 3 regular messages)
         let recentMessages: string[] = [];
         if (conv.status === 'accepted') {
           const { data: recentMessagesData } = await supabase
             .from('messages')
-            .select('content')
+            .select('content, message_type')
             .eq('conversation_id', conv.id)
+            .neq('message_type', 'financial_notification') // Exclude notifications from rotation
             .order('created_at', { ascending: false })
             .limit(3);
 

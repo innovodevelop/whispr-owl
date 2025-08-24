@@ -297,7 +297,7 @@ export const ChatWindow = ({
       </div>
 
       {/* Message Input */}
-      <div className="p-3 md:p-4 border-t border-border bg-card slide-up">
+      <div className="p-3 md:p-4 border-t border-border bg-card slide-up pb-safe-area-inset-bottom">
         <div className="flex items-center gap-2">
           <BurnOnReadSelector
             onSelect={setBurnOnReadDuration}
@@ -309,14 +309,14 @@ export const ChatWindow = ({
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             disabled={sending}
-            className="flex-1 min-h-[40px] resize-none"
+            className="flex-1 min-h-[40px] resize-none text-sm md:text-base"
             aria-label="Message input"
           />
           <Button 
             onClick={handleSendMessage} 
             size="icon" 
             disabled={!newMessage.trim() || sending}
-            className="touch-feedback btn-press h-10 w-10 shrink-0"
+            className="touch-feedback btn-press h-9 w-9 md:h-10 md:w-10 shrink-0"
             aria-label="Send message"
             title="Send message"
           >
@@ -326,7 +326,7 @@ export const ChatWindow = ({
             variant="ghost"
             size="icon"
             onClick={() => setFinancialSheetOpen(true)}
-            className="touch-feedback h-10 w-10 shrink-0"
+            className="touch-feedback h-9 w-9 md:h-10 md:w-10 shrink-0"
             aria-label="Financial sheet"
             title="Financial sheet"
           >

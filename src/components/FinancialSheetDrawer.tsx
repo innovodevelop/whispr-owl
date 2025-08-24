@@ -47,7 +47,7 @@ export const FinancialSheetDrawer = ({
       onSheetCreated();
     }
     if (newSheet && sendMessage) {
-      await sendMessage("📊 Financial sheet created", undefined, "financial_notification");
+      await sendMessage("Financial sheet created", undefined, "financial_notification");
     }
   };
 
@@ -68,7 +68,7 @@ export const FinancialSheetDrawer = ({
         onEntryAdded([...sheet.entries, entry]);
       }
       if (sendMessage) {
-        await sendMessage(`💰 Added financial entry: ${entry.name} - $${entry.amount.toFixed(2)}`, undefined, "financial_notification");
+        await sendMessage(`Added financial entry: ${entry.name} - $${entry.amount.toFixed(2)}`, undefined, "financial_notification");
       }
     }
   };
@@ -86,7 +86,7 @@ export const FinancialSheetDrawer = ({
     
     if (sendMessage) {
       const fieldName = field === 'due_date' ? 'due date' : field;
-      await sendMessage(`✏️ Updated ${fieldName} for: ${sheet?.entries.find(e => e.id === entryId)?.name}`, undefined, "financial_notification");
+      await sendMessage(`Updated ${fieldName} for: ${sheet?.entries.find(e => e.id === entryId)?.name}`, undefined, "financial_notification");
     }
   };
 
@@ -97,7 +97,7 @@ export const FinancialSheetDrawer = ({
       onEntryRemoved(removedEntry);
     }
     if (removedEntry && sendMessage && entryToRemove) {
-      await sendMessage(`🗑️ Removed financial entry: ${entryToRemove.name}`, undefined, "financial_notification");
+      await sendMessage(`Removed financial entry: ${entryToRemove.name}`, undefined, "financial_notification");
     }
   };
 

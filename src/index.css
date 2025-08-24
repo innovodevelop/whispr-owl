@@ -112,7 +112,12 @@ ANIMATIONS & INTERACTIONS
     --shadow-medium: 0 4px 12px hsl(var(--primary) / 0.15);
     --shadow-strong: 0 8px 24px hsl(var(--primary) / 0.2);
     --shadow-glow: 0 0 20px hsl(var(--primary) / 0.3);
-  }
+}
+
+/* Mobile safe area support */
+.pb-safe-area-inset-bottom {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
 
   .dark {
     --background: 222.2 84% 4.9%;
