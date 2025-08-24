@@ -220,10 +220,14 @@ const Contacts = () => {
                   </CardContent>
                 </Card>
               )}
+              {/* Results count */}
+              {searchResults.length > 0 && (
+                <p className="text-xs md:text-sm text-muted-foreground">Found {searchResults.length} {searchResults.length === 1 ? 'user' : 'users'}</p>
+              )}
 
               {/* Search Results */}
               {searchResults.length > 0 && searchResults.map((user, index) => (
-                <Card key={user.user_id} className="hover:bg-muted/50 transition-colors hover-lift touch-feedback stagger-item" style={{ animationDelay: `${index * 0.05}s` }}>
+                <Card key={user.user_id} className="border hover:bg-muted/50 transition-colors hover-lift touch-feedback" style={{ animationDelay: `${index * 0.05}s` }}>
                   <CardContent className="p-3 md:p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
