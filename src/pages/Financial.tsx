@@ -1,12 +1,15 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { DollarSign, Plus, TrendingUp, Users, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import BottomNavigation from '@/components/BottomNavigation';
-import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import React, { useState, useEffect, useMemo } from "react";
+import { ArrowLeft, Plus, TrendingUp, DollarSign, Users, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import BottomNavigation from "@/components/BottomNavigation";
+import AppHeader from "@/components/AppHeader";
+import { FinancialSheetDrawer } from "@/components/FinancialSheetDrawer";
+import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SheetSummary {
   id: string;
@@ -31,6 +34,7 @@ const Financial: React.FC = () => {
   const [sheets, setSheets] = useState<SheetSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadData = async () => {
@@ -140,213 +144,211 @@ const Financial: React.FC = () => {
   }, [sheets]);
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-4">
-      {/* Header */}
-      <header className="glass-card border-b border-border/30 p-4 md:p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-3 rounded-xl bg-secondary">
-            <DollarSign className="h-6 w-6 text-secondary-foreground" />
-          </div>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Financial Sheets</h1>
-            <p className="text-sm text-muted-foreground">Manage shared expenses and budgets</p>
-          </div>
-        </div>
-
+    <div className="min-h-screen bg-background page-enter">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <AppHeader title="Financial Sheets" />
+        
         {/* Tab Navigation */}
-        <div className="flex gap-2">
-          {[
-            { key: 'overview', label: 'Overview' },
-            { key: 'sheets', label: 'Sheets' },
-            { key: 'history', label: 'History' }
-          ].map((tab) => (
-            <Button
-              key={tab.key}
-              variant={selectedTab === tab.key ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setSelectedTab(tab.key as typeof selectedTab)}
-              className={cn(
-                'transition-all duration-300',
-                selectedTab === tab.key ? 'btn-neon' : 'hover:bg-primary/10'
-              )}
-            >
-              {tab.label}
-            </Button>
-          ))}
-        </div>
-      </header>
-
-      <div className="container mx-auto p-4 md:p-6 space-y-6">
-        {selectedTab === 'overview' && (
-          <div className="space-y-6 fade-in">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="glass-card transition-all duration-300">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-green-500" />
-                    Total Balance
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-500">${totalBalance.toFixed(2)}</div>
-                  <p className="text-xs text-muted-foreground mt-1">Across all sheets</p>
-                </CardContent>
-              </Card>
-
-              <Card className="glass-card transition-all duration-300">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <Users className="h-4 w-4 text-foreground" />
-                    Active Sheets
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-foreground">{activeCount}</div>
-                  <p className="text-xs text-muted-foreground mt-1">You can access these sheets</p>
-                </CardContent>
-              </Card>
-
-              <Card className="glass-card transition-all duration-300">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-foreground" />
-                    This Month
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-foreground">${calcThisMonth(entryDatesFromSheets(sheets)).toFixed(2)}</div>
-                  <p className="text-xs text-muted-foreground mt-1">Sum of entries this month</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Recent Activity */}
-            <Card className="glass-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-foreground" />
-                  Recent Activity
-                </CardTitle>
-                <CardDescription>Latest financial sheet updates</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {recentActivity.length === 0 && (
-                  <p className="text-sm text-muted-foreground">No recent activity</p>
+        <div className="p-4 border-b border-border">
+          <div className="flex gap-2">
+            {[
+              { key: 'overview', label: 'Overview' },
+              { key: 'sheets', label: 'Sheets' },
+              { key: 'history', label: 'History' }
+            ].map((tab) => (
+              <Button
+                key={tab.key}
+                variant={selectedTab === tab.key ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setSelectedTab(tab.key as typeof selectedTab)}
+                className={cn(
+                  'transition-all duration-300',
+                  selectedTab === tab.key ? 'btn-neon' : 'hover:bg-primary/10'
                 )}
-                {recentActivity.map((activity, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors stagger-item"
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-primary"></div>
-                      <div>
-                        <p className="text-sm font-medium">
-                          <span className="text-foreground">{activity.user}</span> {activity.action}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {activity.sheet} • {activity.time}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {activity.amount > 0 ? (
-                        <ArrowUpRight className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <ArrowDownRight className="h-4 w-4 text-red-500" />
-                      )}
-                      <span className={cn(
-                        'text-sm font-semibold',
-                        activity.amount > 0 ? 'text-green-500' : 'text-red-500'
-                      )}>
-                        ${Math.abs(activity.amount).toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {selectedTab === 'sheets' && (
-          <div className="space-y-4 fade-in">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-foreground">Financial Sheets</h2>
-              <Button size="sm" className="btn-neon" onClick={() => alert('Create a sheet from within a conversation') /* minimal for now */}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Sheet
+              >
+                {tab.label}
               </Button>
-            </div>
+            ))}
+          </div>
+        </div>
 
-            <div className="grid gap-4">
-              {loading && <p className="text-sm text-muted-foreground">Loading...</p>}
-              {!loading && sheets.length === 0 && (
-                <p className="text-sm text-muted-foreground">No sheets yet</p>
-              )}
-              {sheets.map((sheet, index) => (
-                <Card
-                  key={sheet.id}
-                  className="glass-card transition-all duration-300 cursor-pointer stagger-item"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-semibold text-foreground">{sheet.title || 'Financial Sheet'}</h3>
-                          <Badge variant={sheet.trend === 'up' ? 'default' : 'secondary'} className="text-xs">
-                            {sheet.entries} entries
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Users className="h-3 w-3" />
-                            {(sheet.collaborators.length + 1)} people
-                          </span>
-                          <span>{sheet.lastActivity}</span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className={cn(
-                          'text-xl font-bold',
-                          sheet.totalAmount >= 0 ? 'text-green-500' : 'text-red-500'
-                        )}>
-                          {sheet.totalAmount >= 0 ? '+' : ''}${sheet.totalAmount.toFixed(2)}
-                        </div>
-                        {sheet.trend === 'up' ? (
-                          <ArrowUpRight className="h-4 w-4 text-green-500 ml-auto" />
-                        ) : sheet.trend === 'down' ? (
-                          <ArrowDownRight className="h-4 w-4 text-red-500 ml-auto" />
-                        ) : null}
-                      </div>
-                    </div>
+        <div className="container mx-auto p-4 md:p-6 space-y-6">
+          {selectedTab === 'overview' && (
+            <div className="space-y-6 fade-in">
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="glass-card transition-all duration-300">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-green-500" />
+                      Total Balance
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-green-500">${totalBalance.toFixed(2)}</div>
+                    <p className="text-xs text-muted-foreground mt-1">Across all sheets</p>
                   </CardContent>
                 </Card>
-              ))}
+
+                <Card className="glass-card transition-all duration-300">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      <Users className="h-4 w-4 text-foreground" />
+                      Active Sheets
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-foreground">{activeCount}</div>
+                    <p className="text-xs text-muted-foreground mt-1">You can access these sheets</p>
+                  </CardContent>
+                </Card>
+
+                <Card className="glass-card transition-all duration-300">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-foreground" />
+                      This Month
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-foreground">${calcThisMonth(entryDatesFromSheets(sheets)).toFixed(2)}</div>
+                    <p className="text-xs text-muted-foreground mt-1">Sum of entries this month</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Recent Activity */}
+              <Card className="glass-card">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-foreground" />
+                    Recent Activity
+                  </CardTitle>
+                  <CardDescription>Latest financial sheet updates</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {recentActivity.length === 0 && (
+                    <p className="text-sm text-muted-foreground">No recent activity</p>
+                  )}
+                  {recentActivity.map((activity, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors stagger-item"
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-primary"></div>
+                        <div>
+                          <p className="text-sm font-medium">
+                            <span className="text-foreground">{activity.user}</span> {activity.action}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {activity.sheet} • {activity.time}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {activity.amount > 0 ? (
+                          <ArrowUpRight className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <ArrowDownRight className="h-4 w-4 text-red-500" />
+                        )}
+                        <span className={cn(
+                          'text-sm font-semibold',
+                          activity.amount > 0 ? 'text-green-500' : 'text-red-500'
+                        )}>
+                          ${Math.abs(activity.amount).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
             </div>
-          </div>
-        )}
+          )}
 
-        {selectedTab === 'history' && (
-          <div className="space-y-4 fade-in">
-            <h2 className="text-lg font-semibold text-foreground">Transaction History</h2>
-            <Card className="glass-card">
-              <CardContent className="p-4">
-                <div className="text-center py-8">
-                  <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">Transaction history will appear here</p>
-                  <p className="text-sm text-muted-foreground">Start by creating your first financial sheet</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+          {selectedTab === 'sheets' && (
+            <div className="space-y-4 fade-in">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-foreground">Financial Sheets</h2>
+                <Button size="sm" className="btn-neon" onClick={() => alert('Create a sheet from within a conversation')}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Sheet
+                </Button>
+              </div>
+
+              <div className="grid gap-4">
+                {loading && <p className="text-sm text-muted-foreground">Loading...</p>}
+                {!loading && sheets.length === 0 && (
+                  <p className="text-sm text-muted-foreground">No sheets yet</p>
+                )}
+                {sheets.map((sheet, index) => (
+                  <Card
+                    key={sheet.id}
+                    className="glass-card transition-all duration-300 cursor-pointer stagger-item"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-semibold text-foreground">{sheet.title || 'Financial Sheet'}</h3>
+                            <Badge variant={sheet.trend === 'up' ? 'default' : 'secondary'} className="text-xs">
+                              {sheet.entries} entries
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <Users className="h-3 w-3" />
+                              {(sheet.collaborators.length + 1)} people
+                            </span>
+                            <span>{sheet.lastActivity}</span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className={cn(
+                            'text-xl font-bold',
+                            sheet.totalAmount >= 0 ? 'text-green-500' : 'text-red-500'
+                          )}>
+                            {sheet.totalAmount >= 0 ? '+' : ''}${sheet.totalAmount.toFixed(2)}
+                          </div>
+                          {sheet.trend === 'up' ? (
+                            <ArrowUpRight className="h-4 w-4 text-green-500 ml-auto" />
+                          ) : sheet.trend === 'down' ? (
+                            <ArrowDownRight className="h-4 w-4 text-red-500 ml-auto" />
+                          ) : null}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {selectedTab === 'history' && (
+            <div className="space-y-4 fade-in">
+              <h2 className="text-lg font-semibold text-foreground">Transaction History</h2>
+              <Card className="glass-card">
+                <CardContent className="p-4">
+                  <div className="text-center py-8">
+                    <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">Transaction history will appear here</p>
+                    <p className="text-sm text-muted-foreground">Start by creating your first financial sheet</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom spacing for mobile navigation */}
+        <div className="md:hidden h-20"></div>
+
+        {/* Mobile Bottom Navigation */}
+        <BottomNavigation />
       </div>
-
-      <BottomNavigation />
     </div>
   );
 };
