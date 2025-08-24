@@ -15,22 +15,13 @@ import { UserSearchDialog } from "@/components/dialogs/UserSearchDialog";
 const Contacts = () => {
   const navigate = useNavigate();
   const { contacts, loading } = useContacts();
-  const { conversations, startConversation, acceptConversation, rejectConversation } = useConversations();
+  const { conversations, pendingRequests, startConversation, acceptConversation, rejectConversation, getConversationStatus } = useConversations();
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Get conversation status for each contact
-  const getConversationStatus = (contactUserId: string) => {
-    const conversation = conversations.find(conv => 
-      conv.participant_one === contactUserId || conv.participant_two === contactUserId
-    );
-    
-    if (!conversation) return null;
-    
-    return {
-      status: conversation.status as 'accepted' | 'pending_sent' | 'pending_received',
-      conversation
-    };
+  // Use the conversation status function from the hook
+  const getContactConversationStatus = (contactUserId: string) => {
+    return getConversationStatus(contactUserId);
   };
 
   const handleStartChat = (contactUserId: string) => {
@@ -39,7 +30,8 @@ const Contacts = () => {
     );
     
     if (conversation?.status === 'accepted') {
-      navigate(`/chat/${conversation.id}`);
+      // Navigate to main page with conversation selected
+      navigate('/', { state: { newConversation: { id: conversation.id } } });
     }
   };
 
@@ -54,7 +46,8 @@ const Contacts = () => {
   const handleStartConversation = async (contactUserId: string) => {
     const conversationId = await startConversation(contactUserId);
     if (conversationId) {
-      navigate(`/chat/${conversationId}`);
+      // Navigate to main page with conversation selected
+      navigate('/', { state: { newConversation: { id: conversationId } } });
     }
   };
 
@@ -100,7 +93,13 @@ const Contacts = () => {
             Total: {contacts.length}
           </Badge>
           <Badge variant="outline" className="flex items-center gap-2">
-            Connected: {contacts.filter(c => getConversationStatus(c.contact_user_id)?.status === 'accepted').length}
+            Connected: {contacts.filter(c => getContactConversationStatus(c.contact_user_id)?.status === 'accepted').length}
+          </Badge>
+          <Badge variant="secondary" className="flex items-center gap-2">
+            Pending: {contacts.filter(c => {
+              const status = getContactConversationStatus(c.contact_user_id)?.status;
+              return status === 'pending_sent' || status === 'pending_received';
+            }).length}
           </Badge>
         </div>
 
@@ -136,7 +135,7 @@ const Contacts = () => {
               <ContactCard
                 key={contact.id}
                 contact={contact}
-                conversationStatus={getConversationStatus(contact.contact_user_id)}
+                conversationStatus={getContactConversationStatus(contact.contact_user_id)}
                 onStartChat={handleStartChat}
                 onAcceptRequest={handleAcceptRequest}
                 onRejectRequest={handleRejectRequest}
