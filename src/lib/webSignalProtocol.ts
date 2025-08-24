@@ -343,40 +343,36 @@ export const getPreKeyBundle = async (userId: string): Promise<SignalPreKeyBundl
 
     if (identityError || !identityData) return null;
 
+    // Use secure functions for key retrieval instead of direct table access
     const { data: signedPreKeyData, error: signedPreKeyError } = await supabase
-      .from('signal_signed_prekeys')
-      .select('key_id, public_key, signature')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+      .rpc('get_user_signed_prekey', { target_user_id: userId });
 
-    if (signedPreKeyError || !signedPreKeyData) return null;
+    if (signedPreKeyError || !signedPreKeyData || signedPreKeyData.length === 0) return null;
+
+    const signedPreKey = signedPreKeyData[0];
 
     const { data: preKeyData, error: preKeyError } = await supabase
-      .from('signal_one_time_prekeys')
-      .select('key_id, public_key')
-      .eq('user_id', userId)
-      .eq('used', false)
-      .limit(1)
-      .single();
+      .rpc('get_user_one_time_prekey', { target_user_id: userId });
 
-    if (preKeyData && !preKeyError) {
-      await supabase
-        .from('signal_one_time_prekeys')
-        .update({ used: true })
-        .eq('user_id', userId)
-        .eq('key_id', preKeyData.key_id);
+    let oneTimePreKey = null;
+    if (preKeyData && !preKeyError && preKeyData.length > 0) {
+      oneTimePreKey = preKeyData[0];
+      
+      // Mark the prekey as used using secure function
+      await supabase.rpc('mark_prekey_used', { 
+        prekey_id: oneTimePreKey.id, 
+        target_user_id: userId 
+      });
     }
 
     return {
       registrationId: identityData.registration_id,
       deviceId: 1,
-      prekeyId: preKeyData?.key_id,
-      prekey: preKeyData ? Uint8Array.from(atob(preKeyData.public_key), c => c.charCodeAt(0)) : undefined,
-      signedPrekeyId: signedPreKeyData.key_id,
-      signedPrekey: Uint8Array.from(atob(signedPreKeyData.public_key), c => c.charCodeAt(0)),
-      signedPrekeySignature: Uint8Array.from(atob(signedPreKeyData.signature), c => c.charCodeAt(0)),
+      prekeyId: oneTimePreKey?.key_id,
+      prekey: oneTimePreKey ? Uint8Array.from(atob(oneTimePreKey.public_key), c => c.charCodeAt(0)) : undefined,
+      signedPrekeyId: signedPreKey.key_id,
+      signedPrekey: Uint8Array.from(atob(signedPreKey.public_key), c => c.charCodeAt(0)),
+      signedPrekeySignature: Uint8Array.from(atob(signedPreKey.signature), c => c.charCodeAt(0)),
       identityKey: Uint8Array.from(atob(identityData.identity_key_public), c => c.charCodeAt(0))
     };
   } catch (error) {
