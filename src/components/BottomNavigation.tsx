@@ -29,7 +29,7 @@ const BottomNavigation: React.FC = () => {
             variant={item.isSpecial ? "default" : "ghost"}
             size="lg"
             onClick={() => navigate(item.path)}
-            className={`flex flex-col items-center justify-center h-16 w-16 touch-feedback transition-all duration-300 ${
+            className={`flex items-center justify-center h-16 w-16 touch-feedback transition-all duration-300 ${
               isActive(item.path) && !item.isSpecial
                 ? "text-primary bg-primary/10 scale-105 rounded-2xl"
                 : !item.isSpecial
@@ -37,8 +37,7 @@ const BottomNavigation: React.FC = () => {
                 : ""
             } ${item.isSpecial ? 'rounded-2xl bg-foreground text-background hover:bg-foreground/90 scale-105' : ''}`}
           >
-            <item.icon className={`h-7 w-7 mb-1 ${item.isSpecial ? 'stroke-2' : ''}`} />
-            <span className="text-xs font-medium">{item.label}</span>
+            <item.icon className={`h-8 w-8 ${item.isSpecial ? 'stroke-2' : ''}`} />
           </Button>
         ))}
       </div>
