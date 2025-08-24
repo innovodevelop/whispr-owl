@@ -229,32 +229,35 @@ export const FinancialSheetDrawer = ({
                       sheet.entries.map((entry) => (
                         <div key={entry.id} className="bg-card border rounded-lg p-3 hover:shadow-sm transition-shadow">
                           {/* Header with name and actions */}
-                          <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center justify-between mb-2 group">
                             <div className="flex items-center gap-2 flex-1 min-w-0">
                               {editingId === `${entry.id}-name` ? (
                                 <Input
                                   defaultValue={entry.name}
-                                  onBlur={(e) => handleUpdateEntry(entry.id, 'name', e.target.value)}
+                                  onBlur={(e) => {
+                                    handleUpdateEntry(entry.id, 'name', e.target.value);
+                                    setEditingId(null);
+                                  }}
                                   onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
                                       handleUpdateEntry(entry.id, 'name', e.currentTarget.value);
+                                      setEditingId(null);
+                                    }
+                                    if (e.key === 'Escape') {
+                                      setEditingId(null);
                                     }
                                   }}
                                   className="text-sm h-7 font-medium"
                                   autoFocus
                                 />
                               ) : (
-                                <>
+                                <div 
+                                  className="flex items-center gap-1 cursor-pointer hover:bg-muted px-1 py-0.5 rounded flex-1 min-w-0"
+                                  onClick={() => setEditingId(`${entry.id}-name`)}
+                                >
                                   <span className="font-medium text-sm truncate">{entry.name}</span>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => setEditingId(`${entry.id}-name`)}
-                                    className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  >
-                                    <Edit3 className="h-3 w-3" />
-                                  </Button>
-                                </>
+                                  <Edit3 className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                                </div>
                               )}
                             </div>
                             <Button
@@ -276,23 +279,30 @@ export const FinancialSheetDrawer = ({
                                   type="number"
                                   step="0.01"
                                   defaultValue={entry.amount}
-                                  onBlur={(e) => handleUpdateEntry(entry.id, 'amount', e.target.value)}
+                                  onBlur={(e) => {
+                                    handleUpdateEntry(entry.id, 'amount', e.target.value);
+                                    setEditingId(null);
+                                  }}
                                   onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
                                       handleUpdateEntry(entry.id, 'amount', e.currentTarget.value);
+                                      setEditingId(null);
+                                    }
+                                    if (e.key === 'Escape') {
+                                      setEditingId(null);
                                     }
                                   }}
                                   className="text-sm h-6 w-20 font-mono"
                                   autoFocus
                                 />
                               ) : (
-                                <span 
-                                  className="font-mono text-sm cursor-pointer hover:bg-muted px-1 py-0.5 rounded group"
+                                <div 
+                                  className="font-mono text-sm cursor-pointer hover:bg-muted px-1 py-0.5 rounded group inline-flex items-center gap-1"
                                   onClick={() => setEditingId(`${entry.id}-amount`)}
                                 >
-                                  {entry.amount.toFixed(2)}
-                                  <Edit3 className="h-2.5 w-2.5 inline ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                </span>
+                                  <span>{entry.amount.toFixed(2)}</span>
+                                  <Edit3 className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </div>
                               )}
                             </div>
                             
@@ -303,18 +313,30 @@ export const FinancialSheetDrawer = ({
                                   <Input
                                     type="date"
                                     defaultValue={entry.due_date}
-                                    onBlur={(e) => handleUpdateEntry(entry.id, 'due_date', e.target.value)}
+                                    onBlur={(e) => {
+                                      handleUpdateEntry(entry.id, 'due_date', e.target.value);
+                                      setEditingId(null);
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        handleUpdateEntry(entry.id, 'due_date', e.currentTarget.value);
+                                        setEditingId(null);
+                                      }
+                                      if (e.key === 'Escape') {
+                                        setEditingId(null);
+                                      }
+                                    }}
                                     className="text-xs h-6 w-28"
                                     autoFocus
                                   />
                                 ) : (
-                                  <span 
-                                    className="text-xs text-muted-foreground cursor-pointer hover:bg-muted px-1 py-0.5 rounded group"
+                                  <div 
+                                    className="text-xs text-muted-foreground cursor-pointer hover:bg-muted px-1 py-0.5 rounded group inline-flex items-center gap-1"
                                     onClick={() => setEditingId(`${entry.id}-due_date`)}
                                   >
-                                    Due {formatDistanceToNow(new Date(entry.due_date), { addSuffix: true })}
-                                    <Edit3 className="h-2 w-2 inline ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                  </span>
+                                    <span>Due {formatDistanceToNow(new Date(entry.due_date), { addSuffix: true })}</span>
+                                    <Edit3 className="h-2 w-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                  </div>
                                 )}
                               </div>
                             )}
@@ -326,26 +348,38 @@ export const FinancialSheetDrawer = ({
                               {editingId === `${entry.id}-note` ? (
                                 <Textarea
                                   defaultValue={entry.note || ""}
-                                  onBlur={(e) => handleUpdateEntry(entry.id, 'note', e.target.value)}
+                                  onBlur={(e) => {
+                                    handleUpdateEntry(entry.id, 'note', e.target.value);
+                                    setEditingId(null);
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && e.ctrlKey) {
+                                      handleUpdateEntry(entry.id, 'note', e.currentTarget.value);
+                                      setEditingId(null);
+                                    }
+                                    if (e.key === 'Escape') {
+                                      setEditingId(null);
+                                    }
+                                  }}
                                   placeholder="Add a note..."
                                   className="text-xs resize-none"
                                   rows={2}
                                   autoFocus
                                 />
                               ) : entry.note ? (
-                                <p 
-                                  className="text-xs text-muted-foreground cursor-pointer hover:bg-muted px-1 py-0.5 rounded bg-muted/30 group"
+                                <div 
+                                  className="text-xs text-muted-foreground cursor-pointer hover:bg-muted px-1 py-0.5 rounded bg-muted/30 group inline-flex items-start gap-1"
                                   onClick={() => setEditingId(`${entry.id}-note`)}
                                 >
-                                  {entry.note}
-                                  <Edit3 className="h-2 w-2 inline ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                </p>
+                                  <span className="flex-1">{entry.note}</span>
+                                  <Edit3 className="h-2 w-2 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                                </div>
                               ) : (
                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => setEditingId(`${entry.id}-note`)}
-                                  className="h-6 text-xs text-muted-foreground p-1"
+                                  className="h-6 text-xs text-muted-foreground p-1 justify-start"
                                 >
                                   + Add note
                                 </Button>
