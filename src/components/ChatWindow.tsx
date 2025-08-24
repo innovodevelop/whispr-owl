@@ -195,35 +195,35 @@ const ChatWindow = ({
               return (
                 <div
                   key={message.id}
-                  className="flex justify-center my-6"
+                  className="flex justify-center my-4"
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
-                  <div className="max-w-sm mx-auto bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl p-4 shadow-lg backdrop-blur-sm animate-fade-in">
-                    <div className="flex items-start gap-3">
+                  <div className="max-w-sm mx-auto bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 rounded-xl p-3 shadow-lg backdrop-blur-sm animate-fade-in">
+                    <div className="flex items-start gap-2">
                       <div className="relative">
-                        <Avatar className="h-10 w-10 border-2 border-amber-300 dark:border-amber-600 shadow-sm">
+                        <Avatar className="h-7 w-7 border-2 border-amber-300 dark:border-amber-600 shadow-sm">
                           <AvatarImage src={message.sender?.avatar_url} />
-                          <AvatarFallback className="text-sm bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 font-medium">
+                          <AvatarFallback className="text-xs bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 font-medium">
                             {message.sender?.display_name?.[0] || message.sender?.username?.[0] || "U"}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="absolute -bottom-1 -right-1 bg-amber-400 dark:bg-amber-500 rounded-full p-1 shadow-sm">
-                          <Banknote className="h-3 w-3 text-amber-900 dark:text-amber-100" />
+                        <div className="absolute -bottom-0.5 -right-0.5 bg-amber-400 dark:bg-amber-500 rounded-full p-0.5 shadow-sm">
+                          <Banknote className="h-2.5 w-2.5 text-amber-900 dark:text-amber-100" />
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-0.5">
                           <span className="text-sm font-semibold text-amber-900 dark:text-amber-100 truncate">
                             {message.sender?.display_name || message.sender?.username || "Unknown User"}
                           </span>
-                          <span className="text-xs text-amber-600 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/50 px-2 py-0.5 rounded-full font-medium">
-                            Financial Activity
+                          <span className="text-xs text-amber-600 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/50 px-1.5 py-0.5 rounded-full font-medium">
+                            Finance
                           </span>
                         </div>
                         <p className="text-sm text-amber-800 dark:text-amber-200 leading-relaxed font-medium">
                           {message.content}
                         </p>
-                        <span className="text-xs text-amber-600 dark:text-amber-400 mt-2 block opacity-75">
+                        <span className="text-xs text-amber-600 dark:text-amber-400 mt-1.5 block opacity-75">
                           {formatMessageTime(message.created_at)}
                         </span>
                       </div>
