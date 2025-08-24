@@ -18,6 +18,7 @@ interface FinancialSheetDrawerProps {
   onSheetCreated?: () => void;
   onEntryAdded?: (entries: FinancialEntry[]) => void;
   onEntryRemoved?: (removedEntry: FinancialEntry) => void;
+  sendMessage?: (content: string) => Promise<boolean>;
 }
 
 export const FinancialSheetDrawer = ({
@@ -26,7 +27,8 @@ export const FinancialSheetDrawer = ({
   onOpenChange,
   onSheetCreated,
   onEntryAdded,
-  onEntryRemoved
+  onEntryRemoved,
+  sendMessage
 }: FinancialSheetDrawerProps) => {
   const { sheet, loading, createSheet, addEntry, updateEntry, removeEntry } = useFinancialSheet(conversationId);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -43,6 +45,9 @@ export const FinancialSheetDrawer = ({
     const newSheet = await createSheet();
     if (newSheet && onSheetCreated) {
       onSheetCreated();
+    }
+    if (newSheet && sendMessage) {
+      await sendMessage("📊 Financial sheet created");
     }
   };
 
@@ -61,6 +66,9 @@ export const FinancialSheetDrawer = ({
       setShowAddForm(false);
       if (onEntryAdded && sheet) {
         onEntryAdded([...sheet.entries, entry]);
+      }
+      if (sendMessage) {
+        await sendMessage(`💰 Added financial entry: ${entry.name} - $${entry.amount.toFixed(2)}`);
       }
     }
   };
@@ -227,9 +235,9 @@ export const FinancialSheetDrawer = ({
                       <p className="text-center text-muted-foreground py-4">No entries yet</p>
                     ) : (
                       sheet.entries.map((entry) => (
-                        <div key={entry.id} className="bg-card border rounded-lg p-3 hover:shadow-sm transition-shadow">
+                        <div key={entry.id} className="bg-card border rounded-lg p-4 hover:shadow-sm transition-shadow">
                           {/* Header with name and actions */}
-                          <div className="flex items-center justify-between mb-2 group">
+                          <div className="flex items-center justify-between mb-3 group">
                             <div className="flex items-center gap-2 flex-1 min-w-0">
                               {editingId === `${entry.id}-name` ? (
                                 <Input
@@ -271,7 +279,7 @@ export const FinancialSheetDrawer = ({
                           </div>
                           
                           {/* Amount and due date row */}
-                          <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-1">
                               <DollarSign className="h-3 w-3 text-muted-foreground" />
                               {editingId === `${entry.id}-amount` ? (
@@ -344,7 +352,7 @@ export const FinancialSheetDrawer = ({
 
                           {/* Note */}
                           {(entry.note || editingId === `${entry.id}-note`) && (
-                            <div className="mt-2">
+                            <div className="mt-3">
                               {editingId === `${entry.id}-note` ? (
                                 <Textarea
                                   defaultValue={entry.note || ""}

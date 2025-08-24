@@ -13,6 +13,7 @@ interface Conversation {
   updated_at: string;
   last_message?: string;
   last_message_at?: string;
+  recent_messages?: string[];
   otherParticipant?: {
     username?: string;
     display_name?: string;
@@ -86,11 +87,27 @@ export const useConversations = () => {
           }
         }
         
+        // Get recent messages for rotation (last 3)
+        let recentMessages: string[] = [];
+        if (conv.status === 'accepted') {
+          const { data: recentMessagesData } = await supabase
+            .from('messages')
+            .select('content')
+            .eq('conversation_id', conv.id)
+            .order('created_at', { ascending: false })
+            .limit(3);
+
+          if (recentMessagesData) {
+            recentMessages = recentMessagesData.map(msg => msg.content);
+          }
+        }
+
         return {
           ...conv,
           status: conv.status as 'pending' | 'accepted' | 'rejected' | 'blocked',
           last_message: lastMessage,
           last_message_at: lastMessageAt,
+          recent_messages: recentMessages,
           otherParticipant: profileData
         };
       }));
