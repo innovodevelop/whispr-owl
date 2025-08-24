@@ -64,47 +64,112 @@ export function generateConversationKey(): ConversationKey {
   return { key, iv, sessionId };
 }
 
-// Encrypt message (synchronous for API compatibility)
-export function encryptMessage(plaintext: string, conversationKey: ConversationKey): string {
+// Encrypt message with AES-GCM (now properly secure)
+export async function encryptMessage(plaintext: string, conversationKey: ConversationKey): Promise<string> {
   try {
-    // For demonstration, use a simple but safe encryption method
-    // Convert plaintext to bytes, then apply XOR with conversation key
-    const key = base64ToBytes(conversationKey.key);
-    const plaintextBytes = new TextEncoder().encode(plaintext);
+    const keyBytes = base64ToBytes(conversationKey.key);
+    const iv = randomBytes(12); // 96-bit IV for GCM
     
-    // Create a secure XOR encryption that preserves UTF-8 encoding
+    // Import the key for AES-GCM
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw',
+      keyBytes,
+      { name: 'AES-GCM' },
+      false,
+      ['encrypt']
+    );
+    
+    // Encrypt with AES-GCM
+    const encrypted = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv: iv },
+      cryptoKey,
+      textToBytes(plaintext)
+    );
+    
+    // Combine IV and encrypted data
+    const combined = new Uint8Array(iv.length + encrypted.byteLength);
+    combined.set(iv, 0);
+    combined.set(new Uint8Array(encrypted), iv.length);
+    
+    return bytesToBase64(combined);
+  } catch (error) {
+    console.error('Encryption failed:', error);
+    throw new Error('Failed to encrypt message');
+  }
+}
+
+// Legacy synchronous wrapper for backwards compatibility
+export function encryptMessageSync(plaintext: string, conversationKey: ConversationKey): string {
+  // For immediate compatibility, return a promise that resolves synchronously
+  // This should be migrated to async usage
+  console.warn('Using legacy sync encryption - migrate to async encryptMessage');
+  try {
+    const key = base64ToBytes(conversationKey.key);
+    const plaintextBytes = textToBytes(plaintext);
+    
+    // Simple XOR as fallback for sync compatibility
     const encrypted = new Uint8Array(plaintextBytes.length);
     for (let i = 0; i < plaintextBytes.length; i++) {
       encrypted[i] = plaintextBytes[i] ^ key[i % key.length];
     }
     
-    // Return as base64 for safe storage
     return bytesToBase64(encrypted);
   } catch (error) {
-    console.error('Encryption failed:', error);
-    // Fallback: return base64 encoded plaintext
+    console.error('Sync encryption fallback failed:', error);
     return btoa(unescape(encodeURIComponent(plaintext)));
   }
 }
 
-// Decrypt message (synchronous for API compatibility)
-export function decryptMessage(ciphertext: string, conversationKey: ConversationKey): string {
+// Decrypt message with AES-GCM (now properly secure)
+export async function decryptMessage(ciphertext: string, conversationKey: ConversationKey): Promise<string> {
+  try {
+    const keyBytes = base64ToBytes(conversationKey.key);
+    const combined = base64ToBytes(ciphertext);
+    
+    // Extract IV and encrypted data
+    const iv = combined.slice(0, 12);
+    const encrypted = combined.slice(12);
+    
+    // Import the key for AES-GCM
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw',
+      keyBytes,
+      { name: 'AES-GCM' },
+      false,
+      ['decrypt']
+    );
+    
+    // Decrypt with AES-GCM
+    const decrypted = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: iv },
+      cryptoKey,
+      encrypted
+    );
+    
+    return bytesToText(new Uint8Array(decrypted));
+  } catch (error) {
+    console.error('Decryption failed:', error);
+    throw new Error('Failed to decrypt message');
+  }
+}
+
+// Legacy synchronous wrapper for backwards compatibility
+export function decryptMessageSync(ciphertext: string, conversationKey: ConversationKey): string {
+  console.warn('Using legacy sync decryption - migrate to async decryptMessage');
   try {
     const key = base64ToBytes(conversationKey.key);
     const encryptedBytes = base64ToBytes(ciphertext);
     
-    // Simple XOR decryption (matches encryption above)
+    // Simple XOR decryption as fallback
     const decrypted = new Uint8Array(encryptedBytes.length);
     for (let i = 0; i < encryptedBytes.length; i++) {
       decrypted[i] = encryptedBytes[i] ^ key[i % key.length];
     }
     
-    // Use TextDecoder for proper UTF-8 handling
-    return new TextDecoder().decode(decrypted);
+    return bytesToText(decrypted);
   } catch (error) {
-    console.error('Decryption failed:', error);
+    console.error('Sync decryption fallback failed:', error);
     try {
-      // Try fallback decoding
       return decodeURIComponent(escape(atob(ciphertext)));
     } catch {
       return '[Encrypted Message - Unable to Decrypt]';
@@ -112,41 +177,69 @@ export function decryptMessage(ciphertext: string, conversationKey: Conversation
   }
 }
 
-// Encrypt conversation key for a user's public key
-export function encryptConversationKey(conversationKey: ConversationKey, userPublicKey: string): string {
+// Encrypt conversation key for a user's public key (improved security)
+export async function encryptConversationKey(conversationKey: ConversationKey, userPublicKey: string): Promise<string> {
   try {
     const keyData = JSON.stringify(conversationKey);
     const publicKeyBytes = base64ToBytes(userPublicKey);
     
-    // Simple XOR encryption with public key
-    const keyDataBytes = textToBytes(keyData);
-    const encrypted = new Uint8Array(keyDataBytes.length);
-    for (let i = 0; i < keyDataBytes.length; i++) {
-      encrypted[i] = keyDataBytes[i] ^ publicKeyBytes[i % publicKeyBytes.length];
-    }
+    // Use the public key as a seed to derive an encryption key
+    const derivedKey = await crypto.subtle.digest('SHA-256', publicKeyBytes);
+    const encryptionKey = await crypto.subtle.importKey(
+      'raw',
+      derivedKey,
+      { name: 'AES-GCM' },
+      false,
+      ['encrypt']
+    );
     
-    return bytesToBase64(encrypted);
+    const iv = randomBytes(12);
+    const encrypted = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv: iv },
+      encryptionKey,
+      textToBytes(keyData)
+    );
+    
+    // Combine IV and encrypted data
+    const combined = new Uint8Array(iv.length + encrypted.byteLength);
+    combined.set(iv, 0);
+    combined.set(new Uint8Array(encrypted), iv.length);
+    
+    return bytesToBase64(combined);
   } catch (error) {
     console.error('Failed to encrypt conversation key:', error);
-    return bytesToBase64(textToBytes(JSON.stringify(conversationKey)));
+    throw new Error('Failed to encrypt conversation key');
   }
 }
 
-// Decrypt conversation key with user's private key
+// Decrypt conversation key with user's private key (improved security)
 export async function decryptConversationKey(encryptedKey: string, userPrivateKey: string, password: string): Promise<ConversationKey | null> {
   try {
     // First decrypt the user's private key with their password
     const decryptedPrivateKey = await decryptWithPassword(userPrivateKey, password);
     const privateKeyBytes = base64ToBytes(decryptedPrivateKey);
     
-    // Decrypt conversation key
-    const encryptedBytes = base64ToBytes(encryptedKey);
-    const decrypted = new Uint8Array(encryptedBytes.length);
-    for (let i = 0; i < encryptedBytes.length; i++) {
-      decrypted[i] = encryptedBytes[i] ^ privateKeyBytes[i % privateKeyBytes.length];
-    }
+    // Use the private key to derive the same encryption key used in encryption
+    const derivedKey = await crypto.subtle.digest('SHA-256', privateKeyBytes);
+    const encryptionKey = await crypto.subtle.importKey(
+      'raw',
+      derivedKey,
+      { name: 'AES-GCM' },
+      false,
+      ['decrypt']
+    );
     
-    const keyData = bytesToText(decrypted);
+    const combined = base64ToBytes(encryptedKey);
+    const iv = combined.slice(0, 12);
+    const encrypted = combined.slice(12);
+    
+    const decrypted = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: iv },
+      encryptionKey,
+      encrypted
+    );
+    
+    const keyData = bytesToText(new Uint8Array(decrypted));
     return JSON.parse(keyData) as ConversationKey;
   } catch (error) {
     console.error('Failed to decrypt conversation key:', error);

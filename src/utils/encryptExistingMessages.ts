@@ -63,7 +63,7 @@ export async function encryptExistingMessages(options: EncryptionMigrationOption
           const conversationKey = generateConversationKey();
 
           // Encrypt the message content using our Signal Protocol-inspired encryption system
-          const encryptedContent = encryptMessage(message.content, conversationKey);
+          const encryptedContent = await encryptMessage(message.content, conversationKey);
 
           // Update the message with encrypted content and redact plaintext
           const { error: updateError } = await supabase
