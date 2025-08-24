@@ -44,6 +44,7 @@ export const ContactCard: React.FC<ContactCardProps> = ({
           size="sm"
           onClick={() => onStartConversation(contact.contact_user_id)}
           className="shrink-0 touch-feedback btn-press"
+          aria-label="Start chat"
         >
           <MessageCircle className="h-3 w-3 md:h-4 md:w-4 mr-2" />
           Start Chat
@@ -64,6 +65,8 @@ export const ContactCard: React.FC<ContactCardProps> = ({
               variant="ghost"
               onClick={() => onStartChat(contact.contact_user_id)}
               className="shrink-0 touch-feedback h-8 w-8"
+              aria-label="Open chat"
+              title="Open chat"
             >
               <MessageCircle className="h-4 w-4" />
             </Button>

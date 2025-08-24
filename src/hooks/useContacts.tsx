@@ -90,6 +90,12 @@ export const useContacts = () => {
       const contactsData = (data || []);
       if (contactsData.length === 0) {
         setContacts([]);
+        // Even if no contacts, attempt to backfill from accepted conversations
+        const backfilled = await backfillContactsFromAcceptedConversations([]);
+        if (backfilled) {
+          await fetchContacts();
+          return;
+        }
         return;
       }
 

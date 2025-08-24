@@ -125,14 +125,14 @@ const Contacts = () => {
       {/* Header */}
       <div className="p-3 md:p-4 border-b border-border slide-down">
         <div className="flex items-center gap-3 mb-3 md:mb-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="touch-feedback h-8 w-8 md:h-10 md:w-10">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="touch-feedback h-8 w-8 md:h-10 md:w-10" aria-label="Back">
             <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
           </Button>
           <h1 className="text-lg md:text-xl font-semibold">Contacts</h1>
         </div>
 
         {/* Search */}
-        <div className="relative mb-3 md:mb-4">
+        <div className="relative mb-3 md:mb-4" role="search" aria-label="Search contacts">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search by username or name..."
@@ -152,16 +152,20 @@ const Contacts = () => {
               }
             }}
             className="pl-10 h-9 md:h-10"
+            aria-label="Search contacts"
           />
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 md:gap-2">
+        <div className="flex gap-1 md:gap-2" role="tablist" aria-label="Contacts tabs">
           <Button
             variant={activeTab === "contacts" ? "default" : "ghost"}
             size="sm"
             onClick={() => setActiveTab("contacts")}
             className="flex items-center gap-1 md:gap-2 text-xs md:text-sm h-7 md:h-8 touch-feedback"
+            aria-selected={activeTab === "contacts"}
+            aria-controls="contacts-panel"
+            id="tab-contacts"
           >
             <Users className="h-3 w-3 md:h-4 md:w-4" />
             My Contacts
@@ -171,6 +175,9 @@ const Contacts = () => {
             size="sm"
             onClick={() => setActiveTab("find")}
             className="flex items-center gap-1 md:gap-2 text-xs md:text-sm h-7 md:h-8 touch-feedback"
+            aria-selected={activeTab === "find"}
+            aria-controls="find-panel"
+            id="tab-find"
           >
             <UserPlus className="h-3 w-3 md:h-4 md:w-4" />
             Find People
@@ -180,6 +187,9 @@ const Contacts = () => {
             size="sm"
             onClick={() => setActiveTab("requests")}
             className="flex items-center gap-1 md:gap-2 text-xs md:text-sm h-7 md:h-8 touch-feedback relative"
+            aria-selected={activeTab === "requests"}
+            aria-controls="requests-panel"
+            id="tab-requests"
           >
             <MessageCircle className="h-3 w-3 md:h-4 md:w-4" />
             Requests
@@ -192,8 +202,7 @@ const Contacts = () => {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto" id="contacts-panel" role="tabpanel" aria-labelledby="tab-contacts" hidden={activeTab !== "contacts"}>
         {activeTab === "contacts" ? (
           <div className="p-3 md:p-4 space-y-3 md:space-y-4">
             {/* Add Contact Button */}
@@ -241,11 +250,10 @@ const Contacts = () => {
             </div>
           </div>
         ) : activeTab === "requests" ? (
-          <div className="p-3 md:p-4 space-y-3 md:space-y-4">
+          <div className="p-3 md:p-4 space-y-3 md:space-y-4" id="requests-panel" role="tabpanel" aria-labelledby="tab-requests">
             <h2 className="font-medium text-sm text-muted-foreground mb-3">
               Chat Requests ({pendingRequests.length})
             </h2>
-            
             {pendingRequests.length === 0 ? (
               <Card className="border-dashed border-2 fade-in">
                 <CardContent className="p-6 md:p-8">
@@ -272,13 +280,12 @@ const Contacts = () => {
             )}
           </div>
         ) : (
-          <div className="p-3 md:p-4 space-y-3 md:space-y-4 slide-left">
+          <div className="p-3 md:p-4 space-y-3 md:space-y-4 slide-left" id="find-panel" role="tabpanel" aria-labelledby="tab-find">
             {/* Search Results */}
             <div className="space-y-2">
               <h2 className="font-medium text-xs md:text-sm text-muted-foreground mb-3">
                 {searchQuery ? `Search Results for "${searchQuery}"` : 'Search for people'}
               </h2>
-              
               {searching && (
                 <Card className="loading-pulse">
                   <CardContent className="p-3 md:p-4">
@@ -293,7 +300,6 @@ const Contacts = () => {
               {searchResults.length > 0 && (
                 <p className="text-xs md:text-sm text-muted-foreground">Found {searchResults.length} {searchResults.length === 1 ? 'user' : 'users'}</p>
               )}
-
               {/* Search Results */}
               {searchResults.length > 0 && searchResults.map((user, index) => (
                 <Card key={user.user_id} className="border hover:bg-muted/50 transition-colors hover-lift touch-feedback" style={{ animationDelay: `${index * 0.05}s` }}>
@@ -305,19 +311,18 @@ const Contacts = () => {
                             {(user.display_name || user.username || "?").substring(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        
-                         <div className="flex-1">
-                           <h3 className="font-medium text-sm md:text-base">{user.display_name || user.username}</h3>
-                           <p className="text-xs md:text-sm text-muted-foreground">
-                             {user.username && `@${user.username}`}
-                           </p>
+                        <div className="flex-1">
+                          <h3 className="font-medium text-sm md:text-base">{user.display_name || user.username}</h3>
+                          <p className="text-xs md:text-sm text-muted-foreground">
+                            {user.username && `@${user.username}`}
+                          </p>
                         </div>
                       </div>
-
                       <Button
                         size="sm"
                         onClick={() => handleAddContact(user.user_id)}
                         className="shrink-0 touch-feedback btn-press"
+                        aria-label={`Add ${user.username || user.display_name}`}
                       >
                         <UserPlus className="h-3 w-3 md:h-4 md:w-4 mr-2" />
                         Add
@@ -326,16 +331,15 @@ const Contacts = () => {
                   </CardContent>
                 </Card>
               ))}
-
               {/* No search results */}
               {!searching && searchResults.length === 0 && searchQuery && (
                 <Card className="border-dashed border-2 fade-in">
                   <CardContent className="p-6 md:p-8">
                     <div className="text-center">
                       <Users className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 text-muted-foreground" />
-                       <h3 className="font-medium mb-1 text-sm md:text-base">No users found</h3>
-                       <p className="text-xs md:text-sm text-muted-foreground">
-                         Try searching with a different username or display name
+                      <h3 className="font-medium mb-1 text-sm md:text-base">No users found</h3>
+                      <p className="text-xs md:text-sm text-muted-foreground">
+                        Try searching with a different username or display name
                       </p>
                     </div>
                   </CardContent>
@@ -355,21 +359,21 @@ const Contacts = () => {
                 </Card>
               )}
             </div>
-
             {/* Manual Search */}
             <Card className="border-dashed border-2 scale-in">
               <CardContent className="p-3 md:p-4">
                 <div className="text-center">
                   <Search className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 text-muted-foreground" />
-                    <h3 className="font-medium mb-1 text-sm md:text-base">Search by Username</h3>
-                    <p className="text-xs md:text-sm text-muted-foreground mb-3">
-                      Enter a username or display name to find people
+                  <h3 className="font-medium mb-1 text-sm md:text-base">Search by Username</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground mb-3">
+                    Enter a username or display name to find people
                   </p>
                 </div>
               </CardContent>
             </Card>
           </div>
         )}
+      </div>
       </div>
       
       {/* Bottom spacing for mobile navigation */}

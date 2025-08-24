@@ -247,6 +247,8 @@ export const useConversations = () => {
           ignoreDuplicates: true 
         });
 
+      // After creating contacts, ensure both users will see each other by refreshing contacts screen when they navigate there
+
       toast({
         title: "Chat request accepted",
         description: "You can now start chatting",

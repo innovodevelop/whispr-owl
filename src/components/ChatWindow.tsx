@@ -97,14 +97,14 @@ export const ChatWindow = ({
             <p className="text-xs text-muted-foreground">Online</p>
           </div>
           
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="touch-feedback h-8 w-8 md:h-10 md:w-10">
+          <div className="flex items-center gap-1" role="toolbar" aria-label="Chat actions">
+            <Button variant="ghost" size="icon" className="touch-feedback h-8 w-8 md:h-10 md:w-10" aria-label="Audio call">
               <Phone className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="touch-feedback h-8 w-8 md:h-10 md:w-10">
+            <Button variant="ghost" size="icon" className="touch-feedback h-8 w-8 md:h-10 md:w-10" aria-label="Video call">
               <Video className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="touch-feedback h-8 w-8 md:h-10 md:w-10">
+            <Button variant="ghost" size="icon" className="touch-feedback h-8 w-8 md:h-10 md:w-10" aria-label="More options">
               <MoreVertical className="h-4 w-4" />
             </Button>
           </div>
@@ -118,7 +118,7 @@ export const ChatWindow = ({
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-center fade-in">
+          <div className="flex items-center justify-center h-full text-center fade-in" aria-live="polite">
             <div>
               <p className="text-muted-foreground mb-2">No messages yet</p>
               <p className="text-sm text-muted-foreground">Start the conversation!</p>
@@ -201,12 +201,15 @@ export const ChatWindow = ({
             onKeyPress={handleKeyPress}
             disabled={sending}
             className="flex-1 min-h-[40px] resize-none"
+            aria-label="Message input"
           />
           <Button 
             onClick={handleSendMessage} 
             size="icon" 
             disabled={!newMessage.trim() || sending}
             className="touch-feedback btn-press h-10 w-10 shrink-0"
+            aria-label="Send message"
+            title="Send message"
           >
             <Send className="h-4 w-4" />
           </Button>
