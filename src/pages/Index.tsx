@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, Users, Settings, Search, Plus, LogOut, UserPlus } from "lucide-react";
+import { MessageCircle, Users, Settings, Search, Plus, LogOut, UserPlus, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useConversations } from "@/hooks/useConversations";
 import BottomNavigation from "@/components/BottomNavigation";
@@ -14,6 +16,7 @@ import MessageCard from "@/components/MessageCard";
 
 const Index = () => {
   const { signOut, user } = useAuth();
+  const { profile } = useProfile();
   const navigate = useNavigate();
   const location = useLocation();
   const { conversations, loading } = useConversations();
@@ -97,17 +100,28 @@ const Index = () => {
         <div className="p-3 md:p-4 border-b border-border slide-down">
           <div className="flex items-center justify-between mb-3 md:mb-4">
             <h1 className="text-lg md:text-xl font-semibold">Whispr</h1>
-            <div className="flex items-center gap-1 md:gap-2" role="toolbar" aria-label="Main actions">
-              <Button variant="ghost" size="icon" onClick={() => navigate("/contacts")} className="touch-feedback h-8 w-8 md:h-10 md:w-10" aria-label="Contacts">
-                <Users className="h-4 w-4 md:h-5 md:w-5" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="touch-feedback h-8 w-8 md:h-10 md:w-10" aria-label="Settings">
-                <Settings className="h-4 w-4 md:h-5 md:w-5" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={signOut} className="touch-feedback h-8 w-8 md:h-10 md:w-10" aria-label="Sign out">
-                <LogOut className="h-4 w-4 md:h-5 md:w-5" />
-              </Button>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 rounded-full p-0">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={profile?.avatar_url} alt="Profile" />
+                    <AvatarFallback className="text-xs">
+                      {user?.email?.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => navigate("/contacts")}>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add Contact
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={signOut}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           
           {/* Search */}
@@ -164,7 +178,7 @@ const Index = () => {
             <Button
               onClick={startNewChat}
               size="icon"
-              className="fixed bottom-20 md:bottom-4 left-4 z-40 h-12 w-12 rounded-full shadow-lg bg-primary hover:bg-primary/90 touch-feedback"
+              className="fixed bottom-20 md:bottom-4 left-4 z-40 h-12 w-12 rounded-full bg-primary hover:bg-primary/90 touch-feedback"
               aria-label="Start new chat"
             >
               <Plus className="h-5 w-5" />

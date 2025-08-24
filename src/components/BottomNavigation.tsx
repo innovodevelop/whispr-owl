@@ -30,13 +30,13 @@ const BottomNavigation: React.FC = () => {
             variant={item.isSpecial ? "default" : "ghost"}
             size="sm"
             onClick={() => navigate(item.path)}
-            className={`flex items-center justify-center h-12 w-12 rounded-xl touch-feedback transition-all duration-300 ${
+            className={`flex items-center justify-center h-12 w-12 touch-feedback transition-all duration-300 ${
               isActive(item.path) && !item.isSpecial
-                ? "text-primary bg-primary/10 shadow-lg scale-110"
+                ? "text-primary bg-primary/10 scale-110 rounded-xl"
                 : !item.isSpecial
-                ? "text-muted-foreground hover:text-primary hover:bg-primary/5"
+                ? "text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-xl"
                 : ""
-            } ${item.isSpecial ? 'rounded-full bg-foreground text-background hover:bg-foreground/90 shadow-lg' : ''}`}
+            } ${item.isSpecial ? 'rounded-xl bg-foreground text-background hover:bg-foreground/90' : ''}`}
           >
             <item.icon className={`h-6 w-6 ${item.isSpecial ? 'stroke-2' : ''}`} />
           </Button>

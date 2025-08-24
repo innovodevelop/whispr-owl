@@ -64,7 +64,7 @@ const Financial: React.FC = () => {
           : { data: [], error: null } as any;
 
         const participantIds = Array.from(new Set(
-          (conversations || []).flatMap(c => [c.participant_one, c.participant_two])
+          (conversations || []).flatMap((c: ConvRow) => [c.participant_one, c.participant_two])
         ));
 
         // 4) Fetch profiles for names
@@ -72,7 +72,7 @@ const Financial: React.FC = () => {
           ? await supabase
               .from('profiles')
               .select('user_id, display_name, username')
-              .in('user_id', participantIds)
+              .in('user_id', participantIds.filter((id): id is string => typeof id === 'string'))
           : { data: [], error: null } as any;
 
         const profileMap = new Map(
@@ -88,16 +88,16 @@ const Financial: React.FC = () => {
           bySheet.set(e.sheet_id, cur);
         });
 
-        const convMap = new Map((conversations || []).map(c => [c.id, c]));
+        const convMap = new Map((conversations || []).map((c: ConvRow) => [c.id, c]));
 
         const summaries: SheetSummary[] = (sheetRows || []).map(s => {
           const agg = bySheet.get(s.id) || { total: 0, count: 0, last: null };
-          const conv = convMap.get(s.conversation_id);
+          const conv = convMap.get(s.conversation_id) as ConvRow | undefined;
           const collaborators = conv
-            ? [conv.participant_one, conv.participant_two]
+            ? (([conv.participant_one, conv.participant_two] as string[])
                 .filter(uid => uid !== user.id)
-                .map(uid => profileMap.get(uid) || 'Unknown')
-            : [];
+                .map(uid => profileMap.get(uid) || 'Unknown') as string[])
+            : [] as string[];
           const lastActivityDate = agg.last || s.updated_at;
           const lastActivity = timeAgo(lastActivityDate);
           const trend = agg.total > 0 ? 'up' : agg.total < 0 ? 'down' : 'flat';
@@ -108,10 +108,10 @@ const Financial: React.FC = () => {
             updated_at: s.updated_at,
             totalAmount: agg.total,
             entries: agg.count,
-            collaborators,
+            collaborators: collaborators,
             lastActivity,
             trend
-          };
+          } as SheetSummary;
         });
 
         setSheets(summaries);
@@ -144,7 +144,7 @@ const Financial: React.FC = () => {
       {/* Header */}
       <header className="glass-card border-b border-border/30 p-4 md:p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-3 rounded-xl bg-secondary shadow-lg">
+          <div className="p-3 rounded-xl bg-secondary">
             <DollarSign className="h-6 w-6 text-secondary-foreground" />
           </div>
           <div>
@@ -167,7 +167,7 @@ const Financial: React.FC = () => {
               onClick={() => setSelectedTab(tab.key as typeof selectedTab)}
               className={cn(
                 'transition-all duration-300',
-                selectedTab === tab.key ? 'btn-neon shadow-lg' : 'hover:bg-primary/10'
+                selectedTab === tab.key ? 'btn-neon' : 'hover:bg-primary/10'
               )}
             >
               {tab.label}
