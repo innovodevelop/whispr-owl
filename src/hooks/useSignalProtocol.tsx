@@ -1,20 +1,21 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import {
-  generateIdentityKeyPair,
-  generateSignedPreKey,
-  generatePreKeys,
-  storeIdentityKeys,
-  storeSignedPreKey,
-  storePreKeys,
-  getPreKeyBundle,
-  encryptMessageWithSignalProtocol,
-  decryptMessageWithSignalProtocol,
-  getUserIdentityKeys,
-  getUserPublicKey,
-  SignalPreKeyBundle
-} from '@/lib/signalProtocol';
 import { supabase } from '@/integrations/supabase/client';
+
+// Local copy of required types to avoid static import cycles
+export interface SignalPreKeyBundle {
+  registrationId: number;
+  deviceId: number;
+  prekeyId?: number;
+  prekey?: Uint8Array;
+  signedPrekeyId: number;
+  signedPrekey: Uint8Array;
+  signedPrekeySignature: Uint8Array;
+  identityKey: Uint8Array;
+}
+
+// Lazy loader for the heavy Signal Protocol implementation
+const loadSignal = async () => await import('@/lib/signalProtocol');
 
 interface SignalProtocolState {
   initialized: boolean;
@@ -73,20 +74,23 @@ export const useSignalProtocol = () => {
       // Generate registration ID (1-16383)
       const registrationId = Math.floor(Math.random() * 16383) + 1;
       
+      const sp = await loadSignal().catch(() => null as any);
+      if (!sp) throw new Error('Signal library failed to load');
+      
       // Generate identity key pair
-      const identityKeyPair = generateIdentityKeyPair();
+      const identityKeyPair = sp.generateIdentityKeyPair();
       
       // Generate signed prekey
-      const signedPreKey = generateSignedPreKey(identityKeyPair, 1);
+      const signedPreKey = sp.generateSignedPreKey(identityKeyPair, 1);
       
       // Generate one-time prekeys (50 keys)
-      const preKeys = generatePreKeys(1, 50);
+      const preKeys = sp.generatePreKeys(1, 50);
 
       // Store all keys in database
       await Promise.all([
-        storeIdentityKeys(user.id, identityKeyPair, registrationId),
-        storeSignedPreKey(user.id, signedPreKey),
-        storePreKeys(user.id, preKeys)
+        sp.storeIdentityKeys(user.id, identityKeyPair, registrationId),
+        sp.storeSignedPreKey(user.id, signedPreKey),
+        sp.storePreKeys(user.id, preKeys)
       ]);
 
       setState({
@@ -116,15 +120,17 @@ export const useSignalProtocol = () => {
     if (existingKeys) return existingKeys;
 
     try {
+      const sp = await loadSignal().catch(() => null as any);
+      if (!sp) throw new Error('Signal library failed to load');
       // Get our identity keys
-      const localKeys = await getUserIdentityKeys(user.id);
+      const localKeys = await sp.getUserIdentityKeys(user.id);
       if (!localKeys) {
         console.error('No local identity keys found');
         return null;
       }
 
       // Get remote user's public key
-      const remotePublicKey = await getUserPublicKey(remoteUserId);
+      const remotePublicKey = await sp.getUserPublicKey(remoteUserId);
       if (!remotePublicKey) {
         console.error('No remote public key found for user:', remoteUserId);
         return null;
@@ -155,9 +161,12 @@ export const useSignalProtocol = () => {
       const keys = await getSessionKeys(conversationId, remoteUserId);
       if (!keys) return null;
 
-      return await encryptMessageWithSignalProtocol(
-        message, 
-        keys.localPrivateKey, 
+      const sp = await loadSignal().catch(() => null as any);
+      if (!sp) return null;
+
+      return await sp.encryptMessageWithSignalProtocol(
+        message,
+        keys.localPrivateKey,
         keys.remotePublicKey
       );
     } catch (error) {
@@ -176,7 +185,10 @@ export const useSignalProtocol = () => {
       const keys = await getSessionKeys(conversationId, remoteUserId);
       if (!keys) return null;
 
-      return await decryptMessageWithSignalProtocol(
+      const sp = await loadSignal().catch(() => null as any);
+      if (!sp) return null;
+
+      return await sp.decryptMessageWithSignalProtocol(
         encryptedMessage, 
         keys.localPrivateKey, 
         keys.remotePublicKey
@@ -190,13 +202,16 @@ export const useSignalProtocol = () => {
   // Get user's prekey bundle (for other users to initiate conversations)
   const getMyPreKeyBundle = useCallback(async (): Promise<SignalPreKeyBundle | null> => {
     if (!user) return null;
-    return await getPreKeyBundle(user.id);
+    const sp = await loadSignal().catch(() => null as any);
+    if (!sp) return null;
+    return await sp.getPreKeyBundle(user.id);
   }, [user]);
 
   // Check if we can communicate with a user (they have Signal Protocol keys)
   const canCommunicateWith = useCallback(async (userId: string): Promise<boolean> => {
     try {
-      const preKeyBundle = await getPreKeyBundle(userId);
+      const sp = await loadSignal().catch(() => null as any);
+      const preKeyBundle = sp ? await sp.getPreKeyBundle(userId) : null;
       return preKeyBundle !== null;
     } catch (error) {
       console.error('Error checking if can communicate with user:', error);
