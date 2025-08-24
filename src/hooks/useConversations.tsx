@@ -75,30 +75,46 @@ export const useConversations = () => {
         if (conv.status === 'accepted') {
           const { data: messageData } = await supabase
             .from('messages')
-            .select('content, created_at, message_type')
+            .select('content, encrypted_content, created_at, message_type')
             .eq('conversation_id', conv.id)
             .order('created_at', { ascending: false })
             .limit(1)
             .maybeSingle();
 
           if (messageData) {
-            lastMessage = messageData.content;
+            // For previews, show the unencrypted content (since we can't decrypt without conversation key here)
+            // We'll show a generic preview for encrypted messages
+            if (messageData.encrypted_content && !messageData.content) {
+              // This is an encrypted message
+              if (messageData.message_type === 'financial_notification') {
+                lastMessage = "Financial activity";
+              } else {
+                lastMessage = "New message";
+              }
+            } else {
+              lastMessage = messageData.content;
+            }
             lastMessageAt = messageData.created_at;
           }
         }
         
-        // Optional: recent messages (not used for UI rotation anymore)
+        // Optional: recent messages (not used for UI rotation anymore)  
         let recentMessages: string[] = [];
         if (conv.status === 'accepted') {
           const { data: recentMessagesData } = await supabase
             .from('messages')
-            .select('content')
+            .select('content, encrypted_content')
             .eq('conversation_id', conv.id)
             .order('created_at', { ascending: false })
             .limit(3);
 
           if (recentMessagesData) {
-            recentMessages = recentMessagesData.map(msg => msg.content);
+            recentMessages = recentMessagesData.map(msg => {
+              if (msg.encrypted_content && !msg.content) {
+                return "New message";
+              }
+              return msg.content;
+            });
           }
         }
 
