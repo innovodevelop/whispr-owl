@@ -74,7 +74,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
                 variant="ghost" 
                 size="icon" 
                 onClick={handleBack}
-                className="hidden md:flex h-8 w-8 hover:bg-accent"
+                className="flex h-8 w-8 hover:bg-accent"
                 aria-label="Go back"
               >
                 <ArrowLeft className="h-4 w-4" />
