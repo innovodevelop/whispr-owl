@@ -14,19 +14,14 @@ export interface SignalPreKeyBundle {
   identityKey: Uint8Array;
 }
 
-// Lazy loader for the heavy Signal Protocol implementation with detailed error logging
+// Mobile-compatible crypto loader
 const loadSignal = async () => {
   try {
-    const mod = await import('@/lib/signalProtocol');
+    const mod = await import('@/lib/mobileCrypto');
+    console.info('[Signal] Mobile crypto loaded successfully');
     return mod;
   } catch (err) {
-    console.error('[Signal] Failed to load signalProtocol module:', err);
-    // Environment diagnostics
-    console.info('[Signal] Diagnostics', {
-      hasCrypto: typeof crypto !== 'undefined',
-      hasSubtle: typeof crypto !== 'undefined' && typeof crypto.subtle !== 'undefined',
-      userAgent: navigator?.userAgent,
-    });
+    console.error('[Signal] Failed to load mobileCrypto module:', err);
     return null as any;
   }
 };
@@ -92,13 +87,13 @@ export const useSignalProtocol = () => {
       if (!sp) throw new Error('Signal library failed to load');
       
       // Generate identity key pair
-      const identityKeyPair = sp.generateIdentityKeyPair();
+      const identityKeyPair = await sp.generateIdentityKeyPair();
       
       // Generate signed prekey
-      const signedPreKey = sp.generateSignedPreKey(identityKeyPair, 1);
+      const signedPreKey = await sp.generateSignedPreKey(identityKeyPair, 1);
       
       // Generate one-time prekeys (50 keys)
-      const preKeys = sp.generatePreKeys(1, 50);
+      const preKeys = await sp.generatePreKeys(1, 50);
 
       // Store all keys in database
       await Promise.all([

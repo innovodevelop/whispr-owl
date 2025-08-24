@@ -1,7 +1,6 @@
-import * as libsignal from '@signalapp/libsignal-client';
-import { supabase } from '@/integrations/supabase/client';
+// Mobile-compatible encryption for Capacitor apps
+// Uses Web Crypto API which is available in mobile WebViews
 
-// Signal Protocol types and interfaces
 export interface SignalIdentityKeyPair {
   publicKey: Uint8Array;
   privateKey: Uint8Array;
@@ -18,7 +17,7 @@ export interface SignalPreKeyBundle {
   identityKey: Uint8Array;
 }
 
-// Convert between Uint8Array and base64 strings for database storage (browser-safe)
+// Browser-safe base64 conversion
 export const uint8ArrayToBase64 = (array: Uint8Array): string => {
   let binary = '';
   for (let i = 0; i < array.length; i++) binary += String.fromCharCode(array[i]);
@@ -33,63 +32,192 @@ export const base64ToUint8Array = (base64: string): Uint8Array => {
   return bytes;
 };
 
-// Generate Signal Protocol identity key pair
-export const generateIdentityKeyPair = (): SignalIdentityKeyPair => {
-  const keyPair = libsignal.PrivateKey.generate();
-  const publicKey = keyPair.getPublicKey();
-  
-  return {
-    publicKey: publicKey.serialize(),
-    privateKey: keyPair.serialize()
-  };
+// Generate identity key pair using Web Crypto API
+export const generateIdentityKeyPair = async (): Promise<SignalIdentityKeyPair> => {
+  const keyPair = await crypto.subtle.generateKey(
+    {
+      name: 'ECDH',
+      namedCurve: 'P-256'
+    },
+    true,
+    ['deriveKey']
+  );
+
+  const publicKey = new Uint8Array(await crypto.subtle.exportKey('raw', keyPair.publicKey));
+  const privateKey = new Uint8Array(await crypto.subtle.exportKey('pkcs8', keyPair.privateKey));
+
+  return { publicKey, privateKey };
 };
 
 // Generate signed prekey
-export const generateSignedPreKey = (identityKeyPair: SignalIdentityKeyPair, signedPreKeyId: number): {
-  keyId: number;
-  publicKey: Uint8Array;
-  privateKey: Uint8Array;
-  signature: Uint8Array;
-} => {
-  const privateKey = libsignal.PrivateKey.deserialize(identityKeyPair.privateKey);
-  const signedPreKeyPair = libsignal.PrivateKey.generate();
-  const signedPreKeyPublic = signedPreKeyPair.getPublicKey();
+export const generateSignedPreKey = async (identityKeyPair: SignalIdentityKeyPair, signedPreKeyId: number) => {
+  const keyPair = await crypto.subtle.generateKey(
+    {
+      name: 'ECDH',
+      namedCurve: 'P-256'
+    },
+    true,
+    ['deriveKey']
+  );
+
+  const publicKey = new Uint8Array(await crypto.subtle.exportKey('raw', keyPair.publicKey));
+  const privateKey = new Uint8Array(await crypto.subtle.exportKey('pkcs8', keyPair.privateKey));
   
-  const signature = privateKey.sign(signedPreKeyPublic.serialize());
-  
+  // Create a simple signature using the identity private key
+  const signature = await crypto.subtle.sign(
+    'ECDSA',
+    await crypto.subtle.importKey('pkcs8', identityKeyPair.privateKey, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']),
+    publicKey
+  );
+
   return {
     keyId: signedPreKeyId,
-    publicKey: signedPreKeyPublic.serialize(),
-    privateKey: signedPreKeyPair.serialize(),
-    signature
+    publicKey,
+    privateKey,
+    signature: new Uint8Array(signature)
   };
 };
 
 // Generate one-time prekeys
-export const generatePreKeys = (startId: number, count: number): Array<{
-  keyId: number;
-  publicKey: Uint8Array;
-  privateKey: Uint8Array;
-}> => {
-  const preKeys: Array<{
-    keyId: number;
-    publicKey: Uint8Array;
-    privateKey: Uint8Array;
-  }> = [];
+export const generatePreKeys = async (startId: number, count: number) => {
+  const preKeys = [];
   
   for (let i = 0; i < count; i++) {
-    const keyPair = libsignal.PrivateKey.generate();
+    const keyPair = await crypto.subtle.generateKey(
+      {
+        name: 'ECDH',
+        namedCurve: 'P-256'
+      },
+      true,
+      ['deriveKey']
+    );
+
+    const publicKey = new Uint8Array(await crypto.subtle.exportKey('raw', keyPair.publicKey));
+    const privateKey = new Uint8Array(await crypto.subtle.exportKey('pkcs8', keyPair.privateKey));
+
     preKeys.push({
       keyId: startId + i,
-      publicKey: keyPair.getPublicKey().serialize(),
-      privateKey: keyPair.serialize()
+      publicKey,
+      privateKey
     });
   }
   
   return preKeys;
 };
 
-// Store identity keys in database
+// Simplified encryption using Web Crypto API
+export const encryptMessageWithSignalProtocol = async (
+  plaintext: string,
+  localPrivateKey: Uint8Array,
+  remotePublicKey: Uint8Array
+): Promise<string> => {
+  try {
+    // Import keys for ECDH
+    const localKey = await crypto.subtle.importKey(
+      'pkcs8',
+      localPrivateKey,
+      { name: 'ECDH', namedCurve: 'P-256' },
+      false,
+      ['deriveKey']
+    );
+
+    const remoteKey = await crypto.subtle.importKey(
+      'raw',
+      remotePublicKey,
+      { name: 'ECDH', namedCurve: 'P-256' },
+      false,
+      []
+    );
+
+    // Derive shared secret
+    const sharedSecret = await crypto.subtle.deriveKey(
+      { name: 'ECDH', public: remoteKey },
+      localKey,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt']
+    );
+
+    // Generate random IV
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    
+    // Encrypt the message
+    const encoder = new TextEncoder();
+    const encryptedData = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv },
+      sharedSecret,
+      encoder.encode(plaintext)
+    );
+
+    // Combine IV and encrypted data
+    const combined = new Uint8Array(iv.length + encryptedData.byteLength);
+    combined.set(iv, 0);
+    combined.set(new Uint8Array(encryptedData), iv.length);
+
+    return uint8ArrayToBase64(combined);
+  } catch (error) {
+    console.error('Failed to encrypt message:', error);
+    throw error;
+  }
+};
+
+// Simplified decryption using Web Crypto API
+export const decryptMessageWithSignalProtocol = async (
+  encryptedData: string,
+  localPrivateKey: Uint8Array,
+  remotePublicKey: Uint8Array
+): Promise<string> => {
+  try {
+    const combined = base64ToUint8Array(encryptedData);
+    
+    // Extract IV and ciphertext
+    const iv = combined.slice(0, 12);
+    const ciphertext = combined.slice(12);
+
+    // Import keys for ECDH
+    const localKey = await crypto.subtle.importKey(
+      'pkcs8',
+      localPrivateKey,
+      { name: 'ECDH', namedCurve: 'P-256' },
+      false,
+      ['deriveKey']
+    );
+
+    const remoteKey = await crypto.subtle.importKey(
+      'raw',
+      remotePublicKey,
+      { name: 'ECDH', namedCurve: 'P-256' },
+      false,
+      []
+    );
+
+    // Derive shared secret
+    const sharedSecret = await crypto.subtle.deriveKey(
+      { name: 'ECDH', public: remoteKey },
+      localKey,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['decrypt']
+    );
+
+    // Decrypt the message
+    const decryptedData = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv },
+      sharedSecret,
+      ciphertext
+    );
+
+    const decoder = new TextDecoder();
+    return decoder.decode(decryptedData);
+  } catch (error) {
+    console.error('Failed to decrypt message:', error);
+    throw error;
+  }
+};
+
+// Store/retrieve functions that use Supabase
+import { supabase } from '@/integrations/supabase/client';
+
 export const storeIdentityKeys = async (
   userId: string,
   identityKeyPair: SignalIdentityKeyPair,
@@ -107,7 +235,6 @@ export const storeIdentityKeys = async (
   if (error) throw error;
 };
 
-// Store signed prekey in database
 export const storeSignedPreKey = async (
   userId: string,
   signedPreKey: {
@@ -130,7 +257,6 @@ export const storeSignedPreKey = async (
   if (error) throw error;
 };
 
-// Store one-time prekeys in database
 export const storePreKeys = async (
   userId: string,
   preKeys: Array<{
@@ -154,7 +280,6 @@ export const storePreKeys = async (
   if (error) throw error;
 };
 
-// Get prekey bundle for a user
 export const getPreKeyBundle = async (userId: string): Promise<SignalPreKeyBundle | null> => {
   try {
     // Get identity key and registration ID
@@ -211,111 +336,6 @@ export const getPreKeyBundle = async (userId: string): Promise<SignalPreKeyBundl
   }
 };
 
-// Simplified Signal Protocol encryption using ECDH key agreement
-export const encryptMessageWithSignalProtocol = async (
-  plaintext: string,
-  localPrivateKey: Uint8Array,
-  remotePublicKey: Uint8Array
-): Promise<string> => {
-  try {
-    // Use ECDH to derive a shared secret
-    const localKey = libsignal.PrivateKey.deserialize(localPrivateKey);
-    const remoteKey = libsignal.PublicKey.deserialize(remotePublicKey);
-    
-    // Generate ephemeral key pair for this message
-    const ephemeralKey = libsignal.PrivateKey.generate();
-    const ephemeralPublic = ephemeralKey.getPublicKey();
-    
-    // Derive shared secret using ECDH
-    const sharedSecret = localKey.agree(remoteKey);
-    
-    // Use the shared secret as AES key (simplified - in real Signal Protocol, this would go through HKDF)
-    const encoder = new TextEncoder();
-    const decoder = new TextDecoder();
-    const plaintextBytes = encoder.encode(plaintext);
-    
-    // Generate random IV
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    
-    // Import the shared secret as AES-GCM key
-    const key = await crypto.subtle.importKey(
-      'raw',
-      sharedSecret.slice(0, 32), // Use first 32 bytes as AES-256 key
-      { name: 'AES-GCM' },
-      false,
-      ['encrypt']
-    );
-    
-    // Encrypt the message
-    const encryptedData = await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv },
-      key,
-      plaintextBytes
-    );
-    
-    // Combine ephemeral public key, IV, and encrypted data
-    const combined = new Uint8Array(
-      ephemeralPublic.serialize().length + iv.length + encryptedData.byteLength
-    );
-    
-    combined.set(ephemeralPublic.serialize(), 0);
-    combined.set(iv, ephemeralPublic.serialize().length);
-    combined.set(new Uint8Array(encryptedData), ephemeralPublic.serialize().length + iv.length);
-    
-    return uint8ArrayToBase64(combined);
-  } catch (error) {
-    console.error('Failed to encrypt message:', error);
-    throw error;
-  }
-};
-
-// Simplified Signal Protocol decryption using ECDH key agreement
-export const decryptMessageWithSignalProtocol = async (
-  encryptedData: string,
-  localPrivateKey: Uint8Array,
-  remotePublicKey: Uint8Array
-): Promise<string> => {
-  try {
-    const combined = base64ToUint8Array(encryptedData);
-    
-    // Extract components
-    const ephemeralPublicBytes = combined.slice(0, 33); // Compressed public key is 33 bytes
-    const iv = combined.slice(33, 33 + 12); // IV is 12 bytes
-    const ciphertext = combined.slice(33 + 12);
-    
-    // Deserialize keys
-    const localKey = libsignal.PrivateKey.deserialize(localPrivateKey);
-    const remoteKey = libsignal.PublicKey.deserialize(remotePublicKey);
-    const ephemeralPublic = libsignal.PublicKey.deserialize(ephemeralPublicBytes);
-    
-    // Derive shared secret using ECDH
-    const sharedSecret = localKey.agree(remoteKey);
-    
-    // Import the shared secret as AES-GCM key
-    const key = await crypto.subtle.importKey(
-      'raw',
-      sharedSecret.slice(0, 32), // Use first 32 bytes as AES-256 key
-      { name: 'AES-GCM' },
-      false,
-      ['decrypt']
-    );
-    
-    // Decrypt the message
-    const decryptedData = await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv },
-      key,
-      ciphertext
-    );
-    
-    const decoder = new TextDecoder();
-    return decoder.decode(decryptedData);
-  } catch (error) {
-    console.error('Failed to decrypt message:', error);
-    throw error;
-  }
-};
-
-// Get user's identity keys from database
 export const getUserIdentityKeys = async (userId: string): Promise<SignalIdentityKeyPair | null> => {
   try {
     const { data, error } = await supabase
@@ -336,7 +356,6 @@ export const getUserIdentityKeys = async (userId: string): Promise<SignalIdentit
   }
 };
 
-// Get user's public identity key from database
 export const getUserPublicKey = async (userId: string): Promise<Uint8Array | null> => {
   try {
     const { data, error } = await supabase
