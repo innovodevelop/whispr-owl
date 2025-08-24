@@ -188,7 +188,7 @@ ANIMATIONS & INTERACTIONS
   }
 
   .neon-card {
-    @apply bg-card border border-primary/20 rounded-xl shadow-medium;
+    @apply bg-card border border-primary/20 rounded-xl shadow-lg;
   }
 
   /* Enhanced Interactive Elements */
@@ -197,7 +197,7 @@ ANIMATIONS & INTERACTIONS
   }
 
   .interactive-glow {
-    @apply transition-all duration-300 ease-out hover:shadow-medium;
+    @apply transition-all duration-300 ease-out hover:shadow-lg;
   }
 
   /* Modern Button Animations */
@@ -207,7 +207,7 @@ ANIMATIONS & INTERACTIONS
 
   .btn-neon {
     @apply bg-primary text-primary-foreground;
-    @apply hover:shadow-medium transition-all duration-300;
+    @apply hover:shadow-lg transition-all duration-300;
   }
 
   /* Enhanced Animations */
@@ -261,7 +261,7 @@ ANIMATIONS & INTERACTIONS
   }
 
   .hover-glow {
-    @apply transition-all duration-300 ease-out hover:shadow-medium;
+    @apply transition-all duration-300 ease-out hover:shadow-lg;
   }
 
   /* Mobile Touch Feedback */
