@@ -45,6 +45,14 @@ const AppHeader: React.FC<AppHeaderProps> = ({
     }
   };
 
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } finally {
+      navigate('/auth');
+    }
+  };
+
   const getThemeIcon = () => {
     switch (theme) {
       case 'dark':
@@ -126,7 +134,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
               <DropdownMenuSeparator />
               
               {/* Sign Out */}
-              <DropdownMenuItem onClick={signOut} className="cursor-pointer text-destructive focus:text-destructive">
+              <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive focus:text-destructive">
                 <LogOut className="h-4 w-4 mr-3" />
                 Sign Out
               </DropdownMenuItem>

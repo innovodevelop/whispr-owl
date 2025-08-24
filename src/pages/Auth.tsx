@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Eye, EyeOff, MessageCircle, Phone, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,25 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [awaitingSms, setAwaitingSms] = useState(false);
   const { toast } = useToast();
+
+  // Force dark mode on the auth page
+  useEffect(() => {
+    const root = document.documentElement;
+    const hadLight = root.classList.contains('light');
+    const hadDark = root.classList.contains('dark');
+
+    root.classList.remove('light');
+    root.classList.add('dark');
+
+    return () => {
+      if (hadLight) {
+        root.classList.remove('dark');
+        root.classList.add('light');
+      } else if (!hadDark) {
+        root.classList.remove('dark');
+      }
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
