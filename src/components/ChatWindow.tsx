@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, ArrowLeft, Phone, Video, MoreVertical } from "lucide-react";
+import { Send, ArrowLeft, Phone, Video, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,6 +7,7 @@ import { useMessages } from "@/hooks/useMessages";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import { ChatSettingsDrawer } from "./ChatSettingsDrawer";
 
 interface ChatWindowProps {
   conversationId: string;
@@ -27,6 +28,7 @@ export const ChatWindow = ({
   const { messages, loading, sendMessage } = useMessages(conversationId);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -104,8 +106,14 @@ export const ChatWindow = ({
             <Button variant="ghost" size="icon" className="touch-feedback h-8 w-8 md:h-10 md:w-10" aria-label="Video call">
               <Video className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="touch-feedback h-8 w-8 md:h-10 md:w-10" aria-label="More options">
-              <MoreVertical className="h-4 w-4" />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setSettingsOpen(true)}
+              className="touch-feedback h-8 w-8 md:h-10 md:w-10" 
+              aria-label="Chat settings"
+            >
+              <Settings className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -215,6 +223,13 @@ export const ChatWindow = ({
           </Button>
         </div>
       </div>
+
+      {/* Chat Settings Drawer */}
+      <ChatSettingsDrawer
+        conversationId={conversationId}
+        isOpen={settingsOpen}
+        onOpenChange={setSettingsOpen}
+      />
     </div>
   );
 };
