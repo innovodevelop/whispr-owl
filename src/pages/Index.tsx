@@ -142,39 +142,20 @@ const Index = () => {
             </div>
           ) : (
             filteredConversations.map((conversation, index) => (
-              <div
+              <MessageCard
                 key={conversation.id}
+                id={conversation.id}
+                name={
+                  conversation.otherParticipant?.display_name ||
+                  conversation.otherParticipant?.username ||
+                  "Unknown User"
+                }
+                avatarUrl={conversation.otherParticipant?.avatar_url}
+                lastMessage={conversation.last_message}
+                lastMessageTime={getLastMessageTime(conversation)}
+                selected={selectedChat === conversation.id}
                 onClick={() => setSelectedChat(conversation.id)}
-                className={`p-3 md:p-4 border-b border-border cursor-pointer hover:bg-muted/50 transition-all duration-200 touch-feedback stagger-item ${
-                  selectedChat === conversation.id ? "bg-muted" : ""
-                }`}
-                style={{ animationDelay: `${index * 0.05}s` }}
-              >
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10 md:h-12 md:w-12">
-                    <AvatarImage src={conversation.otherParticipant?.avatar_url} />
-                    <AvatarFallback>
-                      {conversation.otherParticipant?.display_name?.[0] || 
-                       conversation.otherParticipant?.username?.[0] || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-medium truncate text-sm md:text-base">
-                        {conversation.otherParticipant?.display_name || 
-                         conversation.otherParticipant?.username || "Unknown User"}
-                      </h3>
-                      <span className="text-xs text-muted-foreground">
-                        {getLastMessageTime(conversation)}
-                      </span>
-                    </div>
-                    <p className="text-xs md:text-sm text-muted-foreground truncate">
-                      {conversation.last_message || "No messages yet"}
-                    </p>
-                  </div>
-                </div>
-              </div>
+              />
             ))
           )}
         </div>
