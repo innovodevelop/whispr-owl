@@ -18,13 +18,19 @@ export interface SignalPreKeyBundle {
   identityKey: Uint8Array;
 }
 
-// Convert between Uint8Array and base64 strings for database storage
+// Convert between Uint8Array and base64 strings for database storage (browser-safe)
 export const uint8ArrayToBase64 = (array: Uint8Array): string => {
-  return Buffer.from(array).toString('base64');
+  let binary = '';
+  for (let i = 0; i < array.length; i++) binary += String.fromCharCode(array[i]);
+  return btoa(binary);
 };
 
 export const base64ToUint8Array = (base64: string): Uint8Array => {
-  return new Uint8Array(Buffer.from(base64, 'base64'));
+  const binary = atob(base64);
+  const len = binary.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
 };
 
 // Generate Signal Protocol identity key pair

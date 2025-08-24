@@ -14,8 +14,22 @@ export interface SignalPreKeyBundle {
   identityKey: Uint8Array;
 }
 
-// Lazy loader for the heavy Signal Protocol implementation
-const loadSignal = async () => await import('@/lib/signalProtocol');
+// Lazy loader for the heavy Signal Protocol implementation with detailed error logging
+const loadSignal = async () => {
+  try {
+    const mod = await import('@/lib/signalProtocol');
+    return mod;
+  } catch (err) {
+    console.error('[Signal] Failed to load signalProtocol module:', err);
+    // Environment diagnostics
+    console.info('[Signal] Diagnostics', {
+      hasCrypto: typeof crypto !== 'undefined',
+      hasSubtle: typeof crypto !== 'undefined' && typeof crypto.subtle !== 'undefined',
+      userAgent: navigator?.userAgent,
+    });
+    return null as any;
+  }
+};
 
 interface SignalProtocolState {
   initialized: boolean;
