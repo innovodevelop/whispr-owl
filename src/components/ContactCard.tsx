@@ -43,7 +43,10 @@ export const ContactCard: React.FC<ContactCardProps> = ({
         <Button
           size="sm"
           type="button"
-          onClick={() => {
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
             console.log('ContactCard: Start chat button clicked for user:', contact.contact_user_id);
             onStartConversation(contact.contact_user_id);
           }}
@@ -113,7 +116,15 @@ export const ContactCard: React.FC<ContactCardProps> = ({
   };
 
   return (
-    <Card className="hover:bg-muted/50 transition-colors hover-lift touch-feedback">
+    <Card
+      className={`hover:bg-muted/50 transition-colors hover-lift touch-feedback ${!conversationStatus ? 'cursor-pointer' : ''}`}
+      onClick={() => {
+        if (!conversationStatus) {
+          console.log('ContactCard: Card click initiating start conversation for', contact.contact_user_id);
+          onStartConversation(contact.contact_user_id);
+        }
+      }}
+    >
       <CardContent className="p-3 md:p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
