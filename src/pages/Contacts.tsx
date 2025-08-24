@@ -88,9 +88,9 @@ const Contacts = () => {
           <Button 
             onClick={() => setSearchDialogOpen(true)}
             className="shrink-0"
+            size="icon"
           >
-            <UserPlus className="h-4 w-4 mr-2" />
-            Add Contact
+            <UserPlus className="h-4 w-4" />
           </Button>
         </div>
 
