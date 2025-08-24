@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, ArrowLeft, Phone, Video, Settings, Flame, Receipt } from "lucide-react";
+import { Send, ArrowLeft, Phone, Video, Settings, Flame, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -269,16 +269,6 @@ export const ChatWindow = ({
             onSelect={setBurnOnReadDuration}
             selectedDuration={burnOnReadDuration}
           />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setFinancialSheetOpen(true)}
-            className="touch-feedback h-10 w-10 shrink-0"
-            aria-label="Financial sheet"
-            title="Financial sheet"
-          >
-            <Receipt className="h-4 w-4" />
-          </Button>
           <Input
             placeholder="Type a message..."
             value={newMessage}
@@ -297,6 +287,16 @@ export const ChatWindow = ({
             title="Send message"
           >
             <Send className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setFinancialSheetOpen(true)}
+            className="touch-feedback h-10 w-10 shrink-0"
+            aria-label="Financial sheet"
+            title="Financial sheet"
+          >
+            <DollarSign className="h-4 w-4" />
           </Button>
         </div>
       </div>
