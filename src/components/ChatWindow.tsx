@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, ArrowLeft, Phone, Video, Settings, Flame, DollarSign, Banknote } from "lucide-react";
+import { Send, ArrowLeft, Settings, Flame, DollarSign, Banknote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -152,12 +152,6 @@ const ChatWindow = ({
           </div>
           
           <div className="flex items-center gap-1" role="toolbar" aria-label="Chat actions">
-            <Button variant="ghost" size="icon" className="touch-feedback h-8 w-8 md:h-10 md:w-10 hover:bg-primary/10 hover:text-primary transition-all duration-300" aria-label="Audio call">
-              <Phone className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon" className="touch-feedback h-8 w-8 md:h-10 md:w-10 hover:bg-primary/10 hover:text-primary transition-all duration-300" aria-label="Video call">
-              <Video className="h-4 w-4" />
-            </Button>
             <Button 
               variant="ghost" 
               size="icon" 
