@@ -61,9 +61,18 @@ const Contacts = () => {
   );
 
   const handleStartChat = (contactId: string) => {
+    // Prefer navigating directly to an existing accepted conversation
+    const status = getConversationStatus(contactId);
+    const conversationId = status?.status === 'accepted' ? status.conversation?.id : null;
+
+    if (conversationId) {
+      navigate("/", { state: { newConversation: { id: conversationId } } });
+      return;
+    }
+
+    // Fallback: navigate with selected contact (Index will resolve it)
     const contact = contacts.find(c => c.contact_user_id === contactId);
     if (contact) {
-      // Navigate to chat with this contact
       navigate("/", { 
         state: { 
           selectedContact: {

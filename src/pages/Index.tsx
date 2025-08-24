@@ -28,15 +28,29 @@ const Index = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Handle new conversation from contacts page
+  // Handle navigation state from Contacts page to open chat
   useEffect(() => {
     const state = window.history.state?.usr;
-    if (state?.newConversation) {
+    if (!state) return;
+
+    if (state?.newConversation?.id) {
       setSelectedChat(state.newConversation.id);
-      // Clear the state
       window.history.replaceState({}, document.title);
+      return;
     }
-  }, []);
+
+    if (state?.selectedContact?.id && user) {
+      const contactId = state.selectedContact.id as string;
+      const conv = conversations.find(c =>
+        (c.participant_one === user.id && c.participant_two === contactId) ||
+        (c.participant_two === user.id && c.participant_one === contactId)
+      );
+      if (conv) {
+        setSelectedChat(conv.id);
+        window.history.replaceState({}, document.title);
+      }
+    }
+  }, [conversations, user]);
 
   const getLastMessageTime = (conversation: any) => {
     if (!conversation.last_message_at) return "";
