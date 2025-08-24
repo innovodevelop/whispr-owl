@@ -2,14 +2,14 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserSettings } from "@/hooks/useUserSettings";
-import { useEncryption } from "@/hooks/useEncryption";
-import { encryptMessage, decryptMessage } from "@/lib/encryption";
+import { useSignalProtocol } from '@/hooks/useSignalProtocol';
 
 export interface Message {
   id: string;
   conversation_id: string;
   sender_id: string;
   content: string;
+  encrypted_content?: string;
   message_type: string;
   created_at: string;
   updated_at: string;
@@ -27,12 +27,13 @@ export interface Message {
 export const useMessages = (conversationId: string | null) => {
   const { user } = useAuth();
   const { settings } = useUserSettings();
-  const { getConversationKey, createConversationKey, encryptionReady } = useEncryption();
+  const signalProtocol = useSignalProtocol();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
 
   const fetchMessages = useCallback(async () => {
-    if (!conversationId || !user || !encryptionReady) return;
+    if (!conversationId || !user || !signalProtocol.initialized) return;
     
     setLoading(true);
     try {
@@ -47,19 +48,11 @@ export const useMessages = (conversationId: string | null) => {
         return;
       }
 
-      // Get conversation key for decryption
-      const conversationKey = await getConversationKey(conversationId);
-      if (!conversationKey) {
-        console.error('Could not get conversation key for decryption');
-        setMessages(data || []);
-        return;
-      }
-
       // Fetch sender profiles separately
       const senderIds = [...new Set((data || []).map(msg => msg.sender_id))];
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('user_id, username, display_name, avatar_url, encrypted_display_name')
+        .select('user_id, username, display_name, avatar_url')
         .in('user_id', senderIds);
 
       const profileMap = new Map();
@@ -68,42 +61,37 @@ export const useMessages = (conversationId: string | null) => {
       });
 
       // Filter out expired messages, decrypt content, and add sender data
-      const validMessages = (data || []).filter(msg => {
+      const validMessages = await Promise.all((data || []).filter(msg => {
         if (!msg.expires_at) return true;
         return new Date(msg.expires_at) > new Date();
-      }).map(msg => {
+      }).map(async msg => {
         const profile = profileMap.get(msg.sender_id);
         
-        // Decrypt message content if encrypted
+        // Decrypt message content if it's encrypted using Signal Protocol
         let decryptedContent = msg.content;
-        if (msg.encrypted_content) {
+        if (msg.encrypted_content && msg.sender_id !== user?.id) {
           try {
-            decryptedContent = decryptMessage(msg.encrypted_content, conversationKey);
+            const decrypted = await signalProtocol.decryptMessage(
+              msg.encrypted_content,
+              conversationId,
+              msg.sender_id
+            );
+            decryptedContent = decrypted || '[Decryption failed]';
           } catch (error) {
             console.error('Failed to decrypt message:', error);
-            decryptedContent = '[Encrypted Message]';
+            decryptedContent = '[Decryption failed]';
           }
-        }
-
-        // Decrypt sender display name if available
-        let senderDisplayName = profile?.display_name;
-        if (profile?.encrypted_display_name && conversationKey) {
-          try {
-            senderDisplayName = decryptMessage(profile.encrypted_display_name, conversationKey) || profile.display_name;
-          } catch (error) {
-            console.error('Failed to decrypt display name:', error);
-          }
+        } else if (msg.encrypted_content && msg.sender_id === user?.id) {
+          // For our own messages, we can read the original content
+          decryptedContent = msg.content || msg.encrypted_content;
         }
 
         return {
           ...msg,
           content: decryptedContent,
-          sender: {
-            ...profile,
-            display_name: senderDisplayName
-          }
+          sender: profile
         };
-      });
+      }));
 
       setMessages(validMessages as Message[]);
     } catch (error) {
@@ -111,27 +99,19 @@ export const useMessages = (conversationId: string | null) => {
     } finally {
       setLoading(false);
     }
-  }, [conversationId, user, encryptionReady, getConversationKey]);
+  }, [conversationId, user, signalProtocol.initialized, signalProtocol.decryptMessage]);
 
-  const sendMessage = async (content: string, burnOnReadDuration?: number, messageType: string = "text") => {
-    if (!conversationId || !user || !content.trim() || !encryptionReady) return false;
+  const sendMessage = useCallback(async (
+    content: string,
+    burnOnReadDuration?: number,
+    messageType: string = "text"
+  ): Promise<boolean> => {
+    if (!user || !conversationId || !signalProtocol.initialized) return false;
 
     try {
-      // Get or create conversation key for encryption
-      let conversationKey = await getConversationKey(conversationId);
-      if (!conversationKey) {
-        // Try to create the key if we don't have one
-        conversationKey = await createConversationKey(conversationId);
-        if (!conversationKey) {
-          console.error('Could not get or create conversation key for encryption');
-          return false;
-        }
-      }
-
-      // Encrypt the message content
-      const encryptedContent = encryptMessage(content.trim(), conversationKey);
-
-      // Check for conversation-specific disappearing message settings
+      setSending(true);
+      
+      // Get disappearing message settings if no burn duration specified
       const key = `chat_settings_${conversationId}_${user.id}`;
       const stored = localStorage.getItem(key);
       let expiresAt = null;
@@ -143,50 +123,90 @@ export const useMessages = (conversationId: string | null) => {
           const expiryMinutes = chatSettings.disappearing_duration;
           expiresAt = new Date(now.getTime() + expiryMinutes * 60 * 1000);
         }
-      } else {
-        // Fallback to user-wide settings
-        if (settings?.disappearing_message_duration) {
-          const now = new Date();
-          const expiryMinutes = settings.disappearing_message_duration;
-          expiresAt = new Date(now.getTime() + expiryMinutes * 60 * 1000);
-        }
+      } else if (settings?.disappearing_message_duration) {
+        const now = new Date();
+        const expiryMinutes = settings.disappearing_message_duration;
+        expiresAt = new Date(now.getTime() + expiryMinutes * 60 * 1000);
       }
 
-      // For burn-on-read messages, start timer immediately for sender
-      const burnStartsAt = burnOnReadDuration ? new Date().toISOString() : null;
+      // For financial notifications, don't encrypt
+      let encryptedContent = null;
+      let finalContent = content;
+
+      if (messageType !== "financial_notification") {
+        // Get the other participant in the conversation
+        const { data: conversationData } = await supabase
+          .from('conversations')
+          .select('participant_one, participant_two')
+          .eq('id', conversationId)
+          .single();
+
+        if (conversationData) {
+          const remoteUserId = conversationData.participant_one === user.id 
+            ? conversationData.participant_two 
+            : conversationData.participant_one;
+          
+          if (remoteUserId) {
+            // Encrypt message using Signal Protocol
+            const encrypted = await signalProtocol.encryptMessage(
+              content,
+              conversationId,
+              remoteUserId
+            );
+            encryptedContent = encrypted;
+            // Clear the plain text content for security
+            finalContent = encrypted ? "[Encrypted Message]" : content;
+          }
+        }
+      }
 
       const { data, error } = await supabase
         .from('messages')
         .insert({
           conversation_id: conversationId,
           sender_id: user.id,
-          content: messageType === "financial_notification" ? content.trim() : '[encrypted]', // Only store plaintext for financial notifications
-          encrypted_content: messageType === "financial_notification" ? null : encryptedContent, // Only encrypt regular messages
+          content: finalContent,
+          encrypted_content: encryptedContent,
           message_type: messageType,
           expires_at: expiresAt?.toISOString(),
-          burn_on_read_duration: burnOnReadDuration,
-          burn_on_read_starts_at: burnStartsAt
+          burn_on_read_duration: burnOnReadDuration || null,
+          burn_on_read_starts_at: burnOnReadDuration ? new Date().toISOString() : null
         })
-        .select('*')
+        .select(`
+          *,
+          sender:profiles(display_name, avatar_url)
+        `)
         .single();
 
       if (error) {
         console.error('Error sending message:', error);
-        return false;
+        throw error;
       }
 
-      // Update conversation's updated_at timestamp
-      await supabase
+      console.log('Message sent successfully:', data);
+
+      // Update conversation's last_message_at
+      const { error: conversationError } = await supabase
         .from('conversations')
-        .update({ updated_at: new Date().toISOString() })
+        .update({ 
+          updated_at: new Date().toISOString(),
+          last_message_content: messageType === "financial_notification" ? content : content.slice(0, 100),
+          last_message_at: new Date().toISOString()
+        })
         .eq('id', conversationId);
+
+      if (conversationError) {
+        console.error('Error updating conversation:', conversationError);
+      }
 
       return true;
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Failed to send message:', error);
       return false;
+    } finally {
+      setSending(false);
     }
-  };
+  }, [user, conversationId, settings, signalProtocol]);
 
   const deleteMessage = async (messageId: string) => {
     try {
@@ -317,6 +337,7 @@ export const useMessages = (conversationId: string | null) => {
   return {
     messages,
     loading,
+    sending,
     sendMessage,
     markAsRead,
     fetchMessages,

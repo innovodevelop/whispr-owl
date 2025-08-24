@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { useToast } from "./use-toast";
-import { useEncryption } from "./useEncryption";
-import { decryptMessage } from "@/lib/encryption";
+import { useSignalProtocol } from '@/hooks/useSignalProtocol';
 
 interface Conversation {
   id: string;
@@ -15,6 +14,8 @@ interface Conversation {
   updated_at: string;
   last_message?: string;
   last_message_at?: string;
+  last_message_content?: string;
+  last_message_encrypted?: string;
   recent_messages?: string[];
   otherParticipant?: {
     username?: string;
@@ -26,7 +27,7 @@ interface Conversation {
 export const useConversations = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { getConversationKey } = useEncryption();
+  const signalProtocol = useSignalProtocol();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [pendingRequests, setPendingRequests] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,25 +79,29 @@ export const useConversations = () => {
         if (conv.status === 'accepted') {
           const { data: messageData } = await supabase
             .from('messages')
-            .select('content, encrypted_content, created_at, message_type')
+            .select('content, encrypted_content, created_at, message_type, sender_id')
             .eq('conversation_id', conv.id)
             .order('created_at', { ascending: false })
             .limit(1)
             .maybeSingle();
 
           if (messageData) {
-            if (messageData.encrypted_content && !messageData.content) {
+            if (messageData.encrypted_content) {
               try {
-                const conversationKey = await getConversationKey(conv.id);
-                if (conversationKey) {
-                  lastMessage = decryptMessage(messageData.encrypted_content, conversationKey);
-                } else if (messageData.message_type === 'financial_notification') {
-                  lastMessage = "Financial activity";
+                // Decrypt last message if it exists and is encrypted using Signal Protocol
+                if (signalProtocol.initialized) {
+                  const decrypted = await signalProtocol.decryptMessage(
+                    messageData.encrypted_content,
+                    conv.id,
+                    messageData.sender_id
+                  );
+                  lastMessage = decrypted || '[Encrypted message]';
                 } else {
-                  lastMessage = "New message";
+                  lastMessage = '[Encrypted message]';
                 }
-              } catch {
-                lastMessage = messageData.message_type === 'financial_notification' ? "Financial activity" : "New message";
+              } catch (error) {
+                console.error('Failed to decrypt last message:', error);
+                lastMessage = '[Encrypted message]';
               }
             } else {
               lastMessage = messageData.content;
@@ -110,18 +115,22 @@ export const useConversations = () => {
         if (conv.status === 'accepted') {
           const { data: recentMessagesData } = await supabase
             .from('messages')
-            .select('content, encrypted_content')
+            .select('content, encrypted_content, sender_id')
             .eq('conversation_id', conv.id)
             .order('created_at', { ascending: false })
             .limit(3);
 
           if (recentMessagesData) {
             recentMessages = await Promise.all(recentMessagesData.map(async (msg) => {
-              if (msg.encrypted_content && !msg.content) {
+              if (msg.encrypted_content) {
                 try {
-                  const conversationKey = await getConversationKey(conv.id);
-                  if (conversationKey) {
-                    return decryptMessage(msg.encrypted_content, conversationKey);
+                  if (signalProtocol.initialized) {
+                    const decrypted = await signalProtocol.decryptMessage(
+                      msg.encrypted_content,
+                      conv.id,
+                      msg.sender_id
+                    );
+                    return decrypted || "New message";
                   }
                   return "New message";
                 } catch {
@@ -296,8 +305,6 @@ export const useConversations = () => {
           onConflict: 'user_id,contact_user_id',
           ignoreDuplicates: true 
         });
-
-      // After creating contacts, ensure both users will see each other by refreshing contacts screen when they navigate there
 
       toast({
         title: "Chat request accepted",
