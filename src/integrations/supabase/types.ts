@@ -332,6 +332,126 @@ export type Database = {
         }
         Relationships: []
       }
+      signal_identity_keys: {
+        Row: {
+          created_at: string
+          id: string
+          identity_key_private: string
+          identity_key_public: string
+          registration_id: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          identity_key_private: string
+          identity_key_public: string
+          registration_id: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          identity_key_private?: string
+          identity_key_public?: string
+          registration_id?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      signal_one_time_prekeys: {
+        Row: {
+          created_at: string
+          id: string
+          key_id: number
+          private_key: string
+          public_key: string
+          used: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key_id: number
+          private_key: string
+          public_key: string
+          used?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key_id?: number
+          private_key?: string
+          public_key?: string
+          used?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
+      signal_sessions: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          id: string
+          local_user_id: string
+          remote_user_id: string
+          session_state: string
+          updated_at: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          id?: string
+          local_user_id: string
+          remote_user_id: string
+          session_state: string
+          updated_at?: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          local_user_id?: string
+          remote_user_id?: string
+          session_state?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      signal_signed_prekeys: {
+        Row: {
+          created_at: string
+          id: string
+          key_id: number
+          private_key: string
+          public_key: string
+          signature: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key_id: number
+          private_key: string
+          public_key: string
+          signature: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key_id?: number
+          private_key?: string
+          public_key?: string
+          signature?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_encryption_keys: {
         Row: {
           created_at: string
