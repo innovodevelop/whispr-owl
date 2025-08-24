@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import BottomNavigation from "@/components/BottomNavigation";
-import { ArrowLeft, User, Lock, Bell, Palette, Shield, HelpCircle, LogOut, Camera, Edit2, Check, X } from "lucide-react";
+import { ArrowLeft, User, Lock, Bell, Palette, Shield, HelpCircle, LogOut, Camera, Edit2, Check, X, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ThemeDialog } from "@/components/dialogs/ThemeDialog";
 import { PhoneNumberDialog } from "@/components/dialogs/PhoneNumberDialog";
 import { BlockedUsersDialog } from "@/components/dialogs/BlockedUsersDialog";
+import { encryptExistingMessages, getEncryptionMigrationStats, MigrationProgress } from "@/utils/encryptExistingMessages";
 
 const Settings = () => {
   const { user, signOut } = useAuth();
@@ -32,11 +33,61 @@ const Settings = () => {
   const [phoneDialogOpen, setPhoneDialogOpen] = useState(false);
   const [blockedUsersDialogOpen, setBlockedUsersDialogOpen] = useState(false);
   
+  // Encryption migration states
+  const [migrationStats, setMigrationStats] = useState({ totalMessages: 0, needsEncryption: 0 });
+  const [migrationProgress, setMigrationProgress] = useState<MigrationProgress>({ 
+    total: 0, encrypted: 0, errors: 0, status: 'idle' 
+  });
+  const [isMigrating, setIsMigrating] = useState(false);
+  
   useEffect(() => {
     // Debug render to ensure preview refreshes and to verify settings state
     console.log('Settings render', { settingsLoading, hasSettings: !!settings });
     console.log('Settings sections count', 6);
+    
+    // Load migration stats when component mounts
+    const loadStats = async () => {
+      const stats = await getEncryptionMigrationStats();
+      setMigrationStats(stats);
+    };
+    loadStats();
   }, [settingsLoading, settings]);
+
+  const handleEncryptExistingMessages = async () => {
+    setIsMigrating(true);
+    try {
+      const result = await encryptExistingMessages({
+        onProgress: (progress) => {
+          setMigrationProgress(progress);
+        },
+        batchSize: 5
+      });
+
+      if (result.status === 'completed') {
+        toast({
+          title: "Encryption Complete",
+          description: `Successfully encrypted ${result.encrypted} messages.`,
+        });
+        // Refresh stats
+        const stats = await getEncryptionMigrationStats();
+        setMigrationStats(stats);
+      } else {
+        toast({
+          title: "Encryption Warning", 
+          description: `Encrypted ${result.encrypted} messages with ${result.errors} errors.`,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Encryption Failed",
+        description: "Failed to encrypt existing messages. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsMigrating(false);
+    }
+  };
   // Form states
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
@@ -154,6 +205,21 @@ const Settings = () => {
       ]
     },
     {
+      title: "Encryption",
+      icon: Shield,
+      items: [
+        { 
+          name: "Encrypt Existing Messages", 
+          description: migrationStats.needsEncryption > 0 ? 
+            `${migrationStats.needsEncryption} messages need encryption` : 
+            "All messages are encrypted",
+          action: migrationStats.needsEncryption > 0 ? handleEncryptExistingMessages : undefined,
+          disabled: isMigrating || migrationStats.needsEncryption === 0,
+          loading: isMigrating
+        },
+      ]
+    },
+    {
       title: "Notifications",
       icon: Bell,
       items: [
@@ -164,7 +230,7 @@ const Settings = () => {
     },
     {
       title: "Messaging",
-      icon: Shield,
+      icon: Database,
       items: [
         { name: "Read Receipts", description: "Let others know when you've read their messages", toggle: settings?.read_receipts ?? true, onToggle: (value: boolean) => handleToggleSetting('read_receipts', value) },
         { name: "Disappearing Messages", description: "Messages disappear after a set time", toggle: settings?.disappearing_messages ?? false, onToggle: (value: boolean) => handleToggleSetting('disappearing_messages', value) },
@@ -395,8 +461,17 @@ const Settings = () => {
                         className="touch-feedback"
                       />
                     ) : (
-                      <Button variant="ghost" size="sm" onClick={item.action} className="touch-feedback">
-                        Configure
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={item.action} 
+                        className="touch-feedback"
+                        disabled={item.disabled}
+                      >
+                        {item.loading ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2" />
+                        ) : null}
+                        {item.disabled && !item.loading ? 'Done' : 'Configure'}
                       </Button>
                     )}
                   </div>

@@ -1,26 +1,11 @@
-// TEMPORARILY DISABLED - crypto-js causing app to fail
-// Complete stub implementation to prevent build errors
-const CryptoJS = {
-  lib: {
-    WordArray: {
-      random: (size: number) => ({ toString: () => 'stub-key' })
-    }
-  },
-  SHA256: (data: any) => ({ toString: () => 'stub-hash' }),
-  AES: {
-    encrypt: (data: any, key: any, options?: any) => ({ toString: () => 'stub-encrypted' }),
-    decrypt: (data: any, key: any, options?: any) => ({ toString: (encoding?: any) => data })
-  },
-  mode: { CBC: {} },
-  pad: { Pkcs7: {} },
-  PBKDF2: (password: string, salt: any, options?: any) => ({ toString: () => 'stub-derived' }),
-  enc: {
-    Hex: { parse: (data: any) => data },
-    Utf8: {}
-  }
-};
+import { gcm } from '@noble/ciphers/aes';
 
-// Encryption utilities for end-to-end encryption
+// Use Web Crypto API for random bytes since @noble/ciphers/utils doesn't export randomBytes
+function randomBytes(length: number): Uint8Array {
+  return crypto.getRandomValues(new Uint8Array(length));
+}
+
+// Modern encryption using @noble/ciphers and Web Crypto API
 
 export interface KeyPair {
   publicKey: string;
@@ -32,17 +17,37 @@ export interface ConversationKey {
   iv: string;
 }
 
-// Generate a new RSA-like key pair for user encryption
+// Helper functions for encoding/decoding
+function bytesToBase64(bytes: Uint8Array): string {
+  return btoa(String.fromCharCode(...bytes));
+}
+
+function base64ToBytes(base64: string): Uint8Array {
+  return new Uint8Array(atob(base64).split('').map(c => c.charCodeAt(0)));
+}
+
+function textToBytes(text: string): Uint8Array {
+  return new TextEncoder().encode(text);
+}
+
+function bytesToText(bytes: Uint8Array): string {
+  return new TextDecoder().decode(bytes);
+}
+
+// Generate a new key pair for user encryption
 export async function generateUserKeyPair(password: string): Promise<KeyPair> {
-  // Generate a strong random key pair
-  const privateKeyData = CryptoJS.lib.WordArray.random(256/8); // 256-bit private key
-  const publicKeyData = CryptoJS.SHA256(privateKeyData); // Derive public key from private
+  // Generate a strong random private key
+  const privateKeyBytes = randomBytes(32); // 256-bit private key
   
-  const privateKey = privateKeyData.toString();
-  const publicKey = publicKeyData.toString();
+  // Derive public key from private key (simplified - hash of private key)
+  const privateKeyHash = await crypto.subtle.digest('SHA-256', privateKeyBytes);
+  const publicKeyBytes = new Uint8Array(privateKeyHash);
+  
+  const privateKey = bytesToBase64(privateKeyBytes);
+  const publicKey = bytesToBase64(publicKeyBytes);
   
   // Encrypt the private key with the user's password
-  const encryptedPrivateKey = CryptoJS.AES.encrypt(privateKey, password).toString();
+  const encryptedPrivateKey = await encryptWithPassword(privateKey, password);
   
   return {
     publicKey,
@@ -52,44 +57,40 @@ export async function generateUserKeyPair(password: string): Promise<KeyPair> {
 
 // Generate a symmetric key for conversation encryption
 export function generateConversationKey(): ConversationKey {
-  const key = CryptoJS.lib.WordArray.random(256/8).toString(); // 256-bit AES key
-  const iv = CryptoJS.lib.WordArray.random(128/8).toString();  // 128-bit IV
+  const key = bytesToBase64(randomBytes(32)); // 256-bit AES key
+  const iv = bytesToBase64(randomBytes(12));  // 96-bit IV for GCM
   
   return { key, iv };
 }
 
-// Encrypt text with AES using conversation key
+// Encrypt text with AES-GCM using conversation key
 export function encryptMessage(plaintext: string, conversationKey: ConversationKey): string {
   try {
-    const key = CryptoJS.enc.Hex.parse(conversationKey.key);
-    const iv = CryptoJS.enc.Hex.parse(conversationKey.iv);
+    const key = base64ToBytes(conversationKey.key);
+    const iv = base64ToBytes(conversationKey.iv);
+    const plaintextBytes = textToBytes(plaintext);
     
-    const encrypted = CryptoJS.AES.encrypt(plaintext, key, { 
-      iv: iv,
-      mode: CryptoJS.mode.CBC,
-      padding: CryptoJS.pad.Pkcs7
-    });
+    const cipher = gcm(key, iv);
+    const encrypted = cipher.encrypt(plaintextBytes);
     
-    return encrypted.toString();
+    return bytesToBase64(encrypted);
   } catch (error) {
     console.error('Encryption failed:', error);
     throw new Error('Failed to encrypt message');
   }
 }
 
-// Decrypt text with AES using conversation key
+// Decrypt text with AES-GCM using conversation key
 export function decryptMessage(ciphertext: string, conversationKey: ConversationKey): string {
   try {
-    const key = CryptoJS.enc.Hex.parse(conversationKey.key);
-    const iv = CryptoJS.enc.Hex.parse(conversationKey.iv);
+    const key = base64ToBytes(conversationKey.key);
+    const iv = base64ToBytes(conversationKey.iv);
+    const ciphertextBytes = base64ToBytes(ciphertext);
     
-    const decrypted = CryptoJS.AES.decrypt(ciphertext, key, { 
-      iv: iv,
-      mode: CryptoJS.mode.CBC,
-      padding: CryptoJS.pad.Pkcs7
-    });
+    const cipher = gcm(key, iv);
+    const decrypted = cipher.decrypt(ciphertextBytes);
     
-    return decrypted.toString(CryptoJS.enc.Utf8);
+    return bytesToText(decrypted);
   } catch (error) {
     console.error('Decryption failed:', error);
     return '[Encrypted Message - Unable to Decrypt]';
@@ -100,9 +101,21 @@ export function decryptMessage(ciphertext: string, conversationKey: Conversation
 export function encryptConversationKey(conversationKey: ConversationKey, userPublicKey: string): string {
   try {
     const keyData = JSON.stringify(conversationKey);
-    // Use the public key as the encryption key (simplified implementation)
-    const encrypted = CryptoJS.AES.encrypt(keyData, userPublicKey).toString();
-    return encrypted;
+    const publicKeyBytes = base64ToBytes(userPublicKey);
+    
+    // Use first 32 bytes of public key as encryption key (simplified)
+    const encryptionKey = publicKeyBytes.slice(0, 32);
+    const iv = randomBytes(12);
+    
+    const cipher = gcm(encryptionKey, iv);
+    const encrypted = cipher.encrypt(textToBytes(keyData));
+    
+    // Combine IV and encrypted data
+    const combined = new Uint8Array(iv.length + encrypted.length);
+    combined.set(iv, 0);
+    combined.set(encrypted, iv.length);
+    
+    return bytesToBase64(combined);
   } catch (error) {
     console.error('Failed to encrypt conversation key:', error);
     throw new Error('Failed to encrypt conversation key');
@@ -110,49 +123,157 @@ export function encryptConversationKey(conversationKey: ConversationKey, userPub
 }
 
 // Decrypt conversation key with user's private key
-export function decryptConversationKey(encryptedKey: string, userPrivateKey: string, password: string): ConversationKey | null {
+export async function decryptConversationKey(encryptedKey: string, userPrivateKey: string, password: string): Promise<ConversationKey | null> {
   try {
     // First decrypt the user's private key with their password
-    const decryptedPrivateKey = CryptoJS.AES.decrypt(userPrivateKey, password).toString(CryptoJS.enc.Utf8);
+    const decryptedPrivateKey = await decryptWithPassword(userPrivateKey, password);
+    const privateKeyBytes = base64ToBytes(decryptedPrivateKey);
     
-    // Then decrypt the conversation key
-    const decryptedData = CryptoJS.AES.decrypt(encryptedKey, decryptedPrivateKey).toString(CryptoJS.enc.Utf8);
+    // Use first 32 bytes as decryption key
+    const decryptionKey = privateKeyBytes.slice(0, 32);
     
-    return JSON.parse(decryptedData) as ConversationKey;
+    // Extract IV and encrypted data
+    const combined = base64ToBytes(encryptedKey);
+    const iv = combined.slice(0, 12);
+    const encrypted = combined.slice(12);
+    
+    const cipher = gcm(decryptionKey, iv);
+    const decrypted = cipher.decrypt(encrypted);
+    
+    return JSON.parse(bytesToText(decrypted)) as ConversationKey;
   } catch (error) {
     console.error('Failed to decrypt conversation key:', error);
     return null;
   }
 }
 
-// Hash password for secure storage (used for key derivation)
-export function hashPassword(password: string, salt?: string): string {
-  const saltToUse = salt || CryptoJS.lib.WordArray.random(128/8).toString();
-  const hash = CryptoJS.PBKDF2(password, saltToUse, {
-    keySize: 256/32,
-    iterations: 10000
-  }).toString();
+// Encrypt text with password using Web Crypto API
+async function encryptWithPassword(text: string, password: string): Promise<string> {
+  const salt = randomBytes(16);
+  const iv = randomBytes(12);
   
-  return `${saltToUse}:${hash}`;
+  // Derive key from password
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    textToBytes(password),
+    'PBKDF2',
+    false,
+    ['deriveBits', 'deriveKey']
+  );
+  
+  const key = await crypto.subtle.deriveKey(
+    {
+      name: 'PBKDF2',
+      salt: salt,
+      iterations: 100000,
+      hash: 'SHA-256'
+    },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+  
+  // Encrypt the text
+  const encrypted = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: iv },
+    key,
+    textToBytes(text)
+  );
+  
+  // Combine salt, IV, and encrypted data
+  const combined = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
+  combined.set(salt, 0);
+  combined.set(iv, salt.length);
+  combined.set(new Uint8Array(encrypted), salt.length + iv.length);
+  
+  return bytesToBase64(combined);
+}
+
+// Decrypt text with password using Web Crypto API
+async function decryptWithPassword(encryptedText: string, password: string): Promise<string> {
+  const combined = base64ToBytes(encryptedText);
+  const salt = combined.slice(0, 16);
+  const iv = combined.slice(16, 28);
+  const encrypted = combined.slice(28);
+  
+  // Derive key from password
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    textToBytes(password),
+    'PBKDF2',
+    false,
+    ['deriveBits', 'deriveKey']
+  );
+  
+  const key = await crypto.subtle.deriveKey(
+    {
+      name: 'PBKDF2',
+      salt: salt,
+      iterations: 100000,
+      hash: 'SHA-256'
+    },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+  
+  // Decrypt the text
+  const decrypted = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: iv },
+    key,
+    encrypted
+  );
+  
+  return bytesToText(new Uint8Array(decrypted));
+}
+
+// Hash password for secure storage
+export async function hashPassword(password: string, salt?: string): Promise<string> {
+  const saltBytes = salt ? base64ToBytes(salt) : randomBytes(16);
+  
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    textToBytes(password),
+    'PBKDF2',
+    false,
+    ['deriveBits']
+  );
+  
+  const hash = await crypto.subtle.deriveBits(
+    {
+      name: 'PBKDF2',
+      salt: saltBytes,
+      iterations: 100000,
+      hash: 'SHA-256'
+    },
+    keyMaterial,
+    256
+  );
+  
+  const saltBase64 = bytesToBase64(saltBytes);
+  const hashBase64 = bytesToBase64(new Uint8Array(hash));
+  
+  return `${saltBase64}:${hashBase64}`;
 }
 
 // Verify password against hash
-export function verifyPassword(password: string, storedHash: string): boolean {
+export async function verifyPassword(password: string, storedHash: string): Promise<boolean> {
   try {
     const [salt, hash] = storedHash.split(':');
-    const computedHash = CryptoJS.PBKDF2(password, salt, {
-      keySize: 256/32,
-      iterations: 10000
-    }).toString();
+    const computedHash = await hashPassword(password, salt);
+    const [, computedHashPart] = computedHash.split(':');
     
-    return computedHash === hash;
+    return computedHashPart === hash;
   } catch {
     return false;
   }
 }
 
 // Generate a secure master password from user credentials
-export function deriveEncryptionPassword(email: string, userId: string): string {
-  // Derive a deterministic but secure password from user data
-  return CryptoJS.SHA256(email + userId + 'encryption_key_salt_2024').toString();
+export async function deriveEncryptionPassword(email: string, userId: string): Promise<string> {
+  const data = textToBytes(email + userId + 'encryption_key_salt_2024');
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return bytesToBase64(new Uint8Array(hash));
 }

@@ -52,7 +52,7 @@ export const useEncryption = () => {
       
       // Generate deterministic encryption password from user data
       console.log("useEncryption: Generating encryption password");
-      const password = deriveEncryptionPassword(user.email!, user.id);
+      const password = await deriveEncryptionPassword(user.email!, user.id);
       setEncryptionPassword(password);
 
       console.log("useEncryption: Checking for existing keys");
@@ -72,7 +72,6 @@ export const useEncryption = () => {
           keyVersion: existingKeys.key_version
         });
       } else {
-        console.log("useEncryption: No existing keys, generating new ones");
         // Generate new keys for user
         await generateAndStoreUserKeys(password);
       }

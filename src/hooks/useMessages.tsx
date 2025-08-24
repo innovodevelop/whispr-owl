@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserSettings } from "@/hooks/useUserSettings";
-// import { useEncryption } from "@/hooks/useEncryption"; // Temporarily disabled
-// import { encryptMessage, decryptMessage } from "@/lib/encryption"; // Temporarily disabled
+import { useEncryption } from "@/hooks/useEncryption";
+import { encryptMessage, decryptMessage } from "@/lib/encryption";
 
 export interface Message {
   id: string;
@@ -27,12 +27,12 @@ export interface Message {
 export const useMessages = (conversationId: string | null) => {
   const { user } = useAuth();
   const { settings } = useUserSettings();
-  // const { getConversationKey, createConversationKey, encryptionReady } = useEncryption(); // Temporarily disabled
+  const { getConversationKey, createConversationKey, encryptionReady } = useEncryption();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchMessages = useCallback(async () => {
-    if (!conversationId || !user) return; // Removed encryptionReady check
+    if (!conversationId || !user || !encryptionReady) return;
     
     setLoading(true);
     try {
@@ -47,11 +47,19 @@ export const useMessages = (conversationId: string | null) => {
         return;
       }
 
-      // Fetch sender profiles separately (simplified without encryption)
+      // Get conversation key for decryption
+      const conversationKey = await getConversationKey(conversationId);
+      if (!conversationKey) {
+        console.error('Could not get conversation key for decryption');
+        setMessages(data || []);
+        return;
+      }
+
+      // Fetch sender profiles separately
       const senderIds = [...new Set((data || []).map(msg => msg.sender_id))];
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('user_id, username, display_name, avatar_url')
+        .select('user_id, username, display_name, avatar_url, encrypted_display_name')
         .in('user_id', senderIds);
 
       const profileMap = new Map();
@@ -59,16 +67,41 @@ export const useMessages = (conversationId: string | null) => {
         profileMap.set(profile.user_id, profile);
       });
 
-      // Filter out expired messages and add sender data (no encryption for now)
+      // Filter out expired messages, decrypt content, and add sender data
       const validMessages = (data || []).filter(msg => {
         if (!msg.expires_at) return true;
         return new Date(msg.expires_at) > new Date();
       }).map(msg => {
         const profile = profileMap.get(msg.sender_id);
         
+        // Decrypt message content if encrypted
+        let decryptedContent = msg.content;
+        if (msg.encrypted_content) {
+          try {
+            decryptedContent = decryptMessage(msg.encrypted_content, conversationKey);
+          } catch (error) {
+            console.error('Failed to decrypt message:', error);
+            decryptedContent = '[Encrypted Message]';
+          }
+        }
+
+        // Decrypt sender display name if available
+        let senderDisplayName = profile?.display_name;
+        if (profile?.encrypted_display_name && conversationKey) {
+          try {
+            senderDisplayName = decryptMessage(profile.encrypted_display_name, conversationKey) || profile.display_name;
+          } catch (error) {
+            console.error('Failed to decrypt display name:', error);
+          }
+        }
+
         return {
           ...msg,
-          sender: profile
+          content: decryptedContent,
+          sender: {
+            ...profile,
+            display_name: senderDisplayName
+          }
         };
       });
 
@@ -78,12 +111,26 @@ export const useMessages = (conversationId: string | null) => {
     } finally {
       setLoading(false);
     }
-  }, [conversationId, user]); // Removed encryption dependencies
+  }, [conversationId, user, encryptionReady, getConversationKey]);
 
   const sendMessage = async (content: string, burnOnReadDuration?: number, messageType: string = "text") => {
-    if (!conversationId || !user || !content.trim()) return false; // Removed encryptionReady check
+    if (!conversationId || !user || !content.trim() || !encryptionReady) return false;
 
     try {
+      // Get or create conversation key for encryption
+      let conversationKey = await getConversationKey(conversationId);
+      if (!conversationKey) {
+        // Try to create the key if we don't have one
+        conversationKey = await createConversationKey(conversationId);
+        if (!conversationKey) {
+          console.error('Could not get or create conversation key for encryption');
+          return false;
+        }
+      }
+
+      // Encrypt the message content
+      const encryptedContent = encryptMessage(content.trim(), conversationKey);
+
       // Check for conversation-specific disappearing message settings
       const key = `chat_settings_${conversationId}_${user.id}`;
       const stored = localStorage.getItem(key);
@@ -113,8 +160,8 @@ export const useMessages = (conversationId: string | null) => {
         .insert({
           conversation_id: conversationId,
           sender_id: user.id,
-          content: content.trim(), // Store plaintext for now (no encryption)
-          encrypted_content: null, // Temporarily disabled
+          content: content.trim(), // Keep plaintext for notifications and search
+          encrypted_content: messageType === "financial_notification" ? null : encryptedContent, // Only encrypt regular messages
           message_type: messageType,
           expires_at: expiresAt?.toISOString(),
           burn_on_read_duration: burnOnReadDuration,
