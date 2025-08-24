@@ -36,12 +36,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({
     if (onBack) {
       onBack();
     } else {
-      // Default behavior: go back in history or to home
-      if (window.history.length > 1) {
-        navigate(-1);
-      } else {
-        navigate('/');
-      }
+      // Default behavior: go back to home
+      navigate('/');
     }
   };
 
