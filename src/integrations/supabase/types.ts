@@ -499,6 +499,14 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_user_one_time_prekey_secure: {
+        Args: { target_user_id: string }
+        Returns: {
+          id: string
+          key_id: number
+          public_key: string
+        }[]
+      }
       get_user_signed_prekey: {
         Args: { target_user_id: string }
         Returns: {
@@ -510,7 +518,19 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_user_signed_prekey_secure: {
+        Args: { target_user_id: string }
+        Returns: {
+          key_id: number
+          public_key: string
+          signature: string
+        }[]
+      }
       mark_prekey_used: {
+        Args: { prekey_id: string; target_user_id: string }
+        Returns: boolean
+      }
+      mark_prekey_used_secure: {
         Args: { prekey_id: string; target_user_id: string }
         Returns: boolean
       }

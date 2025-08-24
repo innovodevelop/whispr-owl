@@ -343,23 +343,23 @@ export const getPreKeyBundle = async (userId: string): Promise<SignalPreKeyBundl
 
     const identity = identityData[0];
 
-    // Use secure functions for key retrieval instead of direct table access
+    // Use NEW secure functions for key retrieval instead of direct table access
     const { data: signedPreKeyData, error: signedPreKeyError } = await supabase
-      .rpc('get_user_signed_prekey', { target_user_id: userId });
+      .rpc('get_user_signed_prekey_secure', { target_user_id: userId });
 
     if (signedPreKeyError || !signedPreKeyData || signedPreKeyData.length === 0) return null;
 
     const signedPreKey = signedPreKeyData[0];
 
     const { data: preKeyData, error: preKeyError } = await supabase
-      .rpc('get_user_one_time_prekey', { target_user_id: userId });
+      .rpc('get_user_one_time_prekey_secure', { target_user_id: userId });
 
     let oneTimePreKey = null;
     if (preKeyData && !preKeyError && preKeyData.length > 0) {
       oneTimePreKey = preKeyData[0];
       
-      // Mark the prekey as used using secure function
-      await supabase.rpc('mark_prekey_used', { 
+      // Mark the prekey as used using NEW secure function
+      await supabase.rpc('mark_prekey_used_secure', { 
         prekey_id: oneTimePreKey.id, 
         target_user_id: userId 
       });
