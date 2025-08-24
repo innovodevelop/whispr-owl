@@ -141,7 +141,7 @@ export const useConversations = () => {
   };
 
   const startConversation = async (contactUserId: string) => {
-    if (!user) return false;
+    if (!user) return { success: false, conversationId: null };
 
     try {
       // Check if conversation already exists
@@ -159,18 +159,20 @@ export const useConversations = () => {
           description: "You already have a conversation with this user",
           variant: "destructive",
         });
-        return false;
+        return { success: false, conversationId: existing.id };
       }
 
       // Create new conversation request
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('conversations')
         .insert({
           participant_one: user.id,
           participant_two: contactUserId,
           created_by: user.id,
           status: 'pending'
-        });
+        })
+        .select()
+        .single();
 
       if (error) {
         toast({
@@ -178,7 +180,7 @@ export const useConversations = () => {
           description: error.message,
           variant: "destructive",
         });
-        return false;
+        return { success: false, conversationId: null };
       }
 
       toast({
@@ -187,14 +189,14 @@ export const useConversations = () => {
       });
       
       await fetchConversations();
-      return true;
+      return { success: true, conversationId: data.id };
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to start conversation",
         variant: "destructive",
       });
-      return false;
+      return { success: false, conversationId: null };
     }
   };
 

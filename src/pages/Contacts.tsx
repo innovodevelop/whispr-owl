@@ -94,21 +94,21 @@ const Contacts = () => {
   };
 
   const handleStartConversation = async (contactUserId: string) => {
-    const success = await startConversation(contactUserId);
-    if (success) {
-      // Navigate to chat after successfully creating conversation
-      const contact = contacts.find(c => c.contact_user_id === contactUserId);
-      if (contact) {
-        navigate("/", { 
-          state: { 
-            selectedContact: {
-              id: contactUserId,
-              name: contact.profile?.display_name || contact.profile?.username || "Unknown",
-              avatar: contact.profile?.avatar_url
-            }
-          }
-        });
-      }
+    const result = await startConversation(contactUserId);
+    if (result.success && result.conversationId) {
+      // Navigate to chat with the new conversation
+      navigate("/", { 
+        state: { 
+          newConversation: { id: result.conversationId }
+        }
+      });
+    } else if (result.conversationId) {
+      // Existing conversation - navigate to it
+      navigate("/", { 
+        state: { 
+          newConversation: { id: result.conversationId }
+        }
+      });
     }
   };
 
@@ -373,7 +373,6 @@ const Contacts = () => {
             </Card>
           </div>
         )}
-      </div>
       </div>
       
       {/* Bottom spacing for mobile navigation */}
