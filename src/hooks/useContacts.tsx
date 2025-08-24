@@ -37,17 +37,7 @@ export const useContacts = () => {
     try {
       const { data, error } = await supabase
         .from('contacts')
-        .select(`
-          id,
-          user_id,
-          contact_user_id,
-          created_at,
-          profiles!contacts_contact_user_id_fkey(
-            username,
-            display_name,
-            avatar_url
-          )
-        `)
+        .select('id, user_id, contact_user_id, created_at')
         .eq('user_id', user.id);
 
       if (error) {
@@ -55,10 +45,37 @@ export const useContacts = () => {
         return;
       }
 
+      const contactsData = (data || []);
+      if (contactsData.length === 0) {
+        setContacts([]);
+        return;
+      }
+
+      // Fetch profiles for all contact_user_id in a single query
+      const contactIds = Array.from(new Set(contactsData.map(c => c.contact_user_id).filter(Boolean)));
+
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, username, display_name, avatar_url')
+        .in('user_id', contactIds);
+
+      if (profilesError) {
+        console.error('Error fetching profiles for contacts:', profilesError);
+      }
+
+      const profileMap = new Map<string, { username?: string; display_name?: string; avatar_url?: string }>();
+      (profilesData || []).forEach((p: any) => {
+        profileMap.set(p.user_id, {
+          username: p.username ?? undefined,
+          display_name: p.display_name ?? undefined,
+          avatar_url: p.avatar_url ?? undefined,
+        });
+      });
+
       // Transform the data to match our interface
-      const transformedContacts = (data || []).map(contact => ({
+      const transformedContacts = contactsData.map((contact: any) => ({
         ...contact,
-        profile: contact.profiles
+        profile: profileMap.get(contact.contact_user_id) || undefined,
       }));
 
       setContacts(transformedContacts as Contact[]);
