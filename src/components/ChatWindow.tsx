@@ -12,6 +12,7 @@ import { BurnOnReadSelector } from "./BurnOnReadSelector";
 import { BurnTimer } from "./BurnTimer";
 import { useBurnMessages } from "@/hooks/useBurnMessages";
 import { FinancialSheetDrawer } from "./FinancialSheetDrawer";
+import { EncryptionStatus } from "./EncryptionStatus";
 import type { FinancialEntry } from "@/hooks/useFinancialSheet";
 
 interface ChatWindowProps {
@@ -138,7 +139,9 @@ export const ChatWindow = ({
           
           <div className="flex-1 min-w-0">
             <h2 className="font-semibold text-sm md:text-base truncate">{conversationName}</h2>
-            <p className="text-xs text-muted-foreground">Online</p>
+            <div className="flex items-center gap-2">
+              <EncryptionStatus showText className="shrink-0" />
+            </div>
           </div>
           
           <div className="flex items-center gap-1" role="toolbar" aria-label="Chat actions">
