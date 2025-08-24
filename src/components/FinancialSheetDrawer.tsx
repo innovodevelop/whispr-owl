@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2, Calculator, Calendar, Edit3 } from "lucide-react";
+import { Plus, Trash2, DollarSign, Calendar, Edit3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -120,7 +120,7 @@ export const FinancialSheetDrawer = ({
       <SheetContent side="right" className="w-full sm:max-w-md">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
-            <Calculator className="h-5 w-5" />
+            <DollarSign className="h-5 w-5" />
             Financial Sheet
           </SheetTitle>
         </SheetHeader>
@@ -130,7 +130,7 @@ export const FinancialSheetDrawer = ({
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center space-y-4">
-                  <Calculator className="h-12 w-12 mx-auto text-muted-foreground" />
+                  <DollarSign className="h-12 w-12 mx-auto text-muted-foreground" />
                   <p className="text-muted-foreground">No financial sheet exists for this conversation.</p>
                   <Button onClick={handleCreateSheet} className="w-full">
                     Create Financial Sheet
@@ -290,7 +290,7 @@ export const FinancialSheetDrawer = ({
                           {/* Amount and due date row */}
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-1">
-                              <Calculator className="h-3 w-3 text-muted-foreground" />
+                              <DollarSign className="h-3 w-3 text-muted-foreground" />
                               {editingId === `${entry.id}-amount` ? (
                                 <Input
                                   type="number"

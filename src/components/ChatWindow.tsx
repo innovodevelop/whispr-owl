@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, ArrowLeft, Phone, Video, Settings, Flame, Calculator } from "lucide-react";
+import { Send, ArrowLeft, Phone, Video, Settings, Flame, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -185,26 +185,35 @@ export const ChatWindow = ({
               return (
                 <div
                   key={message.id}
-                  className="flex justify-center my-4"
+                  className="flex justify-center my-6"
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
-                  <div className="max-w-md mx-auto bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8 border-2 border-blue-200 dark:border-blue-700">
-                        <AvatarImage src={message.sender?.avatar_url} />
-                        <AvatarFallback className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">
-                          {message.sender?.display_name?.[0] || message.sender?.username?.[0] || "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
+                  <div className="max-w-sm mx-auto bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 dark:from-amber-950/20 dark:via-yellow-950/20 dark:to-orange-950/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl p-4 shadow-lg backdrop-blur-sm animate-fade-in">
+                    <div className="flex items-start gap-3">
+                      <div className="relative">
+                        <Avatar className="h-10 w-10 border-2 border-amber-300 dark:border-amber-600 shadow-sm">
+                          <AvatarImage src={message.sender?.avatar_url} />
+                          <AvatarFallback className="text-sm bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 font-medium">
+                            {message.sender?.display_name?.[0] || message.sender?.username?.[0] || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="absolute -bottom-1 -right-1 bg-amber-400 dark:bg-amber-500 rounded-full p-1 shadow-sm">
+                          <DollarSign className="h-3 w-3 text-amber-900 dark:text-amber-100" />
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <Calculator className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                          <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                          <span className="text-sm font-semibold text-amber-900 dark:text-amber-100 truncate">
                             {message.sender?.display_name || message.sender?.username || "Unknown User"}
                           </span>
+                          <span className="text-xs text-amber-600 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/50 px-2 py-0.5 rounded-full font-medium">
+                            Financial Activity
+                          </span>
                         </div>
-                        <p className="text-sm text-blue-700 dark:text-blue-300">{message.content}</p>
-                        <span className="text-xs text-blue-500 dark:text-blue-400 mt-1 block">
+                        <p className="text-sm text-amber-800 dark:text-amber-200 leading-relaxed font-medium">
+                          {message.content}
+                        </p>
+                        <span className="text-xs text-amber-600 dark:text-amber-400 mt-2 block opacity-75">
                           {formatMessageTime(message.created_at)}
                         </span>
                       </div>
@@ -297,7 +306,7 @@ export const ChatWindow = ({
       </div>
 
       {/* Message Input */}
-      <div className="p-3 md:p-4 border-t border-border bg-card slide-up pb-safe-area-inset-bottom">
+      <div className="p-3 md:p-4 border-t border-border bg-card slide-up mb-16 md:mb-0">
         <div className="flex items-center gap-2">
           <BurnOnReadSelector
             onSelect={setBurnOnReadDuration}
@@ -330,7 +339,7 @@ export const ChatWindow = ({
             aria-label="Financial sheet"
             title="Financial sheet"
           >
-            <Calculator className="h-4 w-4" />
+            <DollarSign className="h-4 w-4" />
           </Button>
         </div>
       </div>
