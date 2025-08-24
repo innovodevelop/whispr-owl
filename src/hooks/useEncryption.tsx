@@ -26,31 +26,45 @@ export const useEncryption = () => {
   // Initialize encryption for user
   useEffect(() => {
     if (!user) {
+      console.log("useEncryption: No user, setting loading to false");
       setLoading(false);
       return;
     }
 
-    initializeEncryption();
+    console.log("useEncryption: User found, initializing encryption");
+    // Use setTimeout to prevent blocking the main thread
+    const timeoutId = setTimeout(() => {
+      initializeEncryption().catch((error) => {
+        console.error("useEncryption: Critical error during initialization:", error);
+        setLoading(false);
+      });
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
   }, [user]);
 
   const initializeEncryption = async () => {
     if (!user) return;
 
     try {
+      console.log("useEncryption: Starting encryption initialization");
       setLoading(true);
       
       // Generate deterministic encryption password from user data
+      console.log("useEncryption: Generating encryption password");
       const password = deriveEncryptionPassword(user.email!, user.id);
       setEncryptionPassword(password);
 
+      console.log("useEncryption: Checking for existing keys");
       // Check if user already has encryption keys
       const { data: existingKeys, error } = await supabase
         .from('user_encryption_keys')
         .select('public_key, encrypted_private_key, key_version')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (existingKeys && !error) {
+        console.log("useEncryption: Found existing keys");
         // User has existing keys
         setUserKeys({
           publicKey: existingKeys.public_key,
@@ -58,12 +72,15 @@ export const useEncryption = () => {
           keyVersion: existingKeys.key_version
         });
       } else {
+        console.log("useEncryption: No existing keys, generating new ones");
         // Generate new keys for user
         await generateAndStoreUserKeys(password);
       }
+      console.log("useEncryption: Initialization complete");
     } catch (error) {
-      console.error('Failed to initialize encryption:', error);
+      console.error('useEncryption: Failed to initialize encryption:', error);
     } finally {
+      console.log("useEncryption: Setting loading to false");
       setLoading(false);
     }
   };

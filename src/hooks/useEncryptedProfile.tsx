@@ -1,18 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useEncryption } from '@/hooks/useEncryption';
-import { encryptMessage, decryptMessage } from '@/lib/encryption';
+// import { useEncryption } from '@/hooks/useEncryption'; // Temporarily disabled
+// import { encryptMessage, decryptMessage } from '@/lib/encryption'; // Temporarily disabled
 
 export const useEncryptedProfile = () => {
   const { user } = useAuth();
-  const { getConversationKey, encryptionReady, createConversationKey } = useEncryption();
+  // const { getConversationKey, encryptionReady, createConversationKey } = useEncryption(); // Temporarily disabled
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   // Fetch and decrypt user profile
   const fetchProfile = useCallback(async () => {
-    if (!user || !encryptionReady) return;
+    if (!user) return; // Removed encryptionReady check
 
     try {
       setLoading(true);
@@ -36,7 +36,7 @@ export const useEncryptedProfile = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, encryptionReady]);
+  }, [user]); // Removed encryptionReady dependency
 
   // Update profile with optional encryption
   const updateProfile = useCallback(async (updates: any) => {

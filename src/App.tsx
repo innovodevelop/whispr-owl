@@ -15,7 +15,10 @@ const queryClient = new QueryClient();
 const AppContent = () => {
   const { user, loading } = useAuth();
 
+  console.log("AppContent: loading=", loading, "user=", !!user);
+
   if (loading) {
+    console.log("AppContent: Showing loading state");
     return (
       <div className="h-screen flex items-center justify-center bg-background">
         <div className="text-center">
@@ -28,10 +31,12 @@ const AppContent = () => {
 
   // Show auth page if user is not logged in
   if (!user) {
+    console.log("AppContent: Showing auth page");
     return <Auth />;
   }
 
   // Show main app if user is logged in
+  console.log("AppContent: Showing main app");
   return (
     <BrowserRouter>
       <Routes>
