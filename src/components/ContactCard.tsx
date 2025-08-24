@@ -42,11 +42,12 @@ export const ContactCard: React.FC<ContactCardProps> = ({
       return (
         <Button
           size="sm"
+          type="button"
           onClick={() => {
             console.log('ContactCard: Start chat button clicked for user:', contact.contact_user_id);
             onStartConversation(contact.contact_user_id);
           }}
-          className="shrink-0 touch-feedback btn-press"
+          className="shrink-0 touch-feedback btn-press relative z-10 pointer-events-auto"
           aria-label="Start chat"
         >
           <MessageCircle className="h-3 w-3 md:h-4 md:w-4 mr-2" />
@@ -66,8 +67,9 @@ export const ContactCard: React.FC<ContactCardProps> = ({
             <Button
               size="icon"
               variant="ghost"
+              type="button"
               onClick={() => onStartChat(contact.contact_user_id)}
-              className="shrink-0 touch-feedback h-8 w-8"
+              className="shrink-0 touch-feedback h-8 w-8 relative z-10 pointer-events-auto"
               aria-label="Open chat"
               title="Open chat"
             >
