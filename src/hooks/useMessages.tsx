@@ -175,10 +175,7 @@ export const useMessages = (conversationId: string | null) => {
           burn_on_read_duration: burnOnReadDuration || null,
           burn_on_read_starts_at: burnOnReadDuration ? new Date().toISOString() : null
         })
-        .select(`
-          *,
-          sender:profiles(display_name, avatar_url)
-        `)
+        .select('*')
         .single();
 
       if (error) {

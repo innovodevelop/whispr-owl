@@ -81,7 +81,7 @@ export const generateSignedPreKey = async (identityKeyPair: SignalIdentityKeyPai
   if (signal) {
     try {
       console.log('[Signal] Generating signed prekey with libsignal');
-      const identityKey = signal.PrivateKey.deserialize(Buffer.from(identityKeyPair.privateKey));
+      const identityKey = signal.PrivateKey.deserialize(identityKeyPair.privateKey);
       const keyPair = signal.PrivateKey.generate();
       const publicKey = keyPair.getPublicKey();
       
