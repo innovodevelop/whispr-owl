@@ -1,0 +1,95 @@
+-- Fix security definer function search path warnings
+-- Add SET search_path to secure the functions
+
+CREATE OR REPLACE FUNCTION public.get_user_signed_prekey(target_user_id uuid)
+RETURNS TABLE(
+  id uuid,
+  user_id uuid,
+  key_id integer,
+  public_key text,
+  signature text,
+  created_at timestamp with time zone
+)
+LANGUAGE SQL
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
+  SELECT 
+    sp.id,
+    sp.user_id,
+    sp.key_id,
+    sp.public_key,
+    sp.signature,
+    sp.created_at
+  FROM public.signal_signed_prekeys sp
+  WHERE sp.user_id = target_user_id
+    AND target_user_id != auth.uid() -- Don't return own keys
+    AND EXISTS (
+      SELECT 1 FROM conversations c
+      WHERE (
+        (c.participant_one = auth.uid() AND c.participant_two = target_user_id) OR
+        (c.participant_two = auth.uid() AND c.participant_one = target_user_id)
+      )
+    )
+  LIMIT 1;
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_user_one_time_prekey(target_user_id uuid)
+RETURNS TABLE(
+  id uuid,
+  user_id uuid,
+  key_id integer,
+  public_key text
+)
+LANGUAGE SQL
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
+  SELECT 
+    otp.id,
+    otp.user_id,
+    otp.key_id,
+    otp.public_key
+  FROM public.signal_one_time_prekeys otp
+  WHERE otp.user_id = target_user_id
+    AND otp.used = false
+    AND target_user_id != auth.uid() -- Don't return own keys
+    AND EXISTS (
+      SELECT 1 FROM conversations c
+      WHERE (
+        (c.participant_one = auth.uid() AND c.participant_two = target_user_id) OR
+        (c.participant_two = auth.uid() AND c.participant_one = target_user_id)
+      )
+    )
+  LIMIT 1;
+$$;
+
+CREATE OR REPLACE FUNCTION public.mark_prekey_used(prekey_id uuid, target_user_id uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  rows_updated integer;
+BEGIN
+  UPDATE public.signal_one_time_prekeys
+  SET used = true
+  WHERE id = prekey_id
+    AND user_id = target_user_id
+    AND used = false
+    AND target_user_id != auth.uid()
+    AND EXISTS (
+      SELECT 1 FROM conversations c
+      WHERE (
+        (c.participant_one = auth.uid() AND c.participant_two = target_user_id) OR
+        (c.participant_two = auth.uid() AND c.participant_one = target_user_id)
+      )
+    );
+  
+  GET DIAGNOSTICS rows_updated = ROW_COUNT;
+  RETURN rows_updated > 0;
+END;
+$$;
