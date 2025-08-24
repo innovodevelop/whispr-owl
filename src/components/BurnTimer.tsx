@@ -6,10 +6,11 @@ interface BurnTimerProps {
   startsAt: string;
   duration: number; // in seconds
   onExpire: () => void;
+  isOwnMessage?: boolean;
   className?: string;
 }
 
-export const BurnTimer = ({ startsAt, duration, onExpire, className }: BurnTimerProps) => {
+export const BurnTimer = ({ startsAt, duration, onExpire, isOwnMessage, className }: BurnTimerProps) => {
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [hasExpired, setHasExpired] = useState(false);
 

@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { ChatSettingsDrawer } from "./ChatSettingsDrawer";
 import { BurnOnReadSelector } from "./BurnOnReadSelector";
 import { BurnTimer } from "./BurnTimer";
+import { useBurnMessages } from "@/hooks/useBurnMessages";
 
 interface ChatWindowProps {
   conversationId: string;
@@ -28,6 +29,7 @@ export const ChatWindow = ({
 }: ChatWindowProps) => {
   const { user } = useAuth();
   const { messages, loading, sendMessage, deleteMessage } = useMessages(conversationId);
+  const { visibleMessages, hideMessageForSender } = useBurnMessages(messages, user?.id);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -54,8 +56,14 @@ export const ChatWindow = ({
     setSending(false);
   };
 
-  const handleBurnExpire = async (messageId: string) => {
-    await deleteMessage(messageId);
+  const handleBurnExpire = async (messageId: string, isOwnMessage: boolean) => {
+    if (isOwnMessage) {
+      // For sender: just hide from view, don't delete from database
+      hideMessageForSender(messageId);
+    } else {
+      // For receiver: delete from database (which removes for everyone)
+      await deleteMessage(messageId);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -133,7 +141,7 @@ export const ChatWindow = ({
           <div className="flex items-center justify-center h-full">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
-        ) : messages.length === 0 ? (
+        ) : visibleMessages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-center fade-in" aria-live="polite">
             <div>
               <p className="text-muted-foreground mb-2">No messages yet</p>
@@ -141,9 +149,9 @@ export const ChatWindow = ({
             </div>
           </div>
         ) : (
-          messages.map((message, index) => {
+          visibleMessages.map((message, index) => {
             const isOwn = message.sender_id === user?.id;
-            const showAvatar = !isOwn && (index === 0 || messages[index - 1]?.sender_id !== message.sender_id);
+            const showAvatar = !isOwn && (index === 0 || visibleMessages[index - 1]?.sender_id !== message.sender_id);
             const isExpiring = isExpiringSoon(message.expires_at);
             
             return (
@@ -204,7 +212,8 @@ export const ChatWindow = ({
                       <BurnTimer
                         startsAt={message.burn_on_read_starts_at}
                         duration={message.burn_on_read_duration}
-                        onExpire={() => handleBurnExpire(message.id)}
+                        onExpire={() => handleBurnExpire(message.id, isOwn)}
+                        isOwnMessage={isOwn}
                         className={isOwn ? "justify-end" : "justify-start"}
                       />
                     ) : message.sender_id === user?.id ? (

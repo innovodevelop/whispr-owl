@@ -98,6 +98,9 @@ export const useMessages = (conversationId: string | null) => {
         }
       }
 
+      // For burn-on-read messages, start timer immediately for sender
+      const burnStartsAt = burnOnReadDuration ? new Date().toISOString() : null;
+
       const { data, error } = await supabase
         .from('messages')
         .insert({
@@ -106,7 +109,8 @@ export const useMessages = (conversationId: string | null) => {
           content: content.trim(),
           message_type: 'text',
           expires_at: expiresAt?.toISOString(),
-          burn_on_read_duration: burnOnReadDuration
+          burn_on_read_duration: burnOnReadDuration,
+          burn_on_read_starts_at: burnStartsAt
         })
         .select('*')
         .single();
@@ -158,7 +162,7 @@ export const useMessages = (conversationId: string | null) => {
       const message = messages.find(msg => msg.id === messageId);
       const updateData: any = { read_at: new Date().toISOString() };
       
-      // If it's a burn_on_read message and not from current user, start the timer
+      // If it's a burn_on_read message from another user and no timer started yet, start receiver timer
       if (message?.burn_on_read_duration && message.sender_id !== user.id && !message.burn_on_read_starts_at) {
         updateData.burn_on_read_starts_at = new Date().toISOString();
       }
