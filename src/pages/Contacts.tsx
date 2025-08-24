@@ -189,7 +189,7 @@ const Contacts = () => {
 
             {/* Contacts List */}
             <div className="space-y-2">
-              {filteredContacts.length === 0 ? (
+              {contacts.length === 0 ? (
                 <Card className="border-dashed border-2 fade-in">
                   <CardContent className="p-6 md:p-8">
                     <div className="text-center">
@@ -202,7 +202,7 @@ const Contacts = () => {
                   </CardContent>
                 </Card>
               ) : (
-                filteredContacts.map((contact, index) => (
+                contacts.map((contact, index) => (
                   <ContactCard
                     key={contact.id}
                     contact={contact}
