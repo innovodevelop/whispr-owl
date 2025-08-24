@@ -74,28 +74,50 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null
   }
 
-  return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
-${colorConfig
-  .map(([key, itemConfig]) => {
-    const color =
-      itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
-      itemConfig.color
-    return color ? `  --color-${key}: ${color};` : null
-  })
-  .join("\n")}
-}
-`
-          )
-          .join("\n"),
-      }}
-    />
-  )
+  // Security: Use React createElement to avoid dangerouslySetInnerHTML
+  const chartId = id.replace(/[^a-zA-Z0-9-_]/g, '') // Sanitize chart ID
+  
+  // Generate CSS custom properties safely
+  const cssVariables = React.useMemo(() => {
+    const styleRules: Record<string, Record<string, string>> = {}
+    
+    Object.entries(THEMES).forEach(([theme, prefix]) => {
+      const selector = prefix ? `${prefix} [data-chart="${chartId}"]` : `[data-chart="${chartId}"]`
+      styleRules[selector] = {}
+      
+      colorConfig.forEach(([key, itemConfig]) => {
+        const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color
+        if (color && /^#[0-9A-Fa-f]{6}$|^hsl\([\d\s,%.]+\)$|^rgb\([\d\s,]+\)$/.test(color)) {
+          // Only allow safe color formats
+          const sanitizedKey = key.replace(/[^a-zA-Z0-9-_]/g, '')
+          styleRules[selector][`--color-${sanitizedKey}`] = color
+        }
+      })
+    })
+    
+    return styleRules
+  }, [chartId, colorConfig])
+
+  // Apply styles using React ref and useEffect for security
+  const styleRef = React.useRef<HTMLStyleElement>(null)
+  
+  React.useEffect(() => {
+    if (styleRef.current) {
+      let cssText = ''
+      Object.entries(cssVariables).forEach(([selector, variables]) => {
+        if (Object.keys(variables).length > 0) {
+          cssText += `${selector} {\n`
+          Object.entries(variables).forEach(([property, value]) => {
+            cssText += `  ${property}: ${value};\n`
+          })
+          cssText += `}\n`
+        }
+      })
+      styleRef.current.textContent = cssText
+    }
+  }, [cssVariables])
+
+  return <style ref={styleRef} />
 }
 
 const ChartTooltip = RechartsPrimitive.Tooltip

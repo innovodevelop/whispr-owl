@@ -3,11 +3,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, UserPlus, Loader2 } from "lucide-react";
+import { Search, UserPlus, Loader2, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useContacts } from "@/hooks/useContacts";
 import { useToast } from "@/hooks/use-toast";
+import { useRateLimit } from "@/hooks/useRateLimit";
 
 interface UserSearchDialogProps {
   open: boolean;
@@ -27,6 +28,13 @@ export const UserSearchDialog = ({ open, onOpenChange }: UserSearchDialogProps) 
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
+  
+  // Rate limiting: 10 searches per minute
+  const searchRateLimit = useRateLimit({
+    maxAttempts: 10,
+    windowMs: 60 * 1000, // 1 minute
+    blockDurationMs: 30 * 1000 // 30 second block
+  });
 
   useEffect(() => {
     if (searchTerm.trim()) {
@@ -40,19 +48,46 @@ export const UserSearchDialog = ({ open, onOpenChange }: UserSearchDialogProps) 
   const searchUsers = async (query: string) => {
     if (!query.trim() || !user) return;
 
+    // Input validation and sanitization
+    const sanitizedQuery = query.trim().slice(0, 50); // Limit length
+    if (sanitizedQuery.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    // Rate limiting check
+    if (!searchRateLimit.checkRateLimit()) {
+      toast({
+        title: "Too Many Requests",
+        description: `Please wait ${searchRateLimit.getRemainingTime()} seconds before searching again.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .rpc('search_users_by_query_secure', { search_term: query });
+        .rpc('search_users_by_query_secure', { search_term: sanitizedQuery });
 
       if (error) {
         console.error('Search error:', error);
+        toast({
+          title: "Search Error",
+          description: "Unable to search users. Please try again later.",
+          variant: "destructive"
+        });
         return;
       }
 
       setSearchResults(data || []);
     } catch (error) {
       console.error('Search failed:', error);
+      toast({
+        title: "Search Failed",
+        description: "Network error. Please check your connection.",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -85,9 +120,20 @@ export const UserSearchDialog = ({ open, onOpenChange }: UserSearchDialogProps) 
             <Input
               placeholder="Search by username, name, or phone number..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value.slice(0, 50); // Limit input length
+                setSearchTerm(value);
+              }}
               className="pl-9"
+              maxLength={50}
+              disabled={searchRateLimit.isBlocked}
             />
+            {searchRateLimit.isBlocked && (
+              <div className="flex items-center gap-2 text-sm text-destructive mt-1">
+                <AlertTriangle className="h-4 w-4" />
+                Too many requests. Wait {searchRateLimit.getRemainingTime()}s
+              </div>
+            )}
           </div>
 
           {/* Loading State */}

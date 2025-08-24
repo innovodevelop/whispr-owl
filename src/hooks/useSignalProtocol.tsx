@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { securityLogger } from '@/utils/securityLogger';
 
 // Local copy of required types to avoid static import cycles
 export interface SignalPreKeyBundle {
@@ -109,8 +110,10 @@ export const useSignalProtocol = () => {
       });
 
       console.log('Signal Protocol initialization complete');
+      securityLogger.logEncryptionEvent('signal_init', true, user.id);
     } catch (error) {
       console.error('Failed to initialize Signal Protocol:', error);
+      securityLogger.logEncryptionEvent('signal_init', false, user.id, { error: error.message });
       setState({ initialized: false, loading: false, registrationId: null });
     }
   };
@@ -183,9 +186,14 @@ export const useSignalProtocol = () => {
       );
 
       console.log('[Signal] Message encrypted successfully');
+      securityLogger.logEncryptionEvent('message_encrypt', true, user.id, { conversationId });
       return encrypted;
     } catch (error) {
       console.error('[Signal] Failed to encrypt message:', error);
+      securityLogger.logEncryptionEvent('message_encrypt', false, user.id, { 
+        conversationId, 
+        error: error.message 
+      });
       return null;
     }
   }, [user, state.initialized]);
@@ -213,9 +221,14 @@ export const useSignalProtocol = () => {
       );
 
       console.log('[Signal] Message decrypted successfully');
+      securityLogger.logEncryptionEvent('message_decrypt', true, user.id, { conversationId });
       return decrypted;
     } catch (error) {
       console.error('[Signal] Failed to decrypt message:', error);
+      securityLogger.logEncryptionEvent('message_decrypt', false, user.id, { 
+        conversationId, 
+        error: error.message 
+      });
       return null;
     }
   }, [user, state.initialized]);
