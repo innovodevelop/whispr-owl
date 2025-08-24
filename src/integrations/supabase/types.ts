@@ -536,6 +536,30 @@ export type Database = {
           disappearing_enabled: boolean
         }[]
       }
+      get_user_one_time_prekey: {
+        Args: { target_user_id: string }
+        Returns: {
+          id: string
+          key_id: number
+          public_key: string
+          user_id: string
+        }[]
+      }
+      get_user_signed_prekey: {
+        Args: { target_user_id: string }
+        Returns: {
+          created_at: string
+          id: string
+          key_id: number
+          public_key: string
+          signature: string
+          user_id: string
+        }[]
+      }
+      mark_prekey_used: {
+        Args: { prekey_id: string; target_user_id: string }
+        Returns: boolean
+      }
       search_users_by_query_secure: {
         Args: { search_term: string }
         Returns: {
