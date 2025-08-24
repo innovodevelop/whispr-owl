@@ -43,11 +43,26 @@ export const ContactCard: React.FC<ContactCardProps> = ({
         <Button
           size="sm"
           type="button"
+          role="button"
+          tabIndex={0}
           onMouseDown={(e) => e.stopPropagation()}
           onTouchStart={(e) => e.stopPropagation()}
+          onPointerUp={(e) => {
+            e.stopPropagation();
+            console.log('ContactCard: PointerUp start chat for', contact.contact_user_id);
+            onStartConversation(contact.contact_user_id);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('ContactCard: Key start chat for', contact.contact_user_id);
+              onStartConversation(contact.contact_user_id);
+            }
+          }}
           onClick={(e) => {
             e.stopPropagation();
-            console.log('ContactCard: Start chat button clicked for user:', contact.contact_user_id);
+            console.log('ContactCard: Click start chat for', contact.contact_user_id);
             onStartConversation(contact.contact_user_id);
           }}
           className="shrink-0 touch-feedback btn-press relative z-10 pointer-events-auto"
