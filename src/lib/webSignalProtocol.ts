@@ -335,13 +335,13 @@ export const storePreKeys = async (
 
 export const getPreKeyBundle = async (userId: string): Promise<SignalPreKeyBundle | null> => {
   try {
+    // Use secure function for identity key retrieval
     const { data: identityData, error: identityError } = await supabase
-      .from('signal_identity_keys')
-      .select('identity_key_public, registration_id')
-      .eq('user_id', userId)
-      .single();
+      .rpc('get_user_identity_public_key', { target_user_id: userId });
 
-    if (identityError || !identityData) return null;
+    if (identityError || !identityData || identityData.length === 0) return null;
+
+    const identity = identityData[0];
 
     // Use secure functions for key retrieval instead of direct table access
     const { data: signedPreKeyData, error: signedPreKeyError } = await supabase
@@ -366,14 +366,14 @@ export const getPreKeyBundle = async (userId: string): Promise<SignalPreKeyBundl
     }
 
     return {
-      registrationId: identityData.registration_id,
+      registrationId: identity.registration_id,
       deviceId: 1,
       prekeyId: oneTimePreKey?.key_id,
       prekey: oneTimePreKey ? Uint8Array.from(atob(oneTimePreKey.public_key), c => c.charCodeAt(0)) : undefined,
       signedPrekeyId: signedPreKey.key_id,
       signedPrekey: Uint8Array.from(atob(signedPreKey.public_key), c => c.charCodeAt(0)),
       signedPrekeySignature: Uint8Array.from(atob(signedPreKey.signature), c => c.charCodeAt(0)),
-      identityKey: Uint8Array.from(atob(identityData.identity_key_public), c => c.charCodeAt(0))
+      identityKey: Uint8Array.from(atob(identity.identity_key_public), c => c.charCodeAt(0))
     };
   } catch (error) {
     console.error('Failed to get prekey bundle:', error);

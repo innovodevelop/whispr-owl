@@ -483,6 +483,13 @@ export type Database = {
           disappearing_enabled: boolean
         }[]
       }
+      get_user_identity_public_key: {
+        Args: { target_user_id: string }
+        Returns: {
+          identity_key_public: string
+          registration_id: number
+        }[]
+      }
       get_user_one_time_prekey: {
         Args: { target_user_id: string }
         Returns: {
