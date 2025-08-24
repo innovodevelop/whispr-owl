@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -29,6 +29,9 @@ export const NotificationSettingsDialog = ({ open, onOpenChange }: NotificationS
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Notification Settings</DialogTitle>
+          <DialogDescription>
+            Configure your notification preferences and privacy settings.
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-6">
