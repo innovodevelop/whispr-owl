@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2, DollarSign, Calendar } from "lucide-react";
+import { Plus, Trash2, DollarSign, Calendar, Edit3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -222,108 +222,133 @@ export const FinancialSheetDrawer = ({
                   )}
 
                   {/* Entries List */}
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                  <div className="space-y-3 max-h-64 overflow-y-auto">
                     {sheet.entries.length === 0 ? (
                       <p className="text-center text-muted-foreground py-4">No entries yet</p>
                     ) : (
                       sheet.entries.map((entry) => (
-                        <div key={entry.id} className="border rounded-lg p-3 space-y-2">
-                          <div className="flex items-center justify-between">
-                            {editingId === `${entry.id}-name` ? (
-                              <Input
-                                defaultValue={entry.name}
-                                onBlur={(e) => handleUpdateEntry(entry.id, 'name', e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    handleUpdateEntry(entry.id, 'name', e.currentTarget.value);
-                                  }
-                                }}
-                                className="text-sm h-7"
-                                autoFocus
-                              />
-                            ) : (
-                              <span 
-                                className="font-medium cursor-pointer hover:bg-muted px-1 py-0.5 rounded"
-                                onClick={() => setEditingId(`${entry.id}-name`)}
-                              >
-                                {entry.name}
-                              </span>
-                            )}
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleRemoveEntry(entry.id)}
-                              className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground">$</span>
-                            {editingId === `${entry.id}-amount` ? (
-                              <Input
-                                type="number"
-                                step="0.01"
-                                defaultValue={entry.amount}
-                                onBlur={(e) => handleUpdateEntry(entry.id, 'amount', e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    handleUpdateEntry(entry.id, 'amount', e.currentTarget.value);
-                                  }
-                                }}
-                                className="text-sm h-7 font-mono"
-                                autoFocus
-                              />
-                            ) : (
-                              <span 
-                                className="font-mono cursor-pointer hover:bg-muted px-1 py-0.5 rounded"
-                                onClick={() => setEditingId(`${entry.id}-amount`)}
-                              >
-                                {entry.amount.toFixed(2)}
-                              </span>
-                            )}
-                          </div>
-
-                          {entry.note && (
-                            <div>
-                              {editingId === `${entry.id}-note` ? (
-                                <Textarea
-                                  defaultValue={entry.note}
-                                  onBlur={(e) => handleUpdateEntry(entry.id, 'note', e.target.value)}
-                                  className="text-xs resize-none"
-                                  rows={2}
+                        <div key={entry.id} className="bg-card border rounded-lg p-3 hover:shadow-sm transition-shadow">
+                          {/* Header with name and actions */}
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              {editingId === `${entry.id}-name` ? (
+                                <Input
+                                  defaultValue={entry.name}
+                                  onBlur={(e) => handleUpdateEntry(entry.id, 'name', e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      handleUpdateEntry(entry.id, 'name', e.currentTarget.value);
+                                    }
+                                  }}
+                                  className="text-sm h-7 font-medium"
                                   autoFocus
                                 />
                               ) : (
-                                <p 
-                                  className="text-xs text-muted-foreground cursor-pointer hover:bg-muted px-1 py-0.5 rounded"
-                                  onClick={() => setEditingId(`${entry.id}-note`)}
-                                >
-                                  {entry.note}
-                                </p>
+                                <>
+                                  <span className="font-medium text-sm truncate">{entry.name}</span>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setEditingId(`${entry.id}-name`)}
+                                    className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    <Edit3 className="h-3 w-3" />
+                                  </Button>
+                                </>
                               )}
                             </div>
-                          )}
-
-                          {entry.due_date && (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Calendar className="h-3 w-3" />
-                              {editingId === `${entry.id}-due_date` ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleRemoveEntry(entry.id)}
+                              className="h-6 w-6 p-0 bg-white hover:bg-red-50 border-red-200 hover:border-red-300"
+                            >
+                              <Trash2 className="h-3 w-3 text-red-500" />
+                            </Button>
+                          </div>
+                          
+                          {/* Amount and due date row */}
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-1">
+                              <DollarSign className="h-3 w-3 text-muted-foreground" />
+                              {editingId === `${entry.id}-amount` ? (
                                 <Input
-                                  type="date"
-                                  defaultValue={entry.due_date}
-                                  onBlur={(e) => handleUpdateEntry(entry.id, 'due_date', e.target.value)}
-                                  className="text-xs h-6"
+                                  type="number"
+                                  step="0.01"
+                                  defaultValue={entry.amount}
+                                  onBlur={(e) => handleUpdateEntry(entry.id, 'amount', e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      handleUpdateEntry(entry.id, 'amount', e.currentTarget.value);
+                                    }
+                                  }}
+                                  className="text-sm h-6 w-20 font-mono"
                                   autoFocus
                                 />
                               ) : (
                                 <span 
-                                  className="cursor-pointer hover:bg-muted px-1 py-0.5 rounded"
-                                  onClick={() => setEditingId(`${entry.id}-due_date`)}
+                                  className="font-mono text-sm cursor-pointer hover:bg-muted px-1 py-0.5 rounded group"
+                                  onClick={() => setEditingId(`${entry.id}-amount`)}
                                 >
-                                  Due {formatDistanceToNow(new Date(entry.due_date), { addSuffix: true })}
+                                  {entry.amount.toFixed(2)}
+                                  <Edit3 className="h-2.5 w-2.5 inline ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
                                 </span>
+                              )}
+                            </div>
+                            
+                            {entry.due_date && (
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3 text-muted-foreground" />
+                                {editingId === `${entry.id}-due_date` ? (
+                                  <Input
+                                    type="date"
+                                    defaultValue={entry.due_date}
+                                    onBlur={(e) => handleUpdateEntry(entry.id, 'due_date', e.target.value)}
+                                    className="text-xs h-6 w-28"
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <span 
+                                    className="text-xs text-muted-foreground cursor-pointer hover:bg-muted px-1 py-0.5 rounded group"
+                                    onClick={() => setEditingId(`${entry.id}-due_date`)}
+                                  >
+                                    Due {formatDistanceToNow(new Date(entry.due_date), { addSuffix: true })}
+                                    <Edit3 className="h-2 w-2 inline ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Note */}
+                          {(entry.note || editingId === `${entry.id}-note`) && (
+                            <div className="mt-2">
+                              {editingId === `${entry.id}-note` ? (
+                                <Textarea
+                                  defaultValue={entry.note || ""}
+                                  onBlur={(e) => handleUpdateEntry(entry.id, 'note', e.target.value)}
+                                  placeholder="Add a note..."
+                                  className="text-xs resize-none"
+                                  rows={2}
+                                  autoFocus
+                                />
+                              ) : entry.note ? (
+                                <p 
+                                  className="text-xs text-muted-foreground cursor-pointer hover:bg-muted px-1 py-0.5 rounded bg-muted/30 group"
+                                  onClick={() => setEditingId(`${entry.id}-note`)}
+                                >
+                                  {entry.note}
+                                  <Edit3 className="h-2 w-2 inline ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </p>
+                              ) : (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setEditingId(`${entry.id}-note`)}
+                                  className="h-6 text-xs text-muted-foreground p-1"
+                                >
+                                  + Add note
+                                </Button>
                               )}
                             </div>
                           )}
