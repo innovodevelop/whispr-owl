@@ -180,6 +180,23 @@ export const useConversations = () => {
     if (!user) return false;
 
     try {
+      // First, get the conversation to find both participants
+      const { data: conversation, error: fetchError } = await supabase
+        .from('conversations')
+        .select('participant_one, participant_two')
+        .eq('id', conversationId)
+        .single();
+
+      if (fetchError || !conversation) {
+        toast({
+          title: "Error",
+          description: "Failed to find conversation",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      // Update conversation status
       const { error } = await supabase
         .from('conversations')
         .update({ status: 'accepted', updated_at: new Date().toISOString() })
@@ -193,6 +210,20 @@ export const useConversations = () => {
         });
         return false;
       }
+
+      // Add both users to each other's contacts (if not already added)
+      const contactInserts = [
+        { user_id: conversation.participant_one, contact_user_id: conversation.participant_two },
+        { user_id: conversation.participant_two, contact_user_id: conversation.participant_one }
+      ];
+
+      // Insert contacts (ignore duplicates)
+      await supabase
+        .from('contacts')
+        .upsert(contactInserts, { 
+          onConflict: 'user_id,contact_user_id',
+          ignoreDuplicates: true 
+        });
 
       toast({
         title: "Chat request accepted",
