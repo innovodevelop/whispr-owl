@@ -469,7 +469,60 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      signal_public_one_time_prekeys: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          key_id: number | null
+          public_key: string | null
+          used: boolean | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          key_id?: number | null
+          public_key?: string | null
+          used?: boolean | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          key_id?: number | null
+          public_key?: string | null
+          used?: boolean | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      signal_public_prekeys: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          key_id: number | null
+          public_key: string | null
+          signature: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          key_id?: number | null
+          public_key?: string | null
+          signature?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          key_id?: number | null
+          public_key?: string | null
+          signature?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_expired_messages: {
