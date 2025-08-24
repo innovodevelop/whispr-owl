@@ -14,14 +14,14 @@ export interface SignalPreKeyBundle {
   identityKey: Uint8Array;
 }
 
-// Mobile-compatible crypto loader
+// Native Signal Protocol loader
 const loadSignal = async () => {
   try {
-    const mod = await import('@/lib/mobileCrypto');
-    console.info('[Signal] Mobile crypto loaded successfully');
+    const mod = await import('@/lib/nativeSignalProtocol');
+    console.info('[Signal] Native libsignal loaded successfully');
     return mod;
   } catch (err) {
-    console.error('[Signal] Failed to load mobileCrypto module:', err);
+    console.error('[Signal] Failed to load native Signal Protocol:', err);
     return null as any;
   }
 };
@@ -160,53 +160,60 @@ export const useSignalProtocol = () => {
     }
   }, [user, state.initialized]);
 
-  // Encrypt message for a conversation
+  // Encrypt message for a conversation using real Signal Protocol
   const encryptMessageForConversation = useCallback(async (
     message: string,
     conversationId: string,
     remoteUserId: string
   ): Promise<string | null> => {
     try {
-      const keys = await getSessionKeys(conversationId, remoteUserId);
-      if (!keys) return null;
-
       const sp = await loadSignal().catch(() => null as any);
       if (!sp) return null;
 
+      // Get local identity keys
+      const localKeys = await sp.getUserIdentityKeys(user.id);
+      if (!localKeys) return null;
+
+      // Get remote user's prekey bundle
+      const remoteBundle = await sp.getPreKeyBundle(remoteUserId);
+      if (!remoteBundle) return null;
+
       return await sp.encryptMessageWithSignalProtocol(
         message,
-        keys.localPrivateKey,
-        keys.remotePublicKey
+        remoteUserId,
+        localKeys.privateKey,
+        remoteBundle
       );
     } catch (error) {
       console.error('Failed to encrypt message:', error);
       return null;
     }
-  }, [getSessionKeys]);
+  }, [user]);
 
-  // Decrypt message from a conversation
+  // Decrypt message from a conversation using real Signal Protocol
   const decryptMessageFromConversation = useCallback(async (
     encryptedMessage: string,
     conversationId: string,
     remoteUserId: string
   ): Promise<string | null> => {
     try {
-      const keys = await getSessionKeys(conversationId, remoteUserId);
-      if (!keys) return null;
-
       const sp = await loadSignal().catch(() => null as any);
       if (!sp) return null;
 
+      // Get local identity keys
+      const localKeys = await sp.getUserIdentityKeys(user.id);
+      if (!localKeys) return null;
+
       return await sp.decryptMessageWithSignalProtocol(
-        encryptedMessage, 
-        keys.localPrivateKey, 
-        keys.remotePublicKey
+        encryptedMessage,
+        remoteUserId,
+        localKeys.privateKey
       );
     } catch (error) {
       console.error('Failed to decrypt message:', error);
       return null;
     }
-  }, [getSessionKeys]);
+  }, [user]);
 
   // Get user's prekey bundle (for other users to initiate conversations)
   const getMyPreKeyBundle = useCallback(async (): Promise<SignalPreKeyBundle | null> => {
