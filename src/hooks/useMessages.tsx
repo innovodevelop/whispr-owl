@@ -160,7 +160,7 @@ export const useMessages = (conversationId: string | null) => {
         .insert({
           conversation_id: conversationId,
           sender_id: user.id,
-          content: content.trim(), // Keep plaintext for notifications and search
+          content: messageType === "financial_notification" ? content.trim() : '[encrypted]', // Only store plaintext for financial notifications
           encrypted_content: messageType === "financial_notification" ? null : encryptedContent, // Only encrypt regular messages
           message_type: messageType,
           expires_at: expiresAt?.toISOString(),
