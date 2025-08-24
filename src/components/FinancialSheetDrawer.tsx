@@ -83,12 +83,21 @@ export const FinancialSheetDrawer = ({
 
     await updateEntry(entryId, updates);
     setEditingId(null);
+    
+    if (sendMessage) {
+      const fieldName = field === 'due_date' ? 'due date' : field;
+      await sendMessage(`✏️ Updated ${fieldName} for: ${sheet?.entries.find(e => e.id === entryId)?.name}`);
+    }
   };
 
   const handleRemoveEntry = async (entryId: string) => {
+    const entryToRemove = sheet?.entries.find(e => e.id === entryId);
     const removedEntry = await removeEntry(entryId);
     if (removedEntry && onEntryRemoved) {
       onEntryRemoved(removedEntry);
+    }
+    if (removedEntry && sendMessage && entryToRemove) {
+      await sendMessage(`🗑️ Removed financial entry: ${entryToRemove.name}`);
     }
   };
 

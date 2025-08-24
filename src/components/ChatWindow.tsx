@@ -309,7 +309,9 @@ export const ChatWindow = ({
         onSheetCreated={handleSheetCreated}
         onEntryAdded={handleEntryAdded}
         onEntryRemoved={handleEntryRemoved}
-        sendMessage={sendMessage}
+        sendMessage={async (content: string) => {
+          return await sendMessage(content);
+        }}
       />
 
       {/* Chat Settings Drawer */}

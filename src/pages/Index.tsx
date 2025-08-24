@@ -60,11 +60,17 @@ const Index = () => {
     try {
       const messageTime = new Date(conversation.last_message_at);
       const now = new Date();
-      const diffHours = (now.getTime() - messageTime.getTime()) / (1000 * 60 * 60);
+      const diffMinutes = Math.floor((now.getTime() - messageTime.getTime()) / (1000 * 60));
       
-      if (diffHours < 1) return "now";
-      if (diffHours < 24) return `${Math.floor(diffHours)}h`;
-      if (diffHours < 168) return `${Math.floor(diffHours / 24)}d`;
+      if (diffMinutes < 1) return "now";
+      if (diffMinutes < 60) return `${diffMinutes}m`;
+      
+      const diffHours = Math.floor(diffMinutes / 60);
+      if (diffHours < 24) return `${diffHours}h`;
+      
+      const diffDays = Math.floor(diffHours / 24);
+      if (diffDays < 7) return `${diffDays}d`;
+      
       return formatDistanceToNow(messageTime, { addSuffix: false });
     } catch {
       return "";
