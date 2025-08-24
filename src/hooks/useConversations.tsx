@@ -148,8 +148,11 @@ export const useConversations = () => {
 
       // Separate accepted conversations from pending requests
       const accepted = transformedConversations.filter(c => c.status === 'accepted');
+      // Pending requests are those where the current user did NOT create the conversation (they received the request)
       const pending = transformedConversations.filter(c => c.status === 'pending' && c.created_by !== user.id);
 
+      console.log('Pending requests found:', pending.length, pending);
+      
       setConversations(accepted);
       setPendingRequests(pending);
     } catch (error) {
