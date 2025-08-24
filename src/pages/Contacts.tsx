@@ -85,7 +85,22 @@ const Contacts = () => {
   };
 
   const handleStartConversation = async (contactUserId: string) => {
-    await startConversation(contactUserId);
+    const success = await startConversation(contactUserId);
+    if (success) {
+      // Navigate to chat after successfully creating conversation
+      const contact = contacts.find(c => c.contact_user_id === contactUserId);
+      if (contact) {
+        navigate("/", { 
+          state: { 
+            selectedContact: {
+              id: contactUserId,
+              name: contact.profile?.display_name || contact.profile?.username || "Unknown",
+              avatar: contact.profile?.avatar_url
+            }
+          }
+        });
+      }
+    }
   };
 
   const handleAcceptRequest = async (conversationId: string) => {
