@@ -120,42 +120,42 @@ export const ChatWindow = ({
   };
 
   return (
-    <div className={cn("flex flex-col h-full bg-background", className)}>
+    <div className={cn("flex flex-col h-full bg-gradient-to-br from-background to-background/95", className)}>
       {/* Chat Header */}
-      <div className="p-3 md:p-4 border-b border-border bg-card slide-down">
+      <div className="p-3 md:p-4 glass-card border-b border-border/30 slide-down">
         <div className="flex items-center gap-3">
           {onBack && (
-            <Button variant="ghost" size="icon" onClick={onBack} className="touch-feedback md:hidden">
+            <Button variant="ghost" size="icon" onClick={onBack} className="touch-feedback md:hidden hover:bg-primary/10">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           )}
           
-          <Avatar className="h-10 w-10">
+          <Avatar className="h-10 w-10 ring-2 ring-primary/20 shadow-md">
             <AvatarImage src={conversationAvatar} />
-            <AvatarFallback>
+            <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground font-semibold">
               {conversationName.split(" ").map(n => n[0]).join("").toUpperCase()}
             </AvatarFallback>
           </Avatar>
           
           <div className="flex-1 min-w-0">
-            <h2 className="font-semibold text-sm md:text-base truncate">{conversationName}</h2>
+            <h2 className="font-bold text-sm md:text-base truncate text-foreground">{conversationName}</h2>
             <div className="flex items-center gap-2">
               <EncryptionStatus showText className="shrink-0" />
             </div>
           </div>
           
           <div className="flex items-center gap-1" role="toolbar" aria-label="Chat actions">
-            <Button variant="ghost" size="icon" className="touch-feedback h-8 w-8 md:h-10 md:w-10" aria-label="Audio call">
+            <Button variant="ghost" size="icon" className="touch-feedback h-8 w-8 md:h-10 md:w-10 hover:bg-primary/10 hover:text-primary transition-all duration-300" aria-label="Audio call">
               <Phone className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="touch-feedback h-8 w-8 md:h-10 md:w-10" aria-label="Video call">
+            <Button variant="ghost" size="icon" className="touch-feedback h-8 w-8 md:h-10 md:w-10 hover:bg-primary/10 hover:text-primary transition-all duration-300" aria-label="Video call">
               <Video className="h-4 w-4" />
             </Button>
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={() => setSettingsOpen(true)}
-              className="touch-feedback h-8 w-8 md:h-10 md:w-10" 
+              className="touch-feedback h-8 w-8 md:h-10 md:w-10 hover:bg-primary/10 hover:text-primary transition-all duration-300" 
               aria-label="Chat settings"
             >
               <Settings className="h-4 w-4" />
@@ -165,15 +165,15 @@ export const ChatWindow = ({
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-4 bg-gradient-to-b from-background/50 to-background">
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <div className="loading-pulse rounded-full h-8 w-8 border-2 border-primary bg-primary/20"></div>
           </div>
         ) : visibleMessages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-center fade-in" aria-live="polite">
-            <div>
-              <p className="text-muted-foreground mb-2">No messages yet</p>
+            <div className="glass-card p-8 max-w-sm">
+              <p className="text-muted-foreground mb-2 font-medium">No messages yet</p>
               <p className="text-sm text-muted-foreground">Start the conversation!</p>
             </div>
           </div>
@@ -250,29 +250,29 @@ export const ChatWindow = ({
                 
                 <div
                   className={cn(
-                    "max-w-[75%] md:max-w-[60%] px-3 py-2 rounded-2xl shadow-sm transition-all duration-200",
+                    "max-w-[75%] md:max-w-[60%] px-4 py-3 rounded-2xl shadow-lg transition-all duration-300 message-bubble backdrop-blur-sm",
                     isOwn
-                      ? "bg-primary text-primary-foreground rounded-br-md"
-                      : "bg-card border border-border rounded-bl-md",
+                      ? "bg-gradient-to-r from-primary to-secondary text-primary-foreground rounded-br-md shadow-[var(--shadow-glow)]"
+                      : "glass-card border border-primary/20 rounded-bl-md hover:border-primary/40",
                     isExpiring && "ring-2 ring-destructive/50 animate-pulse"
                   )}
                 >
-                  <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                  <p className="text-sm whitespace-pre-wrap break-words font-medium">{message.content}</p>
                   
                   <div className={cn(
-                    "flex items-center gap-1 mt-1 text-xs",
-                    isOwn ? "text-primary-foreground/70 justify-end" : "text-muted-foreground"
+                    "flex items-center gap-1 mt-2 text-xs font-medium",
+                    isOwn ? "text-primary-foreground/80 justify-end" : "text-muted-foreground"
                   )}>
                     <span>{formatMessageTime(message.created_at)}</span>
                     {/* Only show read receipt for regular messages, not financial notifications */}
                     {isOwn && message.read_at && message.message_type !== "financial_notification" && (
-                      <span className="ml-1">
+                      <span className="ml-1 text-primary-foreground/90">
                         {message.read_at ? "✓✓" : "✓"}
                       </span>
                     )}
                     
                     {isExpiring && (
-                      <span className="text-destructive text-xs ml-1">
+                      <span className="text-destructive text-xs ml-1 font-semibold">
                         Expires in {formatDistanceToNow(new Date(message.expires_at!))}
                       </span>
                     )}
@@ -309,7 +309,7 @@ export const ChatWindow = ({
       </div>
 
       {/* Message Input */}
-      <div className="p-3 md:p-4 border-t border-border bg-card slide-up mb-16 md:mb-0">
+      <div className="p-3 md:p-4 glass-card border-t border-border/30 slide-up mb-16 md:mb-0">
         <div className="flex items-center gap-2">
           <BurnOnReadSelector
             onSelect={setBurnOnReadDuration}
@@ -321,14 +321,14 @@ export const ChatWindow = ({
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             disabled={sending}
-            className="flex-1 min-h-[40px] resize-none text-sm md:text-base"
+            className="flex-1 min-h-[40px] resize-none text-sm md:text-base glass-card border-primary/20 focus:border-primary/50"
             aria-label="Message input"
           />
           <Button 
             onClick={handleSendMessage} 
             size="icon" 
             disabled={!newMessage.trim() || sending}
-            className="touch-feedback btn-press h-9 w-9 md:h-10 md:w-10 shrink-0"
+            className="btn-neon h-9 w-9 md:h-10 md:w-10 shrink-0"
             aria-label="Send message"
             title="Send message"
           >
@@ -338,11 +338,11 @@ export const ChatWindow = ({
             variant="ghost"
             size="icon"
             onClick={() => setFinancialSheetOpen(true)}
-            className="touch-feedback h-9 w-9 md:h-10 md:w-10 shrink-0"
+            className="touch-feedback h-9 w-9 md:h-10 md:w-10 shrink-0 border-2 border-primary/30 hover:border-primary/60 hover:bg-primary/10"
             aria-label="Financial sheet"
             title="Financial sheet"
           >
-            <DollarSign className="h-4 w-4" />
+            <DollarSign className="h-4 w-4 stroke-2" />
           </Button>
         </div>
       </div>

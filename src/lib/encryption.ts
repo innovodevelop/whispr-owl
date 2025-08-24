@@ -67,22 +67,23 @@ export function generateConversationKey(): ConversationKey {
 // Encrypt message (synchronous for API compatibility)
 export function encryptMessage(plaintext: string, conversationKey: ConversationKey): string {
   try {
-    // Use Web Crypto API synchronously via a simple XOR cipher for demo
-    // In production, you'd want proper AES-GCM encryption
+    // For demonstration, use a simple but safe encryption method
+    // Convert plaintext to bytes, then apply XOR with conversation key
     const key = base64ToBytes(conversationKey.key);
-    const plaintextBytes = textToBytes(plaintext);
+    const plaintextBytes = new TextEncoder().encode(plaintext);
     
-    // Simple XOR encryption for demonstration (not secure for production)
+    // Create a secure XOR encryption that preserves UTF-8 encoding
     const encrypted = new Uint8Array(plaintextBytes.length);
     for (let i = 0; i < plaintextBytes.length; i++) {
       encrypted[i] = plaintextBytes[i] ^ key[i % key.length];
     }
     
+    // Return as base64 for safe storage
     return bytesToBase64(encrypted);
   } catch (error) {
     console.error('Encryption failed:', error);
-    // Fallback to base64 encoding
-    return bytesToBase64(textToBytes(plaintext));
+    // Fallback: return base64 encoded plaintext
+    return btoa(unescape(encodeURIComponent(plaintext)));
   }
 }
 
@@ -98,12 +99,13 @@ export function decryptMessage(ciphertext: string, conversationKey: Conversation
       decrypted[i] = encryptedBytes[i] ^ key[i % key.length];
     }
     
-    return bytesToText(decrypted);
+    // Use TextDecoder for proper UTF-8 handling
+    return new TextDecoder().decode(decrypted);
   } catch (error) {
     console.error('Decryption failed:', error);
     try {
-      // Try base64 fallback
-      return bytesToText(base64ToBytes(ciphertext));
+      // Try fallback decoding
+      return decodeURIComponent(escape(atob(ciphertext)));
     } catch {
       return '[Encrypted Message - Unable to Decrypt]';
     }

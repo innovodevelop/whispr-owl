@@ -25,7 +25,7 @@ export const EncryptionStatus: React.FC<EncryptionStatusProps> = ({
 
   if (encryptionReady) {
     return (
-      <div className={cn("flex items-center gap-2 text-green-600 dark:text-green-400", className)}>
+      <div className={cn("flex items-center gap-1 text-green-600 dark:text-green-400", className)}>
         <ShieldCheck className="h-4 w-4" />
         {showText && <span className="text-xs">Signal Protocol Active</span>}
       </div>
