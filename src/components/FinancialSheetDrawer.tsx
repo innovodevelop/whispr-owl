@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2, DollarSign, Calendar, Edit3 } from "lucide-react";
+import { Plus, Trash2, Calculator, Calendar, Edit3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,7 +18,7 @@ interface FinancialSheetDrawerProps {
   onSheetCreated?: () => void;
   onEntryAdded?: (entries: FinancialEntry[]) => void;
   onEntryRemoved?: (removedEntry: FinancialEntry) => void;
-  sendMessage?: (content: string) => Promise<boolean>;
+  sendMessage?: (content: string, burnOnReadDuration?: number, messageType?: string) => Promise<boolean>;
 }
 
 export const FinancialSheetDrawer = ({
@@ -47,7 +47,7 @@ export const FinancialSheetDrawer = ({
       onSheetCreated();
     }
     if (newSheet && sendMessage) {
-      await sendMessage("📊 Financial sheet created");
+      await sendMessage("📊 Financial sheet created", undefined, "financial_notification");
     }
   };
 
@@ -68,7 +68,7 @@ export const FinancialSheetDrawer = ({
         onEntryAdded([...sheet.entries, entry]);
       }
       if (sendMessage) {
-        await sendMessage(`💰 Added financial entry: ${entry.name} - $${entry.amount.toFixed(2)}`);
+        await sendMessage(`💰 Added financial entry: ${entry.name} - $${entry.amount.toFixed(2)}`, undefined, "financial_notification");
       }
     }
   };
@@ -86,7 +86,7 @@ export const FinancialSheetDrawer = ({
     
     if (sendMessage) {
       const fieldName = field === 'due_date' ? 'due date' : field;
-      await sendMessage(`✏️ Updated ${fieldName} for: ${sheet?.entries.find(e => e.id === entryId)?.name}`);
+      await sendMessage(`✏️ Updated ${fieldName} for: ${sheet?.entries.find(e => e.id === entryId)?.name}`, undefined, "financial_notification");
     }
   };
 
@@ -97,7 +97,7 @@ export const FinancialSheetDrawer = ({
       onEntryRemoved(removedEntry);
     }
     if (removedEntry && sendMessage && entryToRemove) {
-      await sendMessage(`🗑️ Removed financial entry: ${entryToRemove.name}`);
+      await sendMessage(`🗑️ Removed financial entry: ${entryToRemove.name}`, undefined, "financial_notification");
     }
   };
 
@@ -120,7 +120,7 @@ export const FinancialSheetDrawer = ({
       <SheetContent side="right" className="w-full sm:max-w-md">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5" />
+            <Calculator className="h-5 w-5" />
             Financial Sheet
           </SheetTitle>
         </SheetHeader>
@@ -130,7 +130,7 @@ export const FinancialSheetDrawer = ({
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center space-y-4">
-                  <DollarSign className="h-12 w-12 mx-auto text-muted-foreground" />
+                  <Calculator className="h-12 w-12 mx-auto text-muted-foreground" />
                   <p className="text-muted-foreground">No financial sheet exists for this conversation.</p>
                   <Button onClick={handleCreateSheet} className="w-full">
                     Create Financial Sheet
@@ -290,7 +290,7 @@ export const FinancialSheetDrawer = ({
                           {/* Amount and due date row */}
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-1">
-                              <DollarSign className="h-3 w-3 text-muted-foreground" />
+                              <Calculator className="h-3 w-3 text-muted-foreground" />
                               {editingId === `${entry.id}-amount` ? (
                                 <Input
                                   type="number"

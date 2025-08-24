@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, ArrowLeft, Phone, Video, Settings, Flame, DollarSign } from "lucide-react";
+import { Send, ArrowLeft, Phone, Video, Settings, Flame, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -180,6 +180,40 @@ export const ChatWindow = ({
             const showAvatar = !isOwn && (index === 0 || visibleMessages[index - 1]?.sender_id !== message.sender_id);
             const isExpiring = isExpiringSoon(message.expires_at);
             
+            // Special rendering for financial notifications
+            if (message.message_type === "financial_notification") {
+              return (
+                <div
+                  key={message.id}
+                  className="flex justify-center my-4"
+                  style={{ animationDelay: `${index * 0.05}s` }}
+                >
+                  <div className="max-w-md mx-auto bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-8 w-8 border-2 border-blue-200 dark:border-blue-700">
+                        <AvatarImage src={message.sender?.avatar_url} />
+                        <AvatarFallback className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">
+                          {message.sender?.display_name?.[0] || message.sender?.username?.[0] || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Calculator className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                          <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                            {message.sender?.display_name || message.sender?.username || "Unknown User"}
+                          </span>
+                        </div>
+                        <p className="text-sm text-blue-700 dark:text-blue-300">{message.content}</p>
+                        <span className="text-xs text-blue-500 dark:text-blue-400 mt-1 block">
+                          {formatMessageTime(message.created_at)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <div
                 key={message.id}
@@ -218,8 +252,8 @@ export const ChatWindow = ({
                     isOwn ? "text-primary-foreground/70 justify-end" : "text-muted-foreground"
                   )}>
                     <span>{formatMessageTime(message.created_at)}</span>
-                    
-                    {isOwn && (
+                    {/* Only show read receipt for regular messages, not financial notifications */}
+                    {isOwn && message.read_at && message.message_type !== "financial_notification" && (
                       <span className="ml-1">
                         {message.read_at ? "✓✓" : "✓"}
                       </span>
@@ -296,7 +330,7 @@ export const ChatWindow = ({
             aria-label="Financial sheet"
             title="Financial sheet"
           >
-            <DollarSign className="h-4 w-4" />
+            <Calculator className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -309,8 +343,8 @@ export const ChatWindow = ({
         onSheetCreated={handleSheetCreated}
         onEntryAdded={handleEntryAdded}
         onEntryRemoved={handleEntryRemoved}
-        sendMessage={async (content: string) => {
-          return await sendMessage(content);
+        sendMessage={async (content: string, burnOnReadDuration?: number, messageType?: string) => {
+          return await sendMessage(content, burnOnReadDuration, messageType);
         }}
       />
 
