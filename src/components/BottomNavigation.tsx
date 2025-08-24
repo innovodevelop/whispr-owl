@@ -29,7 +29,7 @@ const BottomNavigation: React.FC = () => {
             variant={item.isSpecial ? "default" : "ghost"}
             size="lg"
             onClick={() => navigate(item.path)}
-            className={`flex items-center justify-center h-16 w-16 touch-feedback transition-all duration-300 ${
+            className={`flex items-center justify-center h-12 w-12 touch-feedback transition-all duration-300 ${
               isActive(item.path) && !item.isSpecial
                 ? "text-primary bg-primary/10 scale-105 rounded-2xl"
                 : !item.isSpecial
