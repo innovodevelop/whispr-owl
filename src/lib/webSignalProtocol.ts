@@ -221,7 +221,7 @@ export const encryptMessageWithSignalProtocol = async (
     combined.set(iv, 0);
     combined.set(new Uint8Array(encryptedData), iv.length);
     
-    return Buffer.from(combined).toString('base64');
+    return btoa(String.fromCharCode(...combined));
   } catch (error) {
     console.error('[Signal] Fallback encryption failed:', error);
     throw error;
@@ -291,8 +291,8 @@ export const storeIdentityKeys = async (
     .from('signal_identity_keys')
     .upsert({
       user_id: userId,
-      identity_key_public: Buffer.from(identityKeyPair.publicKey).toString('base64'),
-      identity_key_private: Buffer.from(identityKeyPair.privateKey).toString('base64'),
+      identity_key_public: btoa(String.fromCharCode(...identityKeyPair.publicKey)),
+      identity_key_private: btoa(String.fromCharCode(...identityKeyPair.privateKey)),
       registration_id: registrationId
     });
 
@@ -320,9 +320,9 @@ export const storeSignedPreKey = async (
     .upsert({
       user_id: userId,
       key_id: signedPreKey.keyId,
-      public_key: Buffer.from(signedPreKey.publicKey).toString('base64'),
-      private_key: Buffer.from(signedPreKey.privateKey).toString('base64'),
-      signature: Buffer.from(signedPreKey.signature).toString('base64')
+      public_key: btoa(String.fromCharCode(...signedPreKey.publicKey)),
+      private_key: btoa(String.fromCharCode(...signedPreKey.privateKey)),
+      signature: btoa(String.fromCharCode(...signedPreKey.signature))
     });
 
   if (error) throw error;
@@ -339,8 +339,8 @@ export const storePreKeys = async (
   const preKeyRecords = preKeys.map(preKey => ({
     user_id: userId,
     key_id: preKey.keyId,
-    public_key: Buffer.from(preKey.publicKey).toString('base64'),
-    private_key: Buffer.from(preKey.privateKey).toString('base64'),
+    public_key: btoa(String.fromCharCode(...preKey.publicKey)),
+    private_key: btoa(String.fromCharCode(...preKey.privateKey)),
     used: false
   }));
 
@@ -391,11 +391,11 @@ export const getPreKeyBundle = async (userId: string): Promise<SignalPreKeyBundl
       registrationId: identityData.registration_id,
       deviceId: 1,
       prekeyId: preKeyData?.key_id,
-      prekey: preKeyData ? Buffer.from(preKeyData.public_key, 'base64') : undefined,
+      prekey: preKeyData ? Uint8Array.from(atob(preKeyData.public_key), c => c.charCodeAt(0)) : undefined,
       signedPrekeyId: signedPreKeyData.key_id,
-      signedPrekey: Buffer.from(signedPreKeyData.public_key, 'base64'),
-      signedPrekeySignature: Buffer.from(signedPreKeyData.signature, 'base64'),
-      identityKey: Buffer.from(identityData.identity_key_public, 'base64')
+      signedPrekey: Uint8Array.from(atob(signedPreKeyData.public_key), c => c.charCodeAt(0)),
+      signedPrekeySignature: Uint8Array.from(atob(signedPreKeyData.signature), c => c.charCodeAt(0)),
+      identityKey: Uint8Array.from(atob(identityData.identity_key_public), c => c.charCodeAt(0))
     };
   } catch (error) {
     console.error('Failed to get prekey bundle:', error);
@@ -423,9 +423,10 @@ export const getUserIdentityKeys = async (userId: string): Promise<SignalIdentit
 
     if (error || !data) return null;
 
+    // Use base64 string conversion instead of Buffer
     const identityKeys = {
-      publicKey: Buffer.from(data.identity_key_public, 'base64'),
-      privateKey: Buffer.from(data.identity_key_private, 'base64')
+      publicKey: Uint8Array.from(atob(data.identity_key_public), c => c.charCodeAt(0)),
+      privateKey: Uint8Array.from(atob(data.identity_key_private), c => c.charCodeAt(0))
     };
     
     // Cache locally
@@ -451,7 +452,7 @@ export const getUserPublicKey = async (userId: string): Promise<Uint8Array | nul
 
     if (error || !data) return null;
 
-    return Buffer.from(data.identity_key_public, 'base64');
+    return Uint8Array.from(atob(data.identity_key_public), c => c.charCodeAt(0));
   } catch (error) {
     console.error('Failed to get user public key:', error);
     return null;
