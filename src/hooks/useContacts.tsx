@@ -31,6 +31,48 @@ export const useContacts = () => {
     }
   }, [user]);
 
+  const backfillContactsFromAcceptedConversations = async (existingContacts: Contact[]): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      const existingIds = new Set((existingContacts || []).map(c => c.contact_user_id));
+
+      const { data: convs, error } = await supabase
+        .from('conversations')
+        .select('participant_one, participant_two, status')
+        .or(`participant_one.eq.${user.id},participant_two.eq.${user.id}`)
+        .eq('status', 'accepted');
+
+      if (error) {
+        console.error('Error fetching accepted conversations for backfill:', error);
+        return false;
+      }
+
+      const toInsert = (convs || [])
+        .map((c: any) => {
+          const otherId = c.participant_one === user.id ? c.participant_two : c.participant_one;
+          return otherId && !existingIds.has(otherId)
+            ? { user_id: user.id, contact_user_id: otherId }
+            : null;
+        })
+        .filter(Boolean) as { user_id: string; contact_user_id: string }[];
+
+      if (toInsert.length > 0) {
+        const { error: upsertError } = await supabase
+          .from('contacts')
+          .upsert(toInsert, { onConflict: 'user_id,contact_user_id', ignoreDuplicates: true });
+        if (upsertError) {
+          console.error('Error backfilling contacts:', upsertError);
+          return false;
+        }
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error('Backfill contacts error:', e);
+      return false;
+    }
+  };
+
   const fetchContacts = async () => {
     if (!user) return;
 
@@ -79,6 +121,14 @@ export const useContacts = () => {
       }));
 
       setContacts(transformedContacts as Contact[]);
+
+      // Backfill contacts from any accepted conversations that don't yet exist
+      const backfilled = await backfillContactsFromAcceptedConversations(transformedContacts as Contact[]);
+      if (backfilled) {
+        // Refresh to include newly created contact rows
+        await fetchContacts();
+        return;
+      }
     } catch (error) {
       console.error('Error fetching contacts:', error);
     } finally {
