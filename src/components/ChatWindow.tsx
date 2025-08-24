@@ -8,6 +8,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ChatSettingsDrawer } from "./ChatSettingsDrawer";
+import { BurnOnReadSelector } from "./BurnOnReadSelector";
+import { BurnTimer } from "./BurnTimer";
 
 interface ChatWindowProps {
   conversationId: string;
@@ -25,10 +27,11 @@ export const ChatWindow = ({
   className 
 }: ChatWindowProps) => {
   const { user } = useAuth();
-  const { messages, loading, sendMessage } = useMessages(conversationId);
+  const { messages, loading, sendMessage, deleteMessage } = useMessages(conversationId);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [burnOnReadDuration, setBurnOnReadDuration] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -43,11 +46,16 @@ export const ChatWindow = ({
     if (!newMessage.trim() || sending) return;
 
     setSending(true);
-    const success = await sendMessage(newMessage);
+    const success = await sendMessage(newMessage, burnOnReadDuration || undefined);
     if (success) {
       setNewMessage("");
+      setBurnOnReadDuration(null); // Clear burn setting after sending
     }
     setSending(false);
+  };
+
+  const handleBurnExpire = async (messageId: string) => {
+    await deleteMessage(messageId);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -189,6 +197,16 @@ export const ChatWindow = ({
                       </span>
                     )}
                   </div>
+                  
+                  {/* Burn on Read Timer */}
+                  {message.burn_on_read_duration && message.burn_on_read_starts_at && (
+                    <BurnTimer
+                      startsAt={message.burn_on_read_starts_at}
+                      duration={message.burn_on_read_duration}
+                      onExpire={() => handleBurnExpire(message.id)}
+                      className={isOwn ? "justify-end" : "justify-start"}
+                    />
+                  )}
                 </div>
                 
                 {isOwn && <div className="w-8" />}
@@ -202,6 +220,10 @@ export const ChatWindow = ({
       {/* Message Input */}
       <div className="p-3 md:p-4 border-t border-border bg-card slide-up">
         <div className="flex items-center gap-2">
+          <BurnOnReadSelector
+            onSelect={setBurnOnReadDuration}
+            selectedDuration={burnOnReadDuration}
+          />
           <Input
             placeholder="Type a message..."
             value={newMessage}

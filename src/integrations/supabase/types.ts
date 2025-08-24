@@ -126,6 +126,8 @@ export type Database = {
       }
       messages: {
         Row: {
+          burn_on_read_duration: number | null
+          burn_on_read_starts_at: string | null
           content: string
           conversation_id: string
           created_at: string
@@ -137,6 +139,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          burn_on_read_duration?: number | null
+          burn_on_read_starts_at?: string | null
           content: string
           conversation_id: string
           created_at?: string
@@ -148,6 +152,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          burn_on_read_duration?: number | null
+          burn_on_read_starts_at?: string | null
           content?: string
           conversation_id?: string
           created_at?: string

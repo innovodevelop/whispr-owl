@@ -13,6 +13,8 @@ export interface Message {
   updated_at: string;
   read_at?: string;
   expires_at?: string;
+  burn_on_read_duration?: number;
+  burn_on_read_starts_at?: string;
   sender?: {
     username?: string;
     display_name?: string;
@@ -71,7 +73,7 @@ export const useMessages = (conversationId: string | null) => {
     }
   }, [conversationId, user]);
 
-  const sendMessage = async (content: string) => {
+  const sendMessage = async (content: string, burnOnReadDuration?: number) => {
     if (!conversationId || !user || !content.trim()) return false;
 
     try {
@@ -103,7 +105,8 @@ export const useMessages = (conversationId: string | null) => {
           sender_id: user.id,
           content: content.trim(),
           message_type: 'text',
-          expires_at: expiresAt?.toISOString()
+          expires_at: expiresAt?.toISOString(),
+          burn_on_read_duration: burnOnReadDuration
         })
         .select('*')
         .single();
@@ -126,13 +129,43 @@ export const useMessages = (conversationId: string | null) => {
     }
   };
 
+  const deleteMessage = async (messageId: string) => {
+    try {
+      const { error } = await supabase
+        .from('messages')
+        .delete()
+        .eq('id', messageId);
+
+      if (error) {
+        console.error('Error deleting message:', error);
+        return false;
+      }
+
+      // Remove from local state immediately
+      setMessages(prev => prev.filter(msg => msg.id !== messageId));
+      return true;
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      return false;
+    }
+  };
+
   const markAsRead = async (messageId: string) => {
     if (!user) return;
 
     try {
+      // Find the message to check if it has burn_on_read
+      const message = messages.find(msg => msg.id === messageId);
+      const updateData: any = { read_at: new Date().toISOString() };
+      
+      // If it's a burn_on_read message and not from current user, start the timer
+      if (message?.burn_on_read_duration && message.sender_id !== user.id && !message.burn_on_read_starts_at) {
+        updateData.burn_on_read_starts_at = new Date().toISOString();
+      }
+
       const { error } = await supabase
         .from('messages')
-        .update({ read_at: new Date().toISOString() })
+        .update(updateData)
         .eq('id', messageId)
         .neq('sender_id', user.id); // Don't mark own messages as read
 
@@ -210,6 +243,7 @@ export const useMessages = (conversationId: string | null) => {
     loading,
     sendMessage,
     markAsRead,
-    fetchMessages
+    fetchMessages,
+    deleteMessage
   };
 };
