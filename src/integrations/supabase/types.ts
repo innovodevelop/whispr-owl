@@ -124,6 +124,74 @@ export type Database = {
         }
         Relationships: []
       }
+      financial_entries: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string | null
+          id: string
+          name: string
+          note: string | null
+          sheet_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          name: string
+          note?: string | null
+          sheet_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          name?: string
+          note?: string | null
+          sheet_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_entries_sheet_id_fkey"
+            columns: ["sheet_id"]
+            isOneToOne: false
+            referencedRelation: "financial_sheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_sheets: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          created_by: string
+          id: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           burn_on_read_duration: number | null

@@ -73,7 +73,7 @@ export const useMessages = (conversationId: string | null) => {
     }
   }, [conversationId, user]);
 
-  const sendMessage = async (content: string, burnOnReadDuration?: number) => {
+  const sendMessage = async (content: string, burnOnReadDuration?: number, messageType: string = "text") => {
     if (!conversationId || !user || !content.trim()) return false;
 
     try {
@@ -107,7 +107,7 @@ export const useMessages = (conversationId: string | null) => {
           conversation_id: conversationId,
           sender_id: user.id,
           content: content.trim(),
-          message_type: 'text',
+          message_type: messageType,
           expires_at: expiresAt?.toISOString(),
           burn_on_read_duration: burnOnReadDuration,
           burn_on_read_starts_at: burnStartsAt

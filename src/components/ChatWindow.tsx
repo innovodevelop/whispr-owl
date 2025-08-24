@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, ArrowLeft, Phone, Video, Settings, Flame } from "lucide-react";
+import { Send, ArrowLeft, Phone, Video, Settings, Flame, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,6 +11,8 @@ import { ChatSettingsDrawer } from "./ChatSettingsDrawer";
 import { BurnOnReadSelector } from "./BurnOnReadSelector";
 import { BurnTimer } from "./BurnTimer";
 import { useBurnMessages } from "@/hooks/useBurnMessages";
+import { FinancialSheetDrawer } from "./FinancialSheetDrawer";
+import type { FinancialEntry } from "@/hooks/useFinancialSheet";
 
 interface ChatWindowProps {
   conversationId: string;
@@ -33,6 +35,7 @@ export const ChatWindow = ({
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [financialSheetOpen, setFinancialSheetOpen] = useState(false);
   const [burnOnReadDuration, setBurnOnReadDuration] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -90,6 +93,29 @@ export const ChatWindow = ({
     const now = new Date();
     const timeLeft = expiry.getTime() - now.getTime();
     return timeLeft < 5 * 60 * 1000; // Less than 5 minutes
+  };
+
+  const handleSheetCreated = async () => {
+    await sendMessage("📊 created a new financial sheet", undefined, "financial_sheet_created");
+  };
+
+  const handleEntryAdded = async (entries: FinancialEntry[]) => {
+    const latestEntry = entries[entries.length - 1];
+    if (latestEntry) {
+      await sendMessage(
+        `💰 added ${latestEntry.name} ($${latestEntry.amount.toFixed(2)}) to the financial sheet`,
+        undefined,
+        "financial_entry_added"
+      );
+    }
+  };
+
+  const handleEntryRemoved = async (removedEntry: FinancialEntry) => {
+    await sendMessage(
+      `🗑️ removed ${removedEntry.name} ($${removedEntry.amount.toFixed(2)}) from the financial sheet`,
+      undefined,
+      "financial_entry_removed"
+    );
   };
 
   return (
@@ -243,6 +269,16 @@ export const ChatWindow = ({
             onSelect={setBurnOnReadDuration}
             selectedDuration={burnOnReadDuration}
           />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setFinancialSheetOpen(true)}
+            className="touch-feedback h-10 w-10 shrink-0"
+            aria-label="Financial sheet"
+            title="Financial sheet"
+          >
+            <Receipt className="h-4 w-4" />
+          </Button>
           <Input
             placeholder="Type a message..."
             value={newMessage}
@@ -264,6 +300,16 @@ export const ChatWindow = ({
           </Button>
         </div>
       </div>
+
+      {/* Financial Sheet Drawer */}
+      <FinancialSheetDrawer
+        conversationId={conversationId}
+        isOpen={financialSheetOpen}
+        onOpenChange={setFinancialSheetOpen}
+        onSheetCreated={handleSheetCreated}
+        onEntryAdded={handleEntryAdded}
+        onEntryRemoved={handleEntryRemoved}
+      />
 
       {/* Chat Settings Drawer */}
       <ChatSettingsDrawer
