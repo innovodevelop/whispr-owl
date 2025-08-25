@@ -32,27 +32,29 @@ const Index = () => {
 
   // Handle navigation state from Contacts page to open chat
   useEffect(() => {
-    const state = window.history.state?.usr;
-    if (!state) return;
+    // Prefer React Router state; fallback to history state for safety
+    const routerState: any = (location.state as any) || (window.history.state && (window.history.state as any).usr);
+    if (!routerState) return;
 
-    if (state?.newConversation?.id) {
-      setSelectedChat(state.newConversation.id);
-      window.history.replaceState({}, document.title);
+    if (routerState?.newConversation?.id) {
+      setSelectedChat(routerState.newConversation.id);
+      // Clear state so we don't reopen on refresh
+      navigate(".", { replace: true, state: null });
       return;
     }
 
-    if (state?.selectedContact?.id && user) {
-      const contactId = state.selectedContact.id as string;
+    if (routerState?.selectedContact?.id && user) {
+      const contactId = routerState.selectedContact.id as string;
       const conv = conversations.find(c =>
         (c.participant_one === user.id && c.participant_two === contactId) ||
         (c.participant_two === user.id && c.participant_one === contactId)
       );
       if (conv) {
         setSelectedChat(conv.id);
-        window.history.replaceState({}, document.title);
+        navigate(".", { replace: true, state: null });
       }
     }
-  }, [conversations, user]);
+  }, [conversations, user, location.state, navigate]);
 
   const getLastMessageTime = (conversation: any) => {
     if (!conversation.last_message_at) return "";
