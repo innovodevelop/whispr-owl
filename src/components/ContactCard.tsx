@@ -165,6 +165,9 @@ export const ContactCard: React.FC<ContactCardProps> = ({
         if (!conversationStatus) {
           console.log('ContactCard: Card click initiating start conversation for', contact.contact_user_id);
           onStartConversation(contact.contact_user_id);
+        } else {
+          console.log('ContactCard: Card click opening existing conversation for', contact.contact_user_id, 'status:', conversationStatus.status);
+          onStartChat(contact.contact_user_id);
         }
       }}
     >
