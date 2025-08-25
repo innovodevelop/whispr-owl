@@ -34,12 +34,14 @@ const Index = () => {
   useEffect(() => {
     // Prefer React Router state; fallback to history state for safety
     const routerState: any = (location.state as any) || (window.history.state && (window.history.state as any).usr);
+    console.log('Index: nav state check -> location.state =', location.state, '; history.usr =', window.history.state && (window.history.state as any).usr);
     if (!routerState) return;
 
     if (routerState?.newConversation?.id) {
+      console.log('Index: selecting chat by newConversation.id =', routerState.newConversation.id);
       setSelectedChat(routerState.newConversation.id);
       // Clear state so we don't reopen on refresh
-      navigate(".", { replace: true, state: null });
+      navigate('.', { replace: true, state: null });
       return;
     }
 
@@ -49,9 +51,10 @@ const Index = () => {
         (c.participant_one === user.id && c.participant_two === contactId) ||
         (c.participant_two === user.id && c.participant_one === contactId)
       );
+      console.log('Index: lookup by selectedContact.id =', contactId, '; found conversation =', conv?.id);
       if (conv) {
         setSelectedChat(conv.id);
-        navigate(".", { replace: true, state: null });
+        navigate('.', { replace: true, state: null });
       }
     }
   }, [conversations, user, location.state, navigate]);

@@ -90,17 +90,20 @@ export const ContactCard: React.FC<ContactCardProps> = ({
               onTouchStart={(e) => e.stopPropagation()}
               onPointerUp={(e) => {
                 e.stopPropagation();
+                console.log('ContactCard: Open chat pointerUp for', contact.contact_user_id);
                 onStartChat(contact.contact_user_id);
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
                   e.stopPropagation();
+                  console.log('ContactCard: Open chat key for', contact.contact_user_id);
                   onStartChat(contact.contact_user_id);
                 }
               }}
               onClick={(e) => {
                 e.stopPropagation();
+                console.log('ContactCard: Open chat click for', contact.contact_user_id);
                 onStartChat(contact.contact_user_id);
               }}
               className="shrink-0 touch-feedback h-8 w-8 relative z-10 pointer-events-auto"

@@ -30,23 +30,31 @@ const Contacts = () => {
   const handleStartChat = (contactUserId: string) => {
     console.log('Contacts: handleStartChat called with contactUserId:', contactUserId);
     console.log('Contacts: Available conversations:', conversations);
+
+    // Prefer status-derived conversation (already computed in hook)
+    const status = getConversationStatus(contactUserId);
+    if (status?.status === 'accepted' && status.conversation?.id) {
+      console.log('Contacts: Using status.conversation to navigate, id:', status.conversation.id);
+      navigate('/', { state: { newConversation: { id: status.conversation.id } } });
+      return;
+    }
     
+    // Fallback: find conversation by participants
     const conversation = conversations.find(conv => 
       (conv.participant_one === user?.id && conv.participant_two === contactUserId) ||
       (conv.participant_two === user?.id && conv.participant_one === contactUserId)
     );
     
-    console.log('Contacts: Found conversation:', conversation);
+    console.log('Contacts: Found conversation via fallback:', conversation);
     
     if (conversation?.status === 'accepted') {
-      console.log('Contacts: Navigating to chat with conversation ID:', conversation.id);
+      console.log('Contacts: Navigating to chat with conversation ID (fallback):', conversation.id);
       // Navigate to main page with conversation selected
       navigate('/', { state: { newConversation: { id: conversation.id } } });
     } else {
       console.log('Contacts: No accepted conversation found, status:', conversation?.status);
     }
   };
-
   const handleAcceptRequest = async (conversationId: string) => {
     await acceptConversation(conversationId);
   };
