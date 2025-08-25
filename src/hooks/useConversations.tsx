@@ -301,16 +301,12 @@ export const useConversations = () => {
         .maybeSingle();
 
       if (existing) {
-        // Instead of showing error, return success with existing conversation
+        // Always return success for existing conversations so navigation works
         if (existing.status === 'accepted') {
           return { success: true, conversationId: existing.id, existing: true };
         } else if (existing.status === 'pending') {
-          toast({
-            title: "Request pending",
-            description: "A chat request is already pending with this user",
-            variant: "default",
-          });
-          return { success: false, conversationId: existing.id, existing: true };
+          // For pending conversations, still return success so navigation works
+          return { success: true, conversationId: existing.id, existing: true };
         }
       }
 
