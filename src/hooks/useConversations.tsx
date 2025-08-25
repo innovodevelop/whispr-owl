@@ -198,8 +198,14 @@ export const useConversations = () => {
           lastMessage = messageData.content || 'New message';
         }
 
-        // Update the conversation in our state
+        // Update the conversation in our state (both accepted and pending sent)
         setConversations(prev => prev.map(conv => 
+          conv.id === conversationId 
+            ? { ...conv, last_message: lastMessage, last_message_at: messageData.created_at }
+            : conv
+        ));
+        
+        setPendingSentRequests(prev => prev.map(conv => 
           conv.id === conversationId 
             ? { ...conv, last_message: lastMessage, last_message_at: messageData.created_at }
             : conv
@@ -482,6 +488,7 @@ export const useConversations = () => {
   return {
     conversations,
     pendingRequests,
+    pendingSentRequests,
     loading,
     startConversation,
     acceptConversation,

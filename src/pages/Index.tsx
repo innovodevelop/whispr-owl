@@ -16,7 +16,7 @@ const Index = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { conversations, loading } = useConversations();
+  const { conversations, loading, pendingSentRequests } = useConversations();
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -82,9 +82,12 @@ const Index = () => {
     }
   };
 
-  const selectedConversation = conversations.find(c => c.id === selectedChat);
+  // Combine accepted conversations with pending sent requests for display
+  const allConversations = [...conversations, ...pendingSentRequests];
+  
+  const selectedConversation = allConversations.find(c => c.id === selectedChat);
 
-  const filteredConversations = conversations.filter(conv =>
+  const filteredConversations = allConversations.filter(conv =>
     conv.otherParticipant?.display_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     conv.otherParticipant?.username?.toLowerCase().includes(searchQuery.toLowerCase())
   );
