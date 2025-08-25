@@ -167,6 +167,49 @@ export const useConversations = () => {
     }
   };
 
+  const updateConversationLastMessage = async (conversationId: string) => {
+    if (!user || !signalProtocol.initialized) return;
+
+    try {
+      // Fetch the latest message for this conversation
+      const { data: messageData } = await supabase
+        .from('messages')
+        .select('content, encrypted_content, created_at, message_type, sender_id')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      let lastMessage = null;
+      if (messageData) {
+        if (messageData.encrypted_content && signalProtocol.initialized) {
+          try {
+            const decrypted = await signalProtocol.decryptMessage(
+              messageData.encrypted_content,
+              conversationId,
+              messageData.sender_id
+            );
+            lastMessage = decrypted || 'New message';
+          } catch (error) {
+            console.error('Failed to decrypt last message:', error);
+            lastMessage = 'New message';
+          }
+        } else {
+          lastMessage = messageData.content || 'New message';
+        }
+
+        // Update the conversation in our state
+        setConversations(prev => prev.map(conv => 
+          conv.id === conversationId 
+            ? { ...conv, last_message: lastMessage, last_message_at: messageData.created_at }
+            : conv
+        ));
+      }
+    } catch (error) {
+      console.error('Error updating conversation last message:', error);
+    }
+  };
+
   const setupRealtimeSubscription = () => {
     if (!user) return;
 
@@ -180,7 +223,13 @@ export const useConversations = () => {
           table: 'conversations',
           filter: `participant_one=eq.${user.id}`
         },
-        () => fetchConversations()
+        (payload) => {
+          console.log('Conversation change (participant_one):', payload);
+          // For inserts and updates, refresh conversations
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            fetchConversations();
+          }
+        }
       )
       .on(
         'postgres_changes',
@@ -190,7 +239,13 @@ export const useConversations = () => {
           table: 'conversations',
           filter: `participant_two=eq.${user.id}`
         },
-        () => fetchConversations()
+        (payload) => {
+          console.log('Conversation change (participant_two):', payload);
+          // For inserts and updates, refresh conversations
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            fetchConversations();
+          }
+        }
       )
       .on(
         'postgres_changes',
@@ -200,14 +255,22 @@ export const useConversations = () => {
           table: 'messages'
         },
         (payload) => {
-          // Check if this message is for any of our conversations
-          const isOurMessage = conversations.some(conv => 
-            conv.id === payload.new.conversation_id
-          );
-          if (isOurMessage) {
-            // Delay refresh to allow for encryption processing
-            setTimeout(() => fetchConversations(), 1000);
-          }
+          console.log('New message inserted:', payload);
+          // Update the conversation's last message immediately
+          updateConversationLastMessage(payload.new.conversation_id);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE', 
+          schema: 'public',
+          table: 'messages'
+        },
+        (payload) => {
+          console.log('Message updated:', payload);
+          // Update the conversation's last message immediately
+          updateConversationLastMessage(payload.new.conversation_id);
         }
       )
       .subscribe();
