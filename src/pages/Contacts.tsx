@@ -17,7 +17,7 @@ import { UserSearchDialog } from "@/components/dialogs/UserSearchDialog";
 const Contacts = () => {
   const navigate = useNavigate();
   const { contacts, loading } = useContacts();
-  const { conversations, pendingRequests, startConversation, acceptConversation, rejectConversation, getConversationStatus } = useConversations();
+  const { conversations, pendingRequests, startConversation, acceptConversation, rejectConversation, getConversationStatus, fetchConversations } = useConversations();
   const { user } = useAuth();
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -67,12 +67,17 @@ const Contacts = () => {
     console.log('Contacts: handleStartConversation called with userId:', contactUserId);
     const result = await startConversation(contactUserId);
     console.log('Contacts: startConversation result:', result);
-    if (result.success && result.conversationId) {
-      // Navigate to main page with conversation selected (whether new or existing)
-      navigate('/', { state: { newConversation: { id: result.conversationId } } });
+
+    // Refresh lists so pending/accepted states appear instantly
+    fetchConversations?.();
+
+    // Only navigate if conversation is accepted
+    const status = getConversationStatus(contactUserId);
+    console.log('Contacts: post-start status:', status);
+    if (status?.status === 'accepted' && status.conversation?.id) {
+      navigate('/', { state: { newConversation: { id: status.conversation.id } } });
     }
   };
-
   // Filter contacts based on search term
   const filteredContacts = contacts.filter(contact => {
     if (!searchTerm) return true;
