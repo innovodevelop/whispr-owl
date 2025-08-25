@@ -136,7 +136,13 @@ export const ContactCard: React.FC<ContactCardProps> = ({
     <Card
       className={`hover:bg-muted/50 transition-colors hover-lift touch-feedback ${!conversationStatus ? 'cursor-pointer' : ''}`}
       onClick={(e) => {
-        console.log('ContactCard: Card clicked, target:', e.target, 'currentTarget:', e.currentTarget);
+        const target = e.target as HTMLElement;
+        const isInteractive = !!target.closest('button, [role="button"], a, input, textarea, select, [data-interactive="true"]');
+        if (isInteractive) {
+          console.log('ContactCard: Click ignored (interactive child).');
+          return;
+        }
+        console.log('ContactCard: Card clicked (non-interactive area), target:', e.target, 'currentTarget:', e.currentTarget);
         if (!conversationStatus) {
           console.log('ContactCard: Card click initiating start conversation for', contact.contact_user_id);
           onStartConversation(contact.contact_user_id);
