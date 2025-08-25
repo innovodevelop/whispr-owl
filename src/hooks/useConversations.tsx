@@ -219,8 +219,9 @@ export const useConversations = () => {
   const setupRealtimeSubscription = () => {
     if (!user) return;
 
+    // Enhanced real-time subscription for better chat overview updates
     const channel = supabase
-      .channel('conversations-changes')
+      .channel('conversations-realtime')
       .on(
         'postgres_changes',
         {
@@ -231,9 +232,10 @@ export const useConversations = () => {
         },
         (payload) => {
           console.log('Conversation change (participant_one):', payload);
-          // For inserts and updates, refresh conversations
+          // Immediate state update for better responsiveness
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-            fetchConversations();
+            // Debounced fetch to avoid excessive calls
+            setTimeout(() => fetchConversations(), 100);
           }
         }
       )
@@ -247,9 +249,8 @@ export const useConversations = () => {
         },
         (payload) => {
           console.log('Conversation change (participant_two):', payload);
-          // For inserts and updates, refresh conversations
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-            fetchConversations();
+            setTimeout(() => fetchConversations(), 100);
           }
         }
       )
@@ -262,8 +263,27 @@ export const useConversations = () => {
         },
         (payload) => {
           console.log('New message inserted:', payload);
-          // Update the conversation's last message immediately
+          // Immediate update of conversation ordering
           updateConversationLastMessage(payload.new.conversation_id);
+          
+          // Move conversation to top of list by updating timestamp
+          setConversations(prev => {
+            const updated = prev.map(conv => 
+              conv.id === payload.new.conversation_id 
+                ? { ...conv, updated_at: new Date().toISOString() }
+                : conv
+            );
+            return updated.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+          });
+          
+          setPendingSentRequests(prev => {
+            const updated = prev.map(conv => 
+              conv.id === payload.new.conversation_id 
+                ? { ...conv, updated_at: new Date().toISOString() }
+                : conv
+            );
+            return updated.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+          });
         }
       )
       .on(
@@ -275,7 +295,6 @@ export const useConversations = () => {
         },
         (payload) => {
           console.log('Message updated:', payload);
-          // Update the conversation's last message immediately
           updateConversationLastMessage(payload.new.conversation_id);
         }
       )
