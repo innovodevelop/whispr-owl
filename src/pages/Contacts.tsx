@@ -71,7 +71,14 @@ const Contacts = () => {
     // Refresh lists so pending/accepted states appear instantly
     fetchConversations?.();
 
-    // Only navigate if conversation is accepted
+    // Navigate immediately to the conversation if we have an ID (accepted or pending)
+    if (result?.conversationId) {
+      console.log('Contacts: Navigating to conversation id from result:', result.conversationId);
+      navigate('/', { state: { newConversation: { id: result.conversationId } } });
+      return;
+    }
+
+    // Fallback: Only navigate if conversation is accepted and found via status lookup
     const status = getConversationStatus(contactUserId);
     console.log('Contacts: post-start status:', status);
     if (status?.status === 'accepted' && status.conversation?.id) {

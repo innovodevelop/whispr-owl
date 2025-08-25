@@ -169,15 +169,15 @@ const Index = () => {
       <div className={`flex-1 flex flex-col ${
         isMobile && !selectedChat ? 'hidden' : 'flex'
       }`}>
-        {selectedChat && selectedConversation ? (
+        {selectedChat ? (
           <ChatWindow
             conversationId={selectedChat}
             conversationName={
-              selectedConversation.otherParticipant?.display_name || 
-              selectedConversation.otherParticipant?.username || 
-              "Unknown User"
+              selectedConversation?.otherParticipant?.display_name || 
+              selectedConversation?.otherParticipant?.username || 
+              'New chat'
             }
-            conversationAvatar={selectedConversation.otherParticipant?.avatar_url}
+            conversationAvatar={selectedConversation?.otherParticipant?.avatar_url}
             onBack={isMobile ? () => setSelectedChat(null) : undefined}
           />
         ) : (
