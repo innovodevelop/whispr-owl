@@ -86,7 +86,23 @@ export const ContactCard: React.FC<ContactCardProps> = ({
               size="icon"
               variant="ghost"
               type="button"
-              onClick={() => onStartChat(contact.contact_user_id)}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              onPointerUp={(e) => {
+                e.stopPropagation();
+                onStartChat(contact.contact_user_id);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onStartChat(contact.contact_user_id);
+                }
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onStartChat(contact.contact_user_id);
+              }}
               className="shrink-0 touch-feedback h-8 w-8 relative z-10 pointer-events-auto"
               aria-label="Open chat"
               title="Open chat"
