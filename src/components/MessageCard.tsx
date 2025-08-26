@@ -10,7 +10,7 @@ interface MessageCardProps {
   lastMessageTime?: string;
   selected?: boolean;
   onClick?: () => void;
-  
+  isUnread?: boolean;
 }
 
 export const MessageCard: React.FC<MessageCardProps> = ({
@@ -21,54 +21,60 @@ export const MessageCard: React.FC<MessageCardProps> = ({
   lastMessageTime,
   selected,
   onClick,
+  isUnread = false,
 }) => {
   return (
     <div
       onClick={onClick}
       className={cn(
-        "group relative p-4 border border-border/50 rounded-2xl bg-card hover:bg-accent/50 cursor-pointer transition-all duration-300 hover:scale-[1.01] hover:shadow-sm",
-        selected && "bg-accent border-primary/30 shadow-sm"
+        "group relative p-4 border-b border-border/30 bg-card hover:bg-accent/50 cursor-pointer transition-all duration-200",
+        selected && "bg-accent border-b-primary/50"
       )}
       role="button"
       aria-label={`Open chat with ${name}`}
     >
       <div className="flex items-start gap-4">
         <div className="relative">
-          <Avatar className="h-14 w-14 ring-2 ring-border group-hover:ring-primary/20 transition-all duration-300">
+          <Avatar className="h-12 w-12 ring-1 ring-border/50 group-hover:ring-primary/30 transition-all duration-200">
             <AvatarImage src={avatarUrl} alt={`${name} avatar`} />
-            <AvatarFallback className="bg-secondary text-secondary-foreground font-semibold text-lg">
+            <AvatarFallback className="bg-secondary text-secondary-foreground font-semibold">
               {name?.[0]?.toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
-          {/* Online indicator placeholder */}
-          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary rounded-full border-2 border-card opacity-80"></div>
         </div>
         
         <div className="flex-1 min-w-0 space-y-1">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-semibold text-base text-foreground truncate group-hover:text-primary transition-colors duration-200">
+            <h3 className={cn(
+              "font-semibold text-sm text-foreground truncate group-hover:text-primary transition-colors duration-200",
+              isUnread && "font-bold"
+            )}>
               {name}
             </h3>
             {lastMessageTime && (
-              <span className="text-xs text-muted-foreground font-medium shrink-0 mt-1">
+              <span className={cn(
+                "text-xs font-medium shrink-0 mt-0.5",
+                isUnread ? "text-primary" : "text-muted-foreground"
+              )}>
                 {lastMessageTime}
               </span>
             )}
           </div>
           
           <div className="flex items-center gap-2">
-            <p className="text-sm text-muted-foreground truncate flex-1">
+            <p className={cn(
+              "text-sm truncate flex-1",
+              isUnread ? "text-foreground font-medium" : "text-muted-foreground",
+              !lastMessage && "italic"
+            )}>
               {lastMessage || "Start a conversation..."}
             </p>
-            {lastMessage && (
-              <div className="w-2 h-2 bg-primary rounded-full opacity-60 shrink-0"></div>
+            {lastMessage && isUnread && (
+              <div className="w-2 h-2 bg-primary rounded-full shrink-0 animate-pulse"></div>
             )}
           </div>
         </div>
       </div>
-      
-      {/* Subtle hover border effect */}
-      <div className="absolute inset-0 rounded-2xl border border-primary/0 group-hover:border-primary/10 transition-all duration-300 pointer-events-none"></div>
     </div>
   );
 };

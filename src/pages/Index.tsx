@@ -150,6 +150,7 @@ const Index = () => {
                 lastMessageTime={getLastMessageTime(conversation)}
                 selected={selectedChat === conversation.id}
                 onClick={() => setSelectedChat(conversation.id)}
+                isUnread={conversation.is_unread}
               />
             ))
           )}

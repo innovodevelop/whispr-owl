@@ -17,6 +17,7 @@ interface Conversation {
   last_message_content?: string;
   last_message_encrypted?: string;
   recent_messages?: string[];
+  is_unread?: boolean;
   otherParticipant?: {
     username?: string;
     display_name?: string;
@@ -77,16 +78,20 @@ export const useConversations = () => {
         // Fetch latest message for preview (notification or regular)
         let lastMessage = null;
         let lastMessageAt = null;
+        let isUnread = false;
         if (conv.status === 'accepted') {
           const { data: messageData } = await supabase
             .from('messages')
-            .select('content, encrypted_content, created_at, message_type, sender_id')
+            .select('content, encrypted_content, created_at, message_type, sender_id, read_at')
             .eq('conversation_id', conv.id)
             .order('created_at', { ascending: false })
             .limit(1)
             .maybeSingle();
 
           if (messageData) {
+            // Check if message is unread (sent by other user and not read)
+            isUnread = messageData.sender_id !== user.id && !messageData.read_at;
+            
             if (messageData.encrypted_content && signalProtocol.initialized) {
               try {
                 // Decrypt all encrypted messages regardless of sender
@@ -143,6 +148,7 @@ export const useConversations = () => {
           last_message: lastMessage,
           last_message_at: lastMessageAt,
           recent_messages: recentMessages,
+          is_unread: isUnread,
           otherParticipant: profileData
         };
       }));
@@ -178,14 +184,17 @@ export const useConversations = () => {
       // Fetch the latest message for this conversation
       const { data: messageData } = await supabase
         .from('messages')
-        .select('content, encrypted_content, created_at, message_type, sender_id')
+        .select('content, encrypted_content, created_at, message_type, sender_id, read_at')
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
       let lastMessage = null;
+      let isUnread = false;
       if (messageData) {
+        // Check if message is unread (sent by other user and not read)
+        isUnread = messageData.sender_id !== user.id && !messageData.read_at;
         if (messageData.encrypted_content && signalProtocol.initialized) {
           try {
             const decrypted = await signalProtocol.decryptMessage(
@@ -202,20 +211,19 @@ export const useConversations = () => {
           lastMessage = messageData.content || 'New message';
         }
 
-        console.log('Successfully decrypted/fetched last message:', lastMessage);
         // Update the conversation in our state (both accepted and pending sent)
         setConversations(prev => {
           console.log('Updating conversations state with new last message');
           return prev.map(conv => 
             conv.id === conversationId 
-              ? { ...conv, last_message: lastMessage, last_message_at: messageData.created_at }
+              ? { ...conv, last_message: lastMessage, last_message_at: messageData.created_at, is_unread: isUnread }
               : conv
           );
         });
         
         setPendingSentRequests(prev => prev.map(conv => 
           conv.id === conversationId 
-            ? { ...conv, last_message: lastMessage, last_message_at: messageData.created_at }
+            ? { ...conv, last_message: lastMessage, last_message_at: messageData.created_at, is_unread: isUnread }
             : conv
         ));
       }
@@ -305,6 +313,36 @@ export const useConversations = () => {
         (payload) => {
           console.log('Message updated:', payload);
           updateConversationLastMessage(payload.new.conversation_id);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public', 
+          table: 'messages',
+          filter: 'read_at=not.is.null'
+        },
+        (payload) => {
+          console.log('Message marked as read:', payload);
+          // Update unread status when message is read
+          const messageId = payload.new.id;
+          const conversationId = payload.new.conversation_id;
+          
+          setConversations(prev => prev.map(conv => {
+            if (conv.id === conversationId) {
+              // If this was the latest message and it's now read, mark as read
+              return { ...conv, is_unread: false };
+            }
+            return conv;
+          }));
+          
+          setPendingSentRequests(prev => prev.map(conv => {
+            if (conv.id === conversationId) {
+              return { ...conv, is_unread: false };
+            }
+            return conv;
+          }));
         }
       )
       .subscribe();
