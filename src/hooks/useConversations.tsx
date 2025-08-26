@@ -168,7 +168,11 @@ export const useConversations = () => {
   };
 
   const updateConversationLastMessage = async (conversationId: string) => {
-    if (!user || !signalProtocol.initialized) return;
+    console.log('updateConversationLastMessage called for:', conversationId);
+    if (!user || !signalProtocol.initialized) {
+      console.log('updateConversationLastMessage: user or signalProtocol not ready');
+      return;
+    }
 
     try {
       // Fetch the latest message for this conversation
@@ -198,12 +202,16 @@ export const useConversations = () => {
           lastMessage = messageData.content || 'New message';
         }
 
+        console.log('Successfully decrypted/fetched last message:', lastMessage);
         // Update the conversation in our state (both accepted and pending sent)
-        setConversations(prev => prev.map(conv => 
-          conv.id === conversationId 
-            ? { ...conv, last_message: lastMessage, last_message_at: messageData.created_at }
-            : conv
-        ));
+        setConversations(prev => {
+          console.log('Updating conversations state with new last message');
+          return prev.map(conv => 
+            conv.id === conversationId 
+              ? { ...conv, last_message: lastMessage, last_message_at: messageData.created_at }
+              : conv
+          );
+        });
         
         setPendingSentRequests(prev => prev.map(conv => 
           conv.id === conversationId 
@@ -263,6 +271,7 @@ export const useConversations = () => {
         },
         (payload) => {
           console.log('New message inserted:', payload);
+          console.log('Updating conversation last message for:', payload.new.conversation_id);
           // Immediate update of conversation ordering
           updateConversationLastMessage(payload.new.conversation_id);
           
