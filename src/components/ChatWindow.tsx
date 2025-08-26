@@ -251,14 +251,15 @@ const ChatWindow = ({
                 
                 <div
                   className={cn(
-                    "max-w-[75%] md:max-w-[60%] px-3 py-1.5 rounded-2xl shadow-sm transition-all duration-300 message-bubble",
+                    "max-w-[75%] md:max-w-[60%] px-3 py-1.5 shadow-sm transition-all duration-300 message-bubble",
                     isOwn
                       ? "text-primary-foreground"
                       : "border border-muted-foreground/10 hover:bg-muted/90",
                     isExpiring && "ring-2 ring-destructive/50 animate-pulse"
                   )}
                   style={{
-                    backgroundColor: isOwn ? 'hsl(var(--primary) / 0.9)' : 'hsl(210deg 72.75% 90% / 90%)'
+                    backgroundColor: isOwn ? 'hsl(var(--primary) / 0.9)' : 'hsl(210deg 72.75% 90% / 90%)',
+                    borderRadius: '1.2rem'
                   }}
                 >
                   <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
