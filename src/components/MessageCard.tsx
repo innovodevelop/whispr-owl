@@ -24,15 +24,16 @@ export const MessageCard: React.FC<MessageCardProps> = ({
   isUnread = false,
 }) => {
   return (
-    <div
-      onClick={onClick}
-      className={cn(
-        "group relative p-4 bg-card hover:bg-accent/50 cursor-pointer transition-all duration-200",
-        selected && "bg-accent"
-      )}
-      role="button"
-      aria-label={`Open chat with ${name}`}
-    >
+    <div className="mx-3 mt-2">
+      <div
+        onClick={onClick}
+        className={cn(
+          "group relative p-4 bg-card hover:bg-accent/50 cursor-pointer transition-all duration-200",
+          (selected || isUnread) && "bg-accent rounded-2xl border border-primary/30"
+        )}
+        role="button"
+        aria-label={`Open chat with ${name}`}
+      >
       <div className="flex items-start gap-4">
         <div className="relative">
           <Avatar className="h-12 w-12 ring-1 ring-border/50 group-hover:ring-primary/30 transition-all duration-200">
@@ -74,6 +75,7 @@ export const MessageCard: React.FC<MessageCardProps> = ({
             )}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
