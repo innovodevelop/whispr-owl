@@ -261,7 +261,7 @@ const ChatWindow = ({
                   <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
                   
                   <div className={cn(
-                    "flex items-center gap-1 mt-1 text-xs",
+                    "flex items-center gap-1 mt-0.5 text-xs",
                     isOwn ? "text-primary-foreground/80 justify-end" : "text-muted-foreground"
                   )}>
                     <span>{formatMessageTime(message.created_at)}</span>
