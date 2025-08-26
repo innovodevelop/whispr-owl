@@ -98,21 +98,21 @@ const Index = () => {
   return (
     <div className="h-screen flex bg-background page-enter">
       {/* Sidebar - Hidden on mobile when chat is selected */}
-      <div className={`w-full md:w-80 m-1 md:m-2 rounded-3xl bg-card/90 backdrop-blur-sm border border-border/20 shadow-2xl flex flex-col overflow-hidden ${
+      <div className={`w-full md:w-80 lg:w-96 m-1 md:m-2 rounded-3xl bg-card/90 backdrop-blur-sm border border-border/20 shadow-2xl flex flex-col overflow-hidden ${
         isMobile && selectedChat ? 'hidden' : 'flex'
       }`} aria-label="Chats list">
         {/* Header */}
         <AppHeader title="Whispr" />
         
         {/* Search */}
-        <div className="p-3 md:p-4 border-b border-border/20">
+        <div className="p-4 border-b border-border/20">
           <div className="relative" role="search" aria-label="Search conversations">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search conversations..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-9 md:h-10 border-0 font-light bg-blue-50/50 dark:bg-blue-950/30"
+              className="pl-10 h-10 border-0 font-light bg-blue-50/30 dark:bg-blue-950/20"
               aria-label="Search conversations"
             />
           </div>

@@ -21,8 +21,8 @@ const BottomNavigation: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card/90 backdrop-blur-xl border-t border-border/50 z-50 pb-safe-area-inset-bottom">
-      <div className="flex justify-around items-center py-2 px-2">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-border/50 z-50 pb-safe-area-inset-bottom">
+      <div className="flex justify-around items-center py-3 px-4">
         {navItems.map((item) => (
           <Button
             key={item.path}
@@ -37,7 +37,7 @@ const BottomNavigation: React.FC = () => {
                 : ""
             } ${item.isSpecial ? 'rounded-2xl bg-foreground text-background hover:bg-foreground/90 scale-105' : ''}`}
           >
-            <item.icon className={`h-8 w-8 ${item.isSpecial ? 'stroke-2' : ''}`} />
+            <item.icon className={`h-6 w-6 ${item.isSpecial ? 'stroke-2' : ''}`} />
           </Button>
         ))}
       </div>
