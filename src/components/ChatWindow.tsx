@@ -251,10 +251,10 @@ const ChatWindow = ({
                 
                 <div
                   className={cn(
-                    "max-w-[75%] md:max-w-[60%] px-3 py-2 rounded-xl shadow-sm transition-all duration-300 message-bubble",
+                    "max-w-[75%] md:max-w-[60%] px-3 py-1.5 rounded-2xl shadow-sm transition-all duration-300 message-bubble",
                     isOwn
-                      ? "bg-primary/90 text-primary-foreground rounded-br-sm"
-                      : "bg-muted/80 border border-muted-foreground/10 rounded-bl-sm hover:bg-muted/90",
+                      ? "bg-primary/90 text-primary-foreground"
+                      : "bg-muted/80 border border-muted-foreground/10 hover:bg-muted/90",
                     isExpiring && "ring-2 ring-destructive/50 animate-pulse"
                   )}
                 >
