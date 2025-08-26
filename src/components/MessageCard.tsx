@@ -24,7 +24,7 @@ export const MessageCard: React.FC<MessageCardProps> = ({
   isUnread = false,
 }) => {
   return (
-    <div className="mx-3 mt-2">
+    <div className="mx-2 mt-2">
       <div
         onClick={onClick}
         className={cn(
