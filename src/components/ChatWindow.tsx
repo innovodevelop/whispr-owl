@@ -316,30 +316,33 @@ const ChatWindow = ({
             onSelect={setBurnOnReadDuration}
             selectedDuration={burnOnReadDuration}
           />
-          <Input
-            placeholder="Type a message..."
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            disabled={sending}
-            className="flex-1 min-h-[40px] resize-none text-sm md:text-base rounded-3xl bg-muted/30 border-0 placeholder:text-sm placeholder:font-light focus:bg-muted/50 flex items-center"
-            aria-label="Message input"
-          />
-          <Button 
-            onClick={handleSendMessage} 
-            size="icon" 
-            disabled={!newMessage.trim() || sending}
-            className="btn-neon h-9 w-9 md:h-10 md:w-10 shrink-0"
-            aria-label="Send message"
-            title="Send message"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
+          <div className="relative flex-1">
+            <Input
+              placeholder="Type a message..."
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              disabled={sending}
+              className="flex-1 min-h-[40px] resize-none text-sm md:text-base rounded-full border-0 placeholder:text-sm placeholder:font-light flex items-center pr-12"
+              style={{ backgroundColor: 'hsl(223deg 37.9% 29.24% / 30%)' }}
+              aria-label="Message input"
+            />
+            <Button 
+              onClick={handleSendMessage} 
+              size="icon" 
+              disabled={!newMessage.trim() || sending}
+              className="btn-neon absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full shrink-0"
+              aria-label="Send message"
+              title="Send message"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setFinancialSheetOpen(true)}
-            className="touch-feedback h-9 w-9 md:h-10 md:w-10 shrink-0 border-2 border-primary/30 hover:border-primary/60 hover:bg-primary/10"
+            className="touch-feedback h-9 w-9 md:h-10 md:w-10 shrink-0 border border-primary/30 hover:border-primary/60 hover:bg-primary/10 rounded-full"
             aria-label="Financial sheet"
             title="Financial sheet"
           >
