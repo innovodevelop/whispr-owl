@@ -122,7 +122,7 @@ const ChatWindow = ({
   };
 
   return (
-    <div className={cn("flex flex-col h-full bg-background", className)}>
+    <div className={cn("flex flex-col h-full rounded-l-2xl", className)} style={{ backgroundColor: 'hsl(var(--background) / 0.95)' }}>
       {/* Chat Header */}
       <div className="p-3 md:p-4 glass-card border-b border-border/30 slide-down">
         <div className="flex items-center gap-3">
