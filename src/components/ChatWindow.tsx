@@ -122,9 +122,9 @@ const ChatWindow = ({
   };
 
   return (
-    <div className={cn("flex flex-col h-full rounded-tl-3xl rounded-bl-3xl p-4", className)} style={{ backgroundColor: 'hsl(224deg 51.69% 7.79% / 95%)' }}>
+    <div className={cn("flex flex-col h-full rounded-tl-3xl rounded-bl-3xl p-4", className)} style={{ backgroundColor: 'hsl(var(--background))' }}>
       {/* Chat Header */}
-      <div className="p-3 md:p-4 rounded-2xl slide-down" style={{ backgroundColor: 'hsl(224deg 51.69% 15% / 40%)' }}>
+      <div className="p-3 md:p-4 rounded-2xl slide-down bg-card/50 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           {onBack && (
             <Button variant="ghost" size="icon" onClick={onBack} className="touch-feedback md:hidden hover:bg-primary/10">
@@ -258,19 +258,16 @@ const ChatWindow = ({
                     isExpiring && "ring-2 ring-destructive/50 animate-pulse"
                   )}
                   style={{
-                    backgroundColor: isOwn ? 'hsl(var(--primary) / 0.9)' : 'hsl(210deg 72.75% 90% / 90%)',
+                    backgroundColor: isOwn ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
                     borderRadius: '1.2rem'
                   }}
                 >
                   <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
                   
                   <div className={cn(
-                    "flex items-center gap-1 mt-0.5 text-xs",
+                    "flex items-center gap-1 mt-0.5 text-xs text-muted-foreground",
                     isOwn ? "justify-end" : ""
-                  )}
-                  style={{
-                    color: isOwn ? 'hsl(var(--primary-foreground) / 0.8)' : 'hsl(222.2deg 47.4% 11.2% / 73%)'
-                  }}>
+                  )}>
                     <span>{formatMessageTime(message.created_at)}</span>
                     {/* Show read receipt for sent messages */}
                     {isOwn && message.message_type !== "financial_notification" && (
@@ -330,8 +327,7 @@ const ChatWindow = ({
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               disabled={sending}
-              className="flex-1 min-h-[40px] resize-none text-sm md:text-base rounded-full border-0 placeholder:text-sm placeholder:font-light flex items-center pr-12"
-              style={{ backgroundColor: 'hsl(223deg 37.9% 29.24% / 30%)' }}
+              className="flex-1 min-h-[40px] resize-none text-sm md:text-base rounded-full border-0 placeholder:text-sm placeholder:font-light flex items-center pr-12 bg-muted/30"
               aria-label="Message input"
             />
             <Button 
