@@ -98,7 +98,7 @@ const Index = () => {
   return (
     <div className="h-screen flex bg-background page-enter">
       {/* Sidebar - Hidden on mobile when chat is selected */}
-      <div className={`w-full md:w-80 border-r border-border flex flex-col ${
+      <div className={`w-full md:w-80 m-2 md:m-4 rounded-2xl bg-card/90 backdrop-blur-sm border border-border/20 shadow-2xl flex flex-col ${
         isMobile && selectedChat ? 'hidden' : 'flex'
       }`} aria-label="Chats list">
         {/* Header */}
@@ -160,7 +160,7 @@ const Index = () => {
             <Button
               onClick={startNewChat}
               size="icon"
-              className="fixed bottom-20 md:bottom-4 left-4 z-40 h-12 w-12 rounded-full bg-primary hover:bg-primary/90 touch-feedback"
+              className="fixed bottom-20 md:bottom-8 left-6 md:left-8 z-40 h-12 w-12 rounded-full bg-primary hover:bg-primary/90 touch-feedback shadow-lg"
               aria-label="Start new chat"
             >
               <Plus className="h-5 w-5" />
