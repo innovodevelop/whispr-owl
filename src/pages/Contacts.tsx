@@ -251,14 +251,14 @@ const Contacts = () => {
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation */}
-      <BottomNavigation />
-
       {/* User Search Dialog */}
       <UserSearchDialog 
         open={searchDialogOpen} 
         onOpenChange={setSearchDialogOpen} 
       />
+      
+      {/* Mobile Bottom Navigation */}
+      <BottomNavigation />
     </div>
   );
 };

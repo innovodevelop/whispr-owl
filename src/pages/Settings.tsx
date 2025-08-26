@@ -287,8 +287,6 @@ const Settings = () => {
         </div>
       </div>
       
-      <BottomNavigation />
-
       {/* Dialogs */}
       <ProfileEditDialog open={showProfileEdit} onOpenChange={setShowProfileEdit} />
       <PhoneNumberDialog open={showPhoneEdit} onOpenChange={setShowPhoneEdit} />
@@ -296,6 +294,8 @@ const Settings = () => {
       <ThemeDialog open={showTheme} onOpenChange={setShowTheme} />
       <BlockedUsersDialog open={showBlockedUsers} onOpenChange={setShowBlockedUsers} />
       <UserSearchDialog open={showUserSearch} onOpenChange={setShowUserSearch} />
+      
+      <BottomNavigation />
     </div>
   );
 };
