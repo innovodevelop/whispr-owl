@@ -322,7 +322,7 @@ const ChatWindow = ({
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             disabled={sending}
-            className="flex-1 min-h-[40px] resize-none text-sm md:text-base rounded-3xl bg-muted/40 border-0 placeholder:text-sm placeholder:font-light focus:bg-muted/60 flex items-center"
+            className="flex-1 min-h-[40px] resize-none text-sm md:text-base rounded-3xl bg-muted/30 border-0 placeholder:text-sm placeholder:font-light focus:bg-muted/50 flex items-center"
             aria-label="Message input"
           />
           <Button 
