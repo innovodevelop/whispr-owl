@@ -112,7 +112,7 @@ const Index = () => {
               placeholder="Search conversations..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-9 md:h-10"
+              className="pl-10 h-9 md:h-10 border-0 font-light"
               aria-label="Search conversations"
             />
           </div>
@@ -159,11 +159,11 @@ const Index = () => {
           {filteredConversations.length > 0 && (
             <Button
               onClick={startNewChat}
-              size="icon"
-              className="fixed bottom-20 md:bottom-8 left-6 md:left-8 z-40 h-12 w-12 rounded-full bg-primary hover:bg-primary/90 touch-feedback shadow-lg"
+              size="icon" 
+              className="fixed bottom-6 md:bottom-6 left-3 md:left-4 z-40 h-14 w-14 rounded-full bg-primary hover:bg-primary/90 touch-feedback shadow-lg"
               aria-label="Start new chat"
             >
-              <Plus className="h-5 w-5" />
+              <Plus className="h-6 w-6" />
             </Button>
           )}
         </div>

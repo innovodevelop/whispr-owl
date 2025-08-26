@@ -28,8 +28,8 @@ export const MessageCard: React.FC<MessageCardProps> = ({
       <div
         onClick={onClick}
         className={cn(
-          "group relative p-4 bg-card hover:bg-accent/50 cursor-pointer transition-all duration-200",
-          (selected || isUnread) && "bg-accent rounded-2xl"
+          "group relative p-4 bg-card hover:bg-accent/50 cursor-pointer transition-all duration-200 hover:rounded-3xl",
+          (selected || isUnread) && "bg-accent rounded-3xl"
         )}
         role="button"
         aria-label={`Open chat with ${name}`}
