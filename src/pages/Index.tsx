@@ -112,7 +112,7 @@ const Index = () => {
               placeholder="Search conversations..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-9 md:h-10 border-0 font-light"
+              className="pl-10 h-9 md:h-10 border-0 font-light bg-blue-50/50 dark:bg-blue-950/30"
               aria-label="Search conversations"
             />
           </div>
