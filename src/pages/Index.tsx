@@ -98,7 +98,7 @@ const Index = () => {
   return (
     <div className="h-screen flex bg-background page-enter">
       {/* Sidebar - Hidden on mobile when chat is selected */}
-      <div className={`w-full md:w-80 m-1 md:m-2 rounded-tl-3xl rounded-bl-3xl bg-card/90 backdrop-blur-sm border border-border/20 shadow-2xl flex flex-col overflow-hidden ${
+      <div className={`w-full md:w-80 m-1 md:m-2 rounded-3xl bg-card/90 backdrop-blur-sm border border-border/20 shadow-2xl flex flex-col overflow-hidden ${
         isMobile && selectedChat ? 'hidden' : 'flex'
       }`} aria-label="Chats list">
         {/* Header */}
