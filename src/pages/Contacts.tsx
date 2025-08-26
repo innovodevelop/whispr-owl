@@ -90,12 +90,13 @@ const Contacts = () => {
   });
 
   return (
-    <div className="h-screen flex flex-col bg-background page-enter">
-      {/* Header */}
-      <AppHeader title="Contacts" showBackButton={true} />
-      
-      {/* Content */}
-      <div className="p-4 flex-1 overflow-auto">
+    <div className="h-screen flex bg-background page-enter">
+      <div className="w-full m-1 md:m-2 rounded-3xl bg-card/90 backdrop-blur-sm shadow-2xl flex flex-col overflow-hidden">
+        {/* Header */}
+        <AppHeader title="Contacts" showBackButton={true} />
+        
+        {/* Content */}
+        <div className="p-4 flex-1 overflow-auto">
         {/* Header Actions */}
         <div className="flex items-center gap-3 mb-6">
           <div className="relative flex-1">
@@ -247,11 +248,9 @@ const Contacts = () => {
             </CardContent>
           </Card>
         )}
+        </div>
       </div>
 
-      {/* Bottom spacing for mobile navigation */}
-      <div className="md:hidden h-20"></div>
-      
       {/* Mobile Bottom Navigation */}
       <BottomNavigation />
 

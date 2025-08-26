@@ -60,29 +60,28 @@ const Settings = () => {
 
   if (profileLoading) {
     return (
-      <div className="min-h-screen bg-background page-enter">
-        <div className="max-w-2xl mx-auto">
+      <div className="h-screen flex bg-background page-enter">
+        <div className="w-full max-w-2xl mx-auto m-1 md:m-2 rounded-3xl bg-card/90 backdrop-blur-sm shadow-2xl flex flex-col overflow-hidden">
           <AppHeader title="Settings" />
-          <div className="p-4">
+          <div className="p-4 flex-1 overflow-auto">
             <div className="animate-pulse space-y-4">
               <div className="h-32 bg-muted rounded-lg"></div>
               <div className="h-20 bg-muted rounded-lg"></div>
               <div className="h-20 bg-muted rounded-lg"></div>
             </div>
           </div>
-          <div className="md:hidden h-20"></div>
-          <BottomNavigation />
         </div>
+        <BottomNavigation />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background page-enter">
-      <div className="max-w-2xl mx-auto">
+    <div className="h-screen flex bg-background page-enter">
+      <div className="w-full max-w-2xl mx-auto m-1 md:m-2 rounded-3xl bg-card/90 backdrop-blur-sm shadow-2xl flex flex-col overflow-hidden">
         <AppHeader title="Settings" />
         
-        <div className="p-4 space-y-6">
+        <div className="p-4 space-y-6 flex-1 overflow-auto">
           {/* Profile Section */}
           <Card>
             <CardHeader>
@@ -286,10 +285,9 @@ const Settings = () => {
             </CardContent>
           </Card>
         </div>
-
-        <div className="md:hidden h-20"></div>
-        <BottomNavigation />
       </div>
+      
+      <BottomNavigation />
 
       {/* Dialogs */}
       <ProfileEditDialog open={showProfileEdit} onOpenChange={setShowProfileEdit} />

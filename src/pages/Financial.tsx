@@ -144,13 +144,13 @@ const Financial: React.FC = () => {
   }, [sheets]);
 
   return (
-    <div className="min-h-screen bg-background page-enter">
-      <div className="max-w-4xl mx-auto">
+    <div className="h-screen flex bg-background page-enter">
+      <div className="w-full max-w-4xl mx-auto m-1 md:m-2 rounded-3xl bg-card/90 backdrop-blur-sm shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
         <AppHeader title="Financial Sheets" />
         
         {/* Tab Navigation */}
-        <div className="p-4 border-b border-border">
+        <div className="p-4 border-b border-border/20">
           <div className="flex gap-2">
             {[
               { key: 'overview', label: 'Overview' },
@@ -173,7 +173,7 @@ const Financial: React.FC = () => {
           </div>
         </div>
 
-        <div className="container mx-auto p-4 md:p-6 space-y-6">
+        <div className="p-4 md:p-6 space-y-6 flex-1 overflow-auto">
           {selectedTab === 'overview' && (
             <div className="space-y-6 fade-in">
               {/* Stats Cards */}
@@ -342,13 +342,9 @@ const Financial: React.FC = () => {
             </div>
           )}
         </div>
-
-        {/* Bottom spacing for mobile navigation */}
-        <div className="md:hidden h-20"></div>
-
-        {/* Mobile Bottom Navigation */}
-        <BottomNavigation />
       </div>
+      
+      <BottomNavigation />
     </div>
   );
 };
