@@ -170,7 +170,7 @@ const Index = () => {
       </div>
 
       {/* Main Chat Area */}
-      <div className={`flex-1 flex flex-col ml-6 ${
+      <div className={`flex-1 flex flex-col ${
         isMobile && !selectedChat ? 'hidden' : 'flex'
       }`}>
         {selectedChat ? (

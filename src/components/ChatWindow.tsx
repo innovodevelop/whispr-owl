@@ -122,7 +122,7 @@ const ChatWindow = ({
   };
 
   return (
-    <div className={cn("flex flex-col h-full rounded-tl-3xl rounded-bl-3xl p-4", className)} style={{ backgroundColor: 'hsl(var(--background))' }}>
+    <div className={cn("flex flex-col h-full rounded-tl-3xl rounded-bl-3xl p-4 bg-card/90 backdrop-blur-sm", className)}>
       {/* Chat Header */}
       <div className="p-3 md:p-4 rounded-2xl slide-down bg-card/50 backdrop-blur-sm">
         <div className="flex items-center gap-3">
@@ -253,14 +253,11 @@ const ChatWindow = ({
                   className={cn(
                     "max-w-[75%] md:max-w-[60%] px-3 py-1.5 shadow-sm transition-all duration-300 message-bubble",
                     isOwn
-                      ? "text-primary-foreground"
-                      : "border border-muted-foreground/10 hover:bg-muted/90",
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-foreground border border-muted-foreground/10 hover:bg-muted/90",
                     isExpiring && "ring-2 ring-destructive/50 animate-pulse"
                   )}
-                  style={{
-                    backgroundColor: isOwn ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
-                    borderRadius: '1.2rem'
-                  }}
+                  style={{ borderRadius: '1.2rem' }}
                 >
                   <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
                   
