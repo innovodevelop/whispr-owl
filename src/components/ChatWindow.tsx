@@ -254,7 +254,7 @@ const ChatWindow = ({
                     "max-w-[75%] md:max-w-[60%] px-3 py-1.5 shadow-sm transition-all duration-300 message-bubble",
                     isOwn
                       ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-foreground border border-muted-foreground/10 hover:bg-muted/90",
+                      : "bg-muted text-foreground hover:bg-muted/90",
                     isExpiring && "ring-2 ring-destructive/50 animate-pulse"
                   )}
                   style={{ borderRadius: '1.2rem' }}
