@@ -124,7 +124,7 @@ const ChatWindow = ({
   return (
     <div className={cn("flex flex-col h-full rounded-tl-3xl rounded-bl-3xl p-4", className)} style={{ backgroundColor: 'hsl(224deg 51.69% 7.79% / 95%)' }}>
       {/* Chat Header */}
-      <div className="p-3 md:p-4 glass-card border-b border-border/30 slide-down">
+      <div className="p-3 md:p-4 rounded-2xl slide-down" style={{ backgroundColor: 'hsl(224deg 51.69% 15% / 40%)' }}>
         <div className="flex items-center gap-3">
           {onBack && (
             <Button variant="ghost" size="icon" onClick={onBack} className="touch-feedback md:hidden hover:bg-primary/10">
