@@ -253,17 +253,23 @@ const ChatWindow = ({
                   className={cn(
                     "max-w-[75%] md:max-w-[60%] px-3 py-1.5 rounded-2xl shadow-sm transition-all duration-300 message-bubble",
                     isOwn
-                      ? "bg-primary/90 text-primary-foreground"
-                      : "bg-muted/80 border border-muted-foreground/10 hover:bg-muted/90",
+                      ? "text-primary-foreground"
+                      : "border border-muted-foreground/10 hover:bg-muted/90",
                     isExpiring && "ring-2 ring-destructive/50 animate-pulse"
                   )}
+                  style={{
+                    backgroundColor: isOwn ? 'hsl(var(--primary) / 0.9)' : 'hsl(210deg 72.75% 90% / 90%)'
+                  }}
                 >
                   <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
                   
                   <div className={cn(
                     "flex items-center gap-1 mt-0.5 text-xs",
-                    isOwn ? "text-primary-foreground/80 justify-end" : "text-muted-foreground"
-                  )}>
+                    isOwn ? "justify-end" : ""
+                  )}
+                  style={{
+                    color: isOwn ? 'hsl(var(--primary-foreground) / 0.8)' : 'hsl(222.2deg 47.4% 11.2% / 73%)'
+                  }}>
                     <span>{formatMessageTime(message.created_at)}</span>
                     {/* Show read receipt for sent messages */}
                     {isOwn && message.message_type !== "financial_notification" && (
