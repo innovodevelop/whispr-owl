@@ -310,7 +310,7 @@ const ChatWindow = ({
       </div>
 
       {/* Message Input */}
-      <div className="p-3 md:p-4 glass-card border-t border-border/30 slide-up mb-16 md:mb-0">
+      <div className="p-3 md:p-4 bg-card/60 backdrop-blur-xl border border-border/50 rounded-xl border-t border-border/30 slide-up mb-16 md:mb-0">
         <div className="flex items-center gap-2">
           <BurnOnReadSelector
             onSelect={setBurnOnReadDuration}
