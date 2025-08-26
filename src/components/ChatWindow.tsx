@@ -265,8 +265,8 @@ const ChatWindow = ({
                     isOwn ? "text-primary-foreground/80 justify-end" : "text-muted-foreground"
                   )}>
                     <span>{formatMessageTime(message.created_at)}</span>
-                    {/* Only show read receipt for regular messages, not financial notifications */}
-                    {isOwn && message.read_at && message.message_type !== "financial_notification" && (
+                    {/* Show read receipt for sent messages */}
+                    {isOwn && message.message_type !== "financial_notification" && (
                       <span className="ml-1 text-primary-foreground/90">
                         {message.read_at ? "✓✓" : "✓"}
                       </span>
