@@ -105,7 +105,7 @@ const Index = () => {
         <AppHeader title="Whispr" />
         
         {/* Search */}
-        <div className="p-3 md:p-4 border-b border-border">
+        <div className="p-3 md:p-4 border-b border-border/20">
           <div className="relative" role="search" aria-label="Search conversations">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
