@@ -258,10 +258,10 @@ const ChatWindow = ({
                     isExpiring && "ring-2 ring-destructive/50 animate-pulse"
                   )}
                 >
-                  <p className="text-sm whitespace-pre-wrap break-words font-medium">{message.content}</p>
+                  <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
                   
                   <div className={cn(
-                    "flex items-center gap-1 mt-2 text-xs font-medium",
+                    "flex items-center gap-1 mt-1 text-xs",
                     isOwn ? "text-primary-foreground/80 justify-end" : "text-muted-foreground"
                   )}>
                     <span>{formatMessageTime(message.created_at)}</span>
