@@ -122,7 +122,7 @@ const ChatWindow = ({
   };
 
   return (
-    <div className={cn("flex flex-col h-full rounded-tl-3xl rounded-bl-3xl p-4 bg-card/90 backdrop-blur-sm mt-1 md:mt-2 mr-1 md:mr-2 mb-1 md:mb-2", className)}>
+    <div className={cn("flex flex-col h-full rounded-3xl p-4 bg-card/90 backdrop-blur-sm mt-1 md:mt-2 mr-1 md:mr-2 mb-1 md:mb-2", className)}>
       {/* Chat Header */}
       <div className="p-3 md:p-4 rounded-2xl slide-down bg-card/50 backdrop-blur-sm">
         <div className="flex items-center gap-3">
