@@ -1,1 +1,105 @@
 project_id = "pwhofxthijramblrjmxr"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[db.pooler]
+enabled = false
+port = 54329
+pool_mode = "transaction"
+default_pool_size = 20
+max_client_conn = 100
+
+[realtime]
+enabled = true
+ip_version = "IPv4"
+port = 54323
+max_header_length = 4096
+
+[studio]
+enabled = true
+port = 54323
+api_url = "http://127.0.0.1:54321"
+openai_api_key = "env(OPENAI_API_KEY)"
+
+[inbucket]
+enabled = true
+port = 54324
+smtp_port = 54325
+pop3_port = 54326
+
+[storage]
+enabled = true
+port = 54327
+file_size_limit = "50MiB"
+image_transformation = { enabled = true }
+
+[auth]
+enabled = true
+port = 54328
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["https://pwhofxthijramblrjmxr.supabase.co/auth/v1/callback"]
+jwt_expiry = 3600
+refresh_token_rotation_enabled = true
+security_update_password_require_reauthentication = true
+security_captcha_enabled = false
+security_captcha_provider = "hcaptcha"
+security_captcha_secret = "env(CAPTCHA_SECRET)"
+enable_signup = true
+enable_anonymous_sign_ins = false
+minimum_password_length = 6
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+secure_email_change_enabled = true
+enable_reauthentication = true
+
+[auth.sms]
+enable_signup = true
+enable_confirmations = true
+template = "Your code is {{ .Code }} ."
+twilio_account_sid = "env(TWILIO_ACCOUNT_SID)"
+twilio_auth_token = "env(TWILIO_AUTH_TOKEN)"
+twilio_message_service_sid = "env(TWILIO_MESSAGE_SERVICE_SID)"
+max_frequency = "5s"
+
+[edge_runtime]
+enabled = true
+port = 54330
+inspector_port = 54331
+
+[analytics]
+enabled = true
+port = 54327
+vector_port = 54328
+gcp_project_id = "env(GCP_PROJECT_ID)"
+gcp_project_number = "env(GCP_PROJECT_NUMBER)"
+gcp_jwt_path = "env(GCP_JWT_PATH)"
+dataset_id = "your_dataset_id"
+table_name = "your_table_name"
+
+[functions.crypto-register]
+verify_jwt = false
+
+[functions.crypto-challenge] 
+verify_jwt = false
+
+[functions.crypto-verify]
+verify_jwt = false
+
+[functions.new-device-request]
+verify_jwt = false
+
+[functions.link-device]
+verify_jwt = false
