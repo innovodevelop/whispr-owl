@@ -267,8 +267,7 @@ const Index = () => {
                         size="sm"
                         className="shrink-0"
                       >
-                        <Plus className="h-4 w-4 mr-1" />
-                        Add
+                        <MessageCircle className="h-4 w-4" />
                       </Button>
                     </div>
                   ))}
