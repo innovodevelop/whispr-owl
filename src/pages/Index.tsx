@@ -10,6 +10,7 @@ import AppHeader from "@/components/AppHeader";
 import { ChatWindow } from "@/components/ChatWindow";
 import { formatDistanceToNow } from "date-fns";
 import MessageCard from "@/components/MessageCard";
+import { UserSearchDialog } from "@/components/dialogs/UserSearchDialog";
 
 
 const Index = () => {
@@ -20,6 +21,7 @@ const Index = () => {
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [userSearchOpen, setUserSearchOpen] = useState(false);
 
   // Handle mobile responsive behavior
   useEffect(() => {
@@ -93,7 +95,7 @@ const Index = () => {
   );
 
   const startNewChat = () => {
-    navigate("/contacts");
+    setUserSearchOpen(true);
   };
   return (
     <div className="h-screen flex bg-background page-enter">
@@ -194,6 +196,12 @@ const Index = () => {
           </div>
         )}
       </div>
+      
+      {/* User Search Dialog */}
+      <UserSearchDialog 
+        open={userSearchOpen} 
+        onOpenChange={setUserSearchOpen} 
+      />
       
       {/* Mobile Bottom Navigation */}
       <BottomNavigation />
