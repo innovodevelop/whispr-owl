@@ -3,7 +3,6 @@ import { Settings, UserPlus, LogOut, Moon, Sun, Monitor, User, Edit, ArrowLeft }
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useTheme } from "@/hooks/useTheme";
@@ -66,7 +65,6 @@ const AppHeader: React.FC<AppHeaderProps> = ({
       <div className="p-3 md:p-4 border-b border-border sticky top-0 z-50 bg-background/95 backdrop-blur-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <SidebarTrigger />
             {showBackButton && (
               <Button 
                 variant="ghost" 
