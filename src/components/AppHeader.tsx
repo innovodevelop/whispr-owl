@@ -62,8 +62,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({
 
   return (
     <>
-      <div className="p-3 md:p-4 border-b border-border sticky top-0 z-50 bg-background/95 backdrop-blur-sm">
-        <div className="flex items-center justify-between">
+      <div className="border-b border-border sticky top-0 z-50 bg-background/95 backdrop-blur-sm">
+        <div className="flex items-center justify-between p-3 md:p-4">
           <div className="flex items-center gap-3">
             {showBackButton && (
               <Button 
