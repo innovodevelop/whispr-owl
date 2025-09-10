@@ -63,7 +63,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   return (
     <>
       <div className="border-b border-border sticky top-0 z-50 bg-background/95 backdrop-blur-sm">
-        <div className="flex items-center justify-between p-3 md:p-4">
+        <div className="container flex items-center justify-between py-3 md:py-4">
           <div className="flex items-center gap-3">
             {showBackButton && (
               <Button 
