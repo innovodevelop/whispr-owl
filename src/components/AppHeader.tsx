@@ -62,8 +62,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({
 
   return (
     <>
-      <div className="border-b border-border sticky top-0 z-50 bg-background/95 backdrop-blur-sm">
-        <div className="flex items-center justify-between py-3 md:py-4 px-4">
+      <header className="w-full border-b border-border sticky top-0 z-50 bg-background supports-[backdrop-filter]:bg-background/80 backdrop-blur-sm">
+        <div className="container flex items-center justify-between py-3 md:py-4 px-4">
           <div className="flex items-center gap-3">
             {showBackButton && (
               <Button 
@@ -137,7 +137,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </div>
+      </header>
 
       <ProfileEditDialog open={showProfileEdit} onOpenChange={setShowProfileEdit} />
     </>
