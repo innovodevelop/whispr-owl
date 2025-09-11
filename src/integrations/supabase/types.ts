@@ -441,7 +441,6 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          identity_key_private: string
           identity_key_public: string
           registration_id: number
           updated_at: string
@@ -450,7 +449,6 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          identity_key_private: string
           identity_key_public: string
           registration_id: number
           updated_at?: string
@@ -459,7 +457,6 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          identity_key_private?: string
           identity_key_public?: string
           registration_id?: number
           updated_at?: string
@@ -472,7 +469,6 @@ export type Database = {
           created_at: string
           id: string
           key_id: number
-          private_key: string
           public_key: string
           used: boolean
           user_id: string
@@ -481,7 +477,6 @@ export type Database = {
           created_at?: string
           id?: string
           key_id: number
-          private_key: string
           public_key: string
           used?: boolean
           user_id: string
@@ -490,7 +485,6 @@ export type Database = {
           created_at?: string
           id?: string
           key_id?: number
-          private_key?: string
           public_key?: string
           used?: boolean
           user_id?: string
@@ -532,7 +526,6 @@ export type Database = {
           created_at: string
           id: string
           key_id: number
-          private_key: string
           public_key: string
           signature: string
           user_id: string
@@ -541,7 +534,6 @@ export type Database = {
           created_at?: string
           id?: string
           key_id: number
-          private_key: string
           public_key: string
           signature: string
           user_id: string
@@ -550,7 +542,6 @@ export type Database = {
           created_at?: string
           id?: string
           key_id?: number
-          private_key?: string
           public_key?: string
           signature?: string
           user_id?: string
@@ -608,7 +599,6 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string | null
-          identity_key_private: string | null
           identity_key_public: string | null
           registration_id: number | null
           updated_at: string | null
@@ -617,7 +607,6 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string | null
-          identity_key_private?: string | null
           identity_key_public?: string | null
           registration_id?: number | null
           updated_at?: string | null
@@ -626,7 +615,6 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string | null
-          identity_key_private?: string | null
           identity_key_public?: string | null
           registration_id?: number | null
           updated_at?: string | null
