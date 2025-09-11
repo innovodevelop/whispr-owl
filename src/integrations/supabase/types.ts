@@ -617,7 +617,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string | null
-          identity_key_private?: never
+          identity_key_private?: string | null
           identity_key_public?: string | null
           registration_id?: number | null
           updated_at?: string | null
@@ -626,7 +626,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string | null
-          identity_key_private?: never
+          identity_key_private?: string | null
           identity_key_public?: string | null
           registration_id?: number | null
           updated_at?: string | null
