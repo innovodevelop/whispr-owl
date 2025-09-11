@@ -687,11 +687,25 @@ export type Database = {
       }
     }
     Functions: {
+      check_rate_limit: {
+        Args: {
+          p_action_type: string
+          p_ip_address?: unknown
+          p_max_attempts?: number
+          p_user_id?: string
+          p_window_minutes?: number
+        }
+        Returns: Json
+      }
       cleanup_expired_crypto_data: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
       cleanup_expired_messages: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_expired_rate_limits: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
@@ -808,6 +822,17 @@ export type Database = {
           p_user_id: string
         }
         Returns: undefined
+      }
+      upsert_rate_limit: {
+        Args: {
+          p_action_type: string
+          p_attempt_count?: number
+          p_blocked_until?: string
+          p_ip_address?: unknown
+          p_user_id?: string
+          p_window_start?: string
+        }
+        Returns: string
       }
       validate_phone_privacy: {
         Args: Record<PropertyKey, never>
