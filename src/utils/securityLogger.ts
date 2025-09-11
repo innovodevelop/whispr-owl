@@ -1,10 +1,13 @@
-// Security audit logging utility
+// Enhanced security audit logging utility
 export interface SecurityEvent {
   event: string;
   userId?: string;
   details?: Record<string, any>;
   severity: 'low' | 'medium' | 'high' | 'critical';
   timestamp: Date;
+  ip?: string;
+  userAgent?: string;
+  sessionId?: string;
 }
 
 class SecurityLogger {
@@ -61,6 +64,43 @@ class SecurityLogger {
       details,
       severity: 'high',
       timestamp: new Date()
+    });
+  }
+
+  logFailedAttempt(event: string, userId?: string, ip?: string, details?: Record<string, any>) {
+    this.log({
+      event: `failed_${event}`,
+      userId,
+      details: { ...details, ip },
+      severity: 'medium',
+      timestamp: new Date(),
+      ip
+    });
+  }
+
+  logSecurityViolation(event: string, userId?: string, ip?: string, details?: Record<string, any>) {
+    this.log({
+      event: `violation_${event}`,
+      userId,
+      details: { ...details, ip },
+      severity: 'critical',
+      timestamp: new Date(),
+      ip
+    });
+  }
+
+  logInputValidationFailure(field: string, value: string, userId?: string, ip?: string) {
+    this.log({
+      event: 'input_validation_failure',
+      userId,
+      details: { 
+        field, 
+        valueLength: value?.length || 0,
+        ip 
+      },
+      severity: 'medium',
+      timestamp: new Date(),
+      ip
     });
   }
 

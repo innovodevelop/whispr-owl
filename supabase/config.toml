@@ -56,7 +56,9 @@ security_captcha_provider = "hcaptcha"
 security_captcha_secret = "env(CAPTCHA_SECRET)"
 enable_signup = true
 enable_anonymous_sign_ins = false
-minimum_password_length = 6
+minimum_password_length = 8
+password_min_length = 8
+enable_leaked_password_protection = true
 
 [auth.email]
 enable_signup = true
@@ -73,6 +75,8 @@ twilio_account_sid = "env(TWILIO_ACCOUNT_SID)"
 twilio_auth_token = "env(TWILIO_AUTH_TOKEN)"
 twilio_message_service_sid = "env(TWILIO_MESSAGE_SERVICE_SID)"
 max_frequency = "5s"
+otp_exp = 300
+otp_length = 6
 
 [edge_runtime]
 enabled = true

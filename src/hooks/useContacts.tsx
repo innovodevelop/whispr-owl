@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { useToast } from "./use-toast";
+import { validateText, validateUUID } from "@/utils/inputValidation";
+import { securityLogger } from "@/utils/securityLogger";
 
 interface Contact {
   id: string;
@@ -145,12 +147,35 @@ export const useContacts = () => {
   const addContact = async (contactUserId: string) => {
     if (!user) return false;
 
+    // Input validation
+    const validation = validateUUID(contactUserId);
+    if (!validation.isValid) {
+      securityLogger.logInputValidationFailure('contactUserId', contactUserId, user.id);
+      toast({
+        title: "Error",
+        description: "Invalid contact ID format",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Prevent adding self as contact
+    if (contactUserId === user.id) {
+      securityLogger.logSuspiciousActivity('self_contact_attempt', user.id, { contactUserId });
+      toast({
+        title: "Error",
+        description: "Cannot add yourself as a contact",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     try {
       const { error } = await supabase
         .from('contacts')
         .insert({
           user_id: user.id,
-          contact_user_id: contactUserId,
+          contact_user_id: validation.sanitizedValue,
         });
 
       if (error) {
@@ -167,6 +192,11 @@ export const useContacts = () => {
           });
           return true;
         }
+        
+        securityLogger.logFailedAttempt('add_contact', user.id, undefined, { 
+          contactUserId: validation.sanitizedValue, 
+          error: error.message 
+        });
         toast({
           title: "Error",
           description: error.message,
@@ -174,6 +204,8 @@ export const useContacts = () => {
         });
         return false;
       }
+
+      securityLogger.logAuthEvent('contact_added', user.id, { contactUserId: validation.sanitizedValue });
 
       toast({
         title: "Contact Added",
@@ -195,14 +227,30 @@ export const useContacts = () => {
   const removeContact = async (contactUserId: string) => {
     if (!user) return false;
 
+    // Input validation
+    const validation = validateUUID(contactUserId);
+    if (!validation.isValid) {
+      securityLogger.logInputValidationFailure('contactUserId', contactUserId, user.id);
+      toast({
+        title: "Error",
+        description: "Invalid contact ID format",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     try {
       const { error } = await supabase
         .from('contacts')
         .delete()
         .eq('user_id', user.id)
-        .eq('contact_user_id', contactUserId);
+        .eq('contact_user_id', validation.sanitizedValue);
 
       if (error) {
+        securityLogger.logFailedAttempt('remove_contact', user.id, undefined, { 
+          contactUserId: validation.sanitizedValue, 
+          error: error.message 
+        });
         toast({
           title: "Error",
           description: error.message,
@@ -210,6 +258,8 @@ export const useContacts = () => {
         });
         return false;
       }
+
+      securityLogger.logAuthEvent('contact_removed', user.id, { contactUserId: validation.sanitizedValue });
 
       toast({
         title: "Contact Removed",
@@ -229,9 +279,14 @@ export const useContacts = () => {
   };
 
   const searchUsersByUsername = async (searchTerm: string) => {
-    // Input validation and sanitization
-    const sanitizedTerm = searchTerm.trim().slice(0, 50); // Limit length
-    if (sanitizedTerm.length < 2) return []; // Minimum search length
+    // Enhanced input validation and sanitization
+    const validation = validateText(searchTerm, 50, 2);
+    if (!validation.isValid) {
+      securityLogger.logInputValidationFailure('searchTerm', searchTerm, user?.id);
+      return [];
+    }
+
+    const sanitizedTerm = validation.sanitizedValue;
 
     // Clear previous timeout
     if (searchTimeoutRef.current) {
@@ -247,13 +302,27 @@ export const useContacts = () => {
             .rpc('search_users_by_query_secure', { search_term: sanitizedTerm });
 
           if (error) {
+            securityLogger.logFailedAttempt('user_search', user?.id, undefined, { 
+              searchTerm: sanitizedTerm, 
+              error: error.message 
+            });
             console.error('Search error occurred');
             resolve([]);
             return;
           }
 
+          // Log successful search for security monitoring
+          securityLogger.logAuthEvent('user_search', user?.id, { 
+            searchTerm: sanitizedTerm,
+            resultCount: (data || []).length 
+          });
+
           resolve(data || []);
         } catch (error) {
+          securityLogger.logFailedAttempt('user_search', user?.id, undefined, { 
+            searchTerm: sanitizedTerm,
+            error: 'Unknown error'
+          });
           console.error('Search error occurred');
           resolve([]);
         } finally {
