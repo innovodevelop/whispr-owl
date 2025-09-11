@@ -730,6 +730,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      validate_view_security: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

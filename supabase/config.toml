@@ -75,7 +75,7 @@ twilio_account_sid = "env(TWILIO_ACCOUNT_SID)"
 twilio_auth_token = "env(TWILIO_AUTH_TOKEN)"
 twilio_message_service_sid = "env(TWILIO_MESSAGE_SERVICE_SID)"
 max_frequency = "5s"
-otp_exp = 300
+otp_exp = 60
 otp_length = 6
 
 [edge_runtime]
