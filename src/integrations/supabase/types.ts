@@ -695,6 +695,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      comprehensive_security_validation: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          component: string
+          details: string
+          status: string
+        }[]
+      }
       final_security_validation: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -784,6 +792,14 @@ export type Database = {
           username: string
         }[]
       }
+      test_signal_identity_keys_secure_access: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          explanation: string
+          result: string
+          test_name: string
+        }[]
+      }
       upsert_conversation_settings: {
         Args: {
           p_conversation_id: string
@@ -808,6 +824,10 @@ export type Database = {
           details: string
           status: string
         }[]
+      }
+      validate_signal_identity_keys_secure_view: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       validate_view_security: {
         Args: Record<PropertyKey, never>
