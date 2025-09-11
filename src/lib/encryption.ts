@@ -248,7 +248,7 @@ export async function decryptConversationKey(encryptedKey: string, userPrivateKe
 }
 
 // Encrypt text with password using Web Crypto API
-async function encryptWithPassword(text: string, password: string): Promise<string> {
+export async function encryptWithPassword(text: string, password: string): Promise<string> {
   try {
     const salt = randomBytes(16);
     const iv = randomBytes(12);
@@ -296,7 +296,7 @@ async function encryptWithPassword(text: string, password: string): Promise<stri
 }
 
 // Decrypt text with password using Web Crypto API
-async function decryptWithPassword(encryptedText: string, password: string): Promise<string> {
+export async function decryptWithPassword(encryptedText: string, password: string): Promise<string> {
   try {
     const combined = base64ToBytes(encryptedText);
     const salt = combined.slice(0, 16);

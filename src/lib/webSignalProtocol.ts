@@ -1,6 +1,7 @@
 // Web-compatible Signal Protocol implementation
 // Using @signalapp/libsignal-client with proper web compatibility
 import { supabase } from '@/integrations/supabase/client';
+import { encryptWithPassword, decryptWithPassword } from '@/lib/encryption';
 
 export interface SignalIdentityKeyPair {
   publicKey: Uint8Array;
@@ -269,12 +270,24 @@ export const storeIdentityKeys = async (
   identityKeyPair: SignalIdentityKeyPair,
   registrationId: number
 ): Promise<void> => {
+  // Derive device-specific secret (stored locally, not in DB)
+  let deviceSecret = localStorage.getItem('signal_device_secret');
+  if (!deviceSecret) {
+    const rand = crypto.getRandomValues(new Uint8Array(32));
+    deviceSecret = btoa(String.fromCharCode(...Array.from(rand)));
+    localStorage.setItem('signal_device_secret', deviceSecret);
+  }
+
+  const publicB64 = btoa(String.fromCharCode(...identityKeyPair.publicKey));
+  const privateB64 = btoa(String.fromCharCode(...identityKeyPair.privateKey));
+  const encryptedPrivate = await encryptWithPassword(privateB64, deviceSecret);
+
   const { error } = await supabase
     .from('signal_identity_keys')
     .upsert({
       user_id: userId,
-      identity_key_public: btoa(String.fromCharCode(...identityKeyPair.publicKey)),
-      identity_key_private: btoa(String.fromCharCode(...identityKeyPair.privateKey)),
+      identity_key_public: publicB64,
+      identity_key_private: encryptedPrivate,
       registration_id: registrationId
     });
 
@@ -401,10 +414,24 @@ export const getUserIdentityKeys = async (userId: string): Promise<SignalIdentit
 
     if (error || !data) return null;
 
-    // Use base64 string conversion instead of Buffer
+    // Decrypt private key with device secret; fall back to base64 if needed
+    let deviceSecret = localStorage.getItem('signal_device_secret');
+    if (!deviceSecret) {
+      console.warn('[Signal] Missing device secret for decrypting identity key');
+      return null;
+    }
+
+    let privateB64: string;
+    try {
+      privateB64 = await decryptWithPassword(data.identity_key_private, deviceSecret);
+    } catch (e) {
+      // Legacy data may be stored as base64
+      privateB64 = data.identity_key_private;
+    }
+
     const identityKeys = {
       publicKey: Uint8Array.from(atob(data.identity_key_public), c => c.charCodeAt(0)),
-      privateKey: Uint8Array.from(atob(data.identity_key_private), c => c.charCodeAt(0))
+      privateKey: Uint8Array.from(atob(privateB64), c => c.charCodeAt(0))
     };
     
     // Cache locally
