@@ -695,6 +695,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      final_security_validation: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          component: string
+          details: string
+          status: string
+        }[]
+      }
       generate_avatar_url: {
         Args: { public_key_hash: string }
         Returns: string
