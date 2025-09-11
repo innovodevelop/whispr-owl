@@ -740,6 +740,17 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_user_identity_keys_secure: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          id: string
+          identity_key_public: string
+          registration_id: number
+          updated_at: string
+          user_id: string
+        }[]
+      }
       get_user_identity_public_key: {
         Args: { target_user_id: string }
         Returns: {
@@ -849,6 +860,10 @@ export type Database = {
           details: string
           status: string
         }[]
+      }
+      validate_signal_identity_keys_secure_security: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       validate_signal_identity_keys_secure_view: {
         Args: Record<PropertyKey, never>
