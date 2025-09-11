@@ -3,9 +3,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { CryptoAuthProvider, useCryptoAuth } from "@/hooks/useCryptoAuthProvider";
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
+import { CryptoAuthFlow } from "./pages/CryptoAuthFlow";
 import Contacts from "./pages/Contacts";
 import Settings from "./pages/Settings";
 import Financial from "./pages/Financial";
@@ -15,9 +15,9 @@ import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, isAuthenticated } = useCryptoAuth();
 
-  console.log("ProtectedRoute: loading=", loading, "user=", !!user);
+  console.log("ProtectedRoute: loading=", loading, "isAuthenticated=", isAuthenticated);
 
   if (loading) {
     console.log("ProtectedRoute: Showing loading state");
@@ -25,29 +25,29 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       <div className="h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">Initializing secure authentication...</p>
         </div>
       </div>
     );
   }
 
-  if (!user) {
-    console.log("ProtectedRoute: Redirecting to auth");
-    return <Auth />;
+  if (!isAuthenticated) {
+    console.log("ProtectedRoute: Redirecting to crypto auth");
+    return <CryptoAuthFlow />;
   }
 
-  console.log("ProtectedRoute: Showing protected content");
+  console.log("ProtectedRoute: Showing protected content for user:", user?.username);
   return <>{children}</>;
 };
 
 const App = () => (
   <GlobalErrorBoundary>
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
+      <CryptoAuthProvider>
         <TooltipProvider>
           <BrowserRouter>
             <Routes>
-              <Route path="/auth" element={<Auth />} />
+              <Route path="/auth" element={<CryptoAuthFlow />} />
               <Route path="/" element={
                 <ProtectedRoute>
                   <Index />
@@ -74,7 +74,7 @@ const App = () => (
           <Toaster />
           <Sonner />
         </TooltipProvider>
-      </AuthProvider>
+      </CryptoAuthProvider>
     </QueryClientProvider>
   </GlobalErrorBoundary>
 );

@@ -31,11 +31,26 @@ export interface CryptoUser {
   recovery_phrase_hash?: string;
 }
 
-// Key generation and storage
+// Device fingerprinting for enhanced security
+export interface DeviceFingerprint {
+  screenResolution: string;
+  timezone: string;
+  language: string;
+  platform: string;
+  userAgent: string;
+  hardwareConcurrency: number;
+  maxTouchPoints: number;
+  colorDepth: number;
+  deviceMemory?: number;
+}
+
+// Key generation and storage with enhanced device fingerprinting
 export class CryptoAuthManager {
   private static readonly STORAGE_KEY = 'whispr_crypto_keys';
   private static readonly USER_ID_KEY = 'whispr_user_id';
   private static readonly RECOVERY_PHRASE_KEY = 'whispr_recovery_phrase';
+  private static readonly DEVICE_ID_KEY = 'whispr_device_id';
+  private static readonly DEVICE_FINGERPRINT_KEY = 'whispr_device_fingerprint';
 
   // Generate a new Ed25519 key pair
   static async generateKeyPair(): Promise<CryptoKeyPair> {
@@ -132,6 +147,49 @@ export class CryptoAuthManager {
     }
   }
 
+  // Generate device fingerprint for enhanced security
+  static generateDeviceFingerprint(): DeviceFingerprint {
+    const fingerprint: DeviceFingerprint = {
+      screenResolution: `${screen.width}x${screen.height}`,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      language: navigator.language,
+      platform: navigator.platform,
+      userAgent: navigator.userAgent.substring(0, 100), // Limit length for storage
+      hardwareConcurrency: navigator.hardwareConcurrency,
+      maxTouchPoints: navigator.maxTouchPoints || 0,
+      colorDepth: screen.colorDepth,
+      deviceMemory: (navigator as any).deviceMemory || undefined
+    };
+    
+    localStorage.setItem(this.DEVICE_FINGERPRINT_KEY, JSON.stringify(fingerprint));
+    return fingerprint;
+  }
+
+  // Get stored device fingerprint
+  static getDeviceFingerprint(): DeviceFingerprint | null {
+    const stored = localStorage.getItem(this.DEVICE_FINGERPRINT_KEY);
+    return stored ? JSON.parse(stored) : null;
+  }
+
+  // Generate unique device ID based on fingerprint
+  static async generateDeviceId(): Promise<string> {
+    const fingerprint = this.generateDeviceFingerprint();
+    const fingerprintString = JSON.stringify(fingerprint);
+    const encoder = new TextEncoder();
+    const data = encoder.encode(fingerprintString);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const deviceId = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 32);
+    
+    localStorage.setItem(this.DEVICE_ID_KEY, deviceId);
+    return deviceId;
+  }
+
+  // Get stored device ID
+  static getDeviceId(): string | null {
+    return localStorage.getItem(this.DEVICE_ID_KEY);
+  }
+
   // Generate and store user ID
   static generateUserId(): string {
     const userId = crypto.randomUUID();
@@ -215,11 +273,33 @@ export class CryptoAuthManager {
     return hashHex === storedHash;
   }
 
+  // Generate username from public key for identity visualization
+  static async generateUsername(publicKey: CryptoKey): Promise<string> {
+    const publicKeyString = await this.exportPublicKey(publicKey);
+    const encoder = new TextEncoder();
+    const data = encoder.encode(publicKeyString);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    // Generate a readable username from the hash
+    const adjectives = ['swift', 'bright', 'wise', 'bold', 'calm', 'quick', 'keen', 'noble'];
+    const nouns = ['falcon', 'tiger', 'eagle', 'wolf', 'bear', 'fox', 'hawk', 'lion'];
+    
+    const adjIndex = parseInt(hash.substring(0, 2), 16) % adjectives.length;
+    const nounIndex = parseInt(hash.substring(2, 4), 16) % nouns.length;
+    const number = parseInt(hash.substring(4, 6), 16);
+    
+    return `${adjectives[adjIndex]}-${nouns[nounIndex]}-${number}`;
+  }
+
   // Clear all stored data (logout)
   static clearStoredData(): void {
     localStorage.removeItem(this.STORAGE_KEY);
     localStorage.removeItem(this.USER_ID_KEY);
     localStorage.removeItem(this.RECOVERY_PHRASE_KEY);
+    localStorage.removeItem(this.DEVICE_ID_KEY);
+    localStorage.removeItem(this.DEVICE_FINGERPRINT_KEY);
   }
 
   // Check if user has existing keys
@@ -227,11 +307,14 @@ export class CryptoAuthManager {
     return !!localStorage.getItem(this.STORAGE_KEY);
   }
 
-  // Register new user with crypto auth
-  static async registerUser(publicKey: CryptoKey, recoveryPhrase?: string[]): Promise<{ success: boolean; error?: string }> {
+  // Register new user with crypto auth including device fingerprinting
+  static async registerUser(publicKey: CryptoKey, recoveryPhrase?: string[]): Promise<{ success: boolean; error?: string; username?: string }> {
     try {
       const userId = this.generateUserId();
+      const deviceId = await this.generateDeviceId();
       const publicKeyString = await this.exportPublicKey(publicKey);
+      const username = await this.generateUsername(publicKey);
+      const fingerprint = this.generateDeviceFingerprint();
       
       let recoveryPhraseHash = null;
       if (recoveryPhrase) {
@@ -247,8 +330,11 @@ export class CryptoAuthManager {
       const { data, error } = await supabase.functions.invoke('crypto-register', {
         body: {
           user_id: userId,
+          device_id: deviceId,
           public_key: publicKeyString,
-          recovery_phrase_hash: recoveryPhraseHash
+          recovery_phrase_hash: recoveryPhraseHash,
+          device_fingerprint: fingerprint,
+          username: username
         }
       });
 
@@ -258,7 +344,7 @@ export class CryptoAuthManager {
       }
 
       this.storeUserId(userId);
-      return { success: true };
+      return { success: true, username };
     } catch (error) {
       console.error('Registration failed:', error);
       return { success: false, error: 'Registration failed' };
