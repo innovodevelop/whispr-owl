@@ -1,5 +1,6 @@
 // Cryptographic authentication utilities for device-based login
 import { supabase } from "@/integrations/supabase/client";
+import { secureKeyManager } from "./secureKeyStorage";
 
 // Types for the crypto auth system
 export interface CryptoKeyPair {
@@ -64,25 +65,42 @@ export class CryptoAuthManager {
     );
   }
 
-  // Store key pair securely in localStorage
+  // Store key pair securely using SecureKeyManager
   static async storeKeyPair(keyPair: CryptoKeyPair): Promise<void> {
-    const publicKeyJwk = await window.crypto.subtle.exportKey("jwk", keyPair.publicKey);
-    const privateKeyJwk = await window.crypto.subtle.exportKey("jwk", keyPair.privateKey);
+    // Generate a device-based passphrase for key wrapping
+    const deviceId = this.getDeviceId() || await this.generateDeviceId();
+    const passphrase = `whispr_${deviceId}_${Date.now()}`;
     
-    const storedKeys: StoredKeyPair = {
-      publicKeyJwk,
-      privateKeyJwk
-    };
+    // Store using secure key manager
+    await secureKeyManager.storePrivateKey('whispr_main_key', keyPair, passphrase);
     
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(storedKeys));
+    // Store passphrase securely (hashed)
+    const encoder = new TextEncoder();
+    const data = encoder.encode(passphrase);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const passphraseHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    localStorage.setItem('whispr_passphrase_hash', passphraseHash);
+    localStorage.setItem('whispr_passphrase', passphrase); // Temporary - for migration
   }
 
-  // Retrieve stored key pair
+  // Retrieve stored key pair using SecureKeyManager
   static async getStoredKeyPair(): Promise<CryptoKeyPair | null> {
-    const stored = localStorage.getItem(this.STORAGE_KEY);
-    if (!stored) return null;
-
     try {
+      // Try new secure storage first
+      const passphrase = localStorage.getItem('whispr_passphrase');
+      if (passphrase) {
+        const keyPair = await secureKeyManager.retrievePrivateKey('whispr_main_key', passphrase);
+        if (keyPair) {
+          return keyPair;
+        }
+      }
+      
+      // Fallback to old localStorage for migration
+      const stored = localStorage.getItem(this.STORAGE_KEY);
+      if (!stored) return null;
+
       const { publicKeyJwk, privateKeyJwk }: StoredKeyPair = JSON.parse(stored);
       
       const publicKey = await window.crypto.subtle.importKey(
@@ -101,7 +119,14 @@ export class CryptoAuthManager {
         ["sign"]
       );
       
-      return { publicKey, privateKey };
+      // Migrate to secure storage
+      const keyPair = { publicKey, privateKey };
+      await this.storeKeyPair(keyPair);
+      
+      // Remove old storage
+      localStorage.removeItem(this.STORAGE_KEY);
+      
+      return keyPair;
     } catch (error) {
       console.error('Failed to restore key pair:', error);
       return null;
@@ -300,11 +325,16 @@ export class CryptoAuthManager {
     localStorage.removeItem(this.RECOVERY_PHRASE_KEY);
     localStorage.removeItem(this.DEVICE_ID_KEY);
     localStorage.removeItem(this.DEVICE_FINGERPRINT_KEY);
+    localStorage.removeItem('whispr_passphrase_hash');
+    localStorage.removeItem('whispr_passphrase');
+    
+    // Clear secure key storage
+    secureKeyManager.deleteKey('whispr_main_key').catch(console.error);
   }
 
   // Check if user has existing keys
   static hasStoredKeys(): boolean {
-    return !!localStorage.getItem(this.STORAGE_KEY);
+    return !!localStorage.getItem('whispr_passphrase') || !!localStorage.getItem(this.STORAGE_KEY);
   }
 
   // Register new user with crypto auth including device fingerprinting

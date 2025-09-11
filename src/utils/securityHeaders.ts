@@ -1,17 +1,19 @@
 // Security headers for enhanced protection
 
 export function applySecurityHeaders() {
-  // Content Security Policy
+  // Content Security Policy - Tightened security
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://esm.sh https://cdn.jsdelivr.net",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "script-src 'self' 'wasm-unsafe-eval' https://esm.sh https://cdn.jsdelivr.net", // Removed unsafe-inline, kept wasm for crypto
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // Inline styles needed for Tailwind
     "img-src 'self' data: https: blob:",
     "font-src 'self' https://fonts.gstatic.com",
     "connect-src 'self' https://pwhofxthijramblrjmxr.supabase.co https://*.supabase.co wss://*.supabase.co",
     "frame-ancestors 'none'",
     "object-src 'none'",
-    "base-uri 'self'"
+    "base-uri 'self'",
+    "form-action 'self'",
+    "upgrade-insecure-requests"
   ].join('; ');
 
   // Apply meta tags if not already present

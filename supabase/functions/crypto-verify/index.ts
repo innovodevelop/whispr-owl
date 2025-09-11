@@ -224,12 +224,38 @@ serve(async (req) => {
         .update({ used: true })
         .eq('challenge_id', challenge_id);
 
-      // Generate a simple token (in production, use proper JWT)
-      const token = btoa(JSON.stringify({
-        user_id: challenge.user_id,
-        issued_at: Date.now(),
-        expires_at: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
-      }));
+      // Generate JWT token with proper signing
+      const now = Math.floor(Date.now() / 1000);
+      const payload = {
+        sub: challenge.user_id,
+        iat: now,
+        exp: now + (24 * 60 * 60), // 24 hours
+        iss: 'whispr-crypto-auth',
+        aud: 'whispr-app'
+      };
+      
+      // Simple HMAC-signed JWT (in production, use proper JWT library)
+      const header = { alg: 'HS256', typ: 'JWT' };
+      const headerB64 = btoa(JSON.stringify(header)).replace(/[+/=]/g, (m) => ({ '+': '-', '/': '_', '=': '' })[m]!);
+      const payloadB64 = btoa(JSON.stringify(payload)).replace(/[+/=]/g, (m) => ({ '+': '-', '/': '_', '=': '' })[m]!);
+      
+      // Use a secure secret (in production, use proper environment variable)
+      const secret = Deno.env.get('JWT_SECRET') || 'whispr-default-secret-change-in-production';
+      const encoder = new TextEncoder();
+      const data = encoder.encode(`${headerB64}.${payloadB64}`);
+      const secretKey = await crypto.subtle.importKey(
+        'raw',
+        encoder.encode(secret),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign']
+      );
+      
+      const signature = await crypto.subtle.sign('HMAC', secretKey, data);
+      const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
+        .replace(/[+/=]/g, (m) => ({ '+': '-', '/': '_', '=': '' })[m]!);
+      
+      const token = `${headerB64}.${payloadB64}.${signatureB64}`;
 
       console.log('Authentication successful for user:', challenge.user_id);
 
