@@ -124,6 +124,141 @@ export type Database = {
         }
         Relationships: []
       }
+      crypto_challenges: {
+        Row: {
+          challenge_id: string
+          challenge_string: string
+          challenge_type: string
+          created_at: string
+          expires_at: string
+          id: string
+          used: boolean
+          user_id: string | null
+        }
+        Insert: {
+          challenge_id: string
+          challenge_string: string
+          challenge_type?: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          used?: boolean
+          user_id?: string | null
+        }
+        Update: {
+          challenge_id?: string
+          challenge_string?: string
+          challenge_type?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          used?: boolean
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      crypto_devices: {
+        Row: {
+          device_fingerprint: Json | null
+          device_id: string
+          device_name: string | null
+          id: string
+          last_used_at: string | null
+          linked_at: string
+          public_key: string
+          user_id: string
+        }
+        Insert: {
+          device_fingerprint?: Json | null
+          device_id: string
+          device_name?: string | null
+          id?: string
+          last_used_at?: string | null
+          linked_at?: string
+          public_key: string
+          user_id: string
+        }
+        Update: {
+          device_fingerprint?: Json | null
+          device_id?: string
+          device_name?: string | null
+          id?: string
+          last_used_at?: string | null
+          linked_at?: string
+          public_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      crypto_users: {
+        Row: {
+          created_at: string
+          device_fingerprint: Json | null
+          device_id: string | null
+          id: string
+          public_key: string
+          recovery_phrase_hash: string | null
+          updated_at: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_fingerprint?: Json | null
+          device_id?: string | null
+          id?: string
+          public_key: string
+          recovery_phrase_hash?: string | null
+          updated_at?: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_fingerprint?: Json | null
+          device_id?: string | null
+          id?: string
+          public_key?: string
+          recovery_phrase_hash?: string | null
+          updated_at?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      device_link_requests: {
+        Row: {
+          challenge_string: string
+          completed: boolean
+          created_at: string
+          device_code: string | null
+          expires_at: string
+          id: string
+          request_id: string
+          requesting_device_id: string
+        }
+        Insert: {
+          challenge_string: string
+          completed?: boolean
+          created_at?: string
+          device_code?: string | null
+          expires_at: string
+          id?: string
+          request_id: string
+          requesting_device_id: string
+        }
+        Update: {
+          challenge_string?: string
+          completed?: boolean
+          created_at?: string
+          device_code?: string | null
+          expires_at?: string
+          id?: string
+          request_id?: string
+          requesting_device_id?: string
+        }
+        Relationships: []
+      }
       financial_entries: {
         Row: {
           amount: number
@@ -472,9 +607,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_crypto_data: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       cleanup_expired_messages: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      generate_avatar_url: {
+        Args: { public_key_hash: string }
+        Returns: string
       }
       get_conversation_settings: {
         Args: { p_conversation_id: string; p_user_id: string }

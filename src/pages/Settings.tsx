@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useCryptoAuth } from "@/hooks/useCryptoAuthProvider";
 import { useProfile } from "@/hooks/useProfile";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useTheme } from "@/hooks/useTheme";
@@ -22,7 +22,9 @@ import {
   UserPlus,
   ChevronRight,
   LogOut,
-  Key
+  Key,
+  Smartphone,
+  Fingerprint
 } from "lucide-react";
 import { ProfileEditDialog } from "@/components/dialogs/ProfileEditDialog";
 import { PhoneNumberDialog } from "@/components/dialogs/PhoneNumberDialog";
@@ -30,10 +32,9 @@ import { NotificationSettingsDialog } from "@/components/dialogs/NotificationSet
 import { ThemeDialog } from "@/components/dialogs/ThemeDialog";
 import { BlockedUsersDialog } from "@/components/dialogs/BlockedUsersDialog";
 import { UserSearchDialog } from "@/components/dialogs/UserSearchDialog";
-import { supabase } from "@/integrations/supabase/client";
 
 const Settings = () => {
-  const { user } = useAuth();
+  const { user, logout } = useCryptoAuth();
   const { profile, loading: profileLoading } = useProfile();
   const { settings } = useUserSettings();
   const { theme } = useTheme();
@@ -46,7 +47,7 @@ const Settings = () => {
   const [showUserSearch, setShowUserSearch] = useState(false);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    logout();
   };
 
   const getThemeLabel = () => {
@@ -82,57 +83,66 @@ const Settings = () => {
         <AppHeader title="Settings" />
         
         <div className="p-4 space-y-6 flex-1 overflow-auto">
-          {/* Profile Section */}
+          {/* Cryptographic Identity Section */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Profile
+                <Key className="h-5 w-5" />
+                Cryptographic Identity
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Profile Info */}
+              {/* Identity Info */}
               <div className="flex items-center gap-4">
                 <Avatar className="h-16 w-16">
-                  <AvatarImage src={profile?.avatar_url} />
+                  <AvatarImage src={`https://api.dicebear.com/7.x/shapes/svg?seed=${user?.id}`} />
                   <AvatarFallback className="text-lg">
-                    {profile?.display_name?.charAt(0) || profile?.username?.charAt(0) || user?.email?.charAt(0) || "U"}
+                    {user?.username?.charAt(0).toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
                   <h3 className="font-medium">
-                    {profile?.display_name || profile?.username || "No name set"}
+                    {user?.username || "Anonymous User"}
                   </h3>
-                  {profile?.username && profile?.display_name && (
-                    <p className="text-sm text-muted-foreground">@{profile.username}</p>
-                  )}
-                  <p className="text-xs text-muted-foreground">{user?.email}</p>
-                  {profile?.bio && (
-                    <p className="text-sm text-muted-foreground mt-1">{profile.bio}</p>
-                  )}
+                  <p className="text-xs text-muted-foreground">Device-based Identity</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="default" className="bg-green-500">
+                      <Shield className="h-3 w-3 mr-1" />
+                      Secured
+                    </Badge>
+                  </div>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowProfileEdit(true)}
-                >
-                  Edit
-                </Button>
               </div>
 
-              {/* Profile Actions */}
-              <div className="space-y-2">
-                <Button
-                  variant="ghost"
-                  className="w-full justify-between"
-                  onClick={() => setShowPhoneEdit(true)}
-                >
+              {/* Identity Details */}
+              <div className="space-y-3">
+                <Separator />
+                
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4" />
-                    Phone Number
+                    <Smartphone className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">Device ID</span>
                   </div>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+                  <Badge variant="outline" className="font-mono text-xs">
+                    {user?.deviceId?.substring(0, 8)}...
+                  </Badge>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Fingerprint className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">Authentication</span>
+                  </div>
+                  <Badge variant="secondary">Cryptographic Keys</Badge>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Key className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">Recovery</span>
+                  </div>
+                  <Badge variant="outline">Mnemonic Phrase</Badge>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -260,11 +270,23 @@ const Settings = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 p-2 rounded bg-green-50 dark:bg-green-900/20">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-green-50 dark:bg-green-900/20">
                   <Key className="h-4 w-4 text-green-600" />
                   <span className="text-sm text-green-700 dark:text-green-400">
                     Signal Protocol Encryption Active
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                  <Fingerprint className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm text-blue-700 dark:text-blue-400">
+                    Device-Based Authentication
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20">
+                  <Shield className="h-4 w-4 text-purple-600" />
+                  <span className="text-sm text-purple-700 dark:text-purple-400">
+                    End-to-End Encrypted
                   </span>
                 </div>
               </div>
@@ -280,16 +302,14 @@ const Settings = () => {
                 onClick={handleSignOut}
               >
                 <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
+                Clear Identity & Sign Out
               </Button>
             </CardContent>
           </Card>
         </div>
       </div>
       
-      {/* Dialogs */}
-      <ProfileEditDialog open={showProfileEdit} onOpenChange={setShowProfileEdit} />
-      <PhoneNumberDialog open={showPhoneEdit} onOpenChange={setShowPhoneEdit} />
+      {/* Keep some dialogs for contacts and theme */}
       <NotificationSettingsDialog open={showNotifications} onOpenChange={setShowNotifications} />
       <ThemeDialog open={showTheme} onOpenChange={setShowTheme} />
       <BlockedUsersDialog open={showBlockedUsers} onOpenChange={setShowBlockedUsers} />

@@ -17,9 +17,22 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { user_id, public_key, recovery_phrase_hash } = await req.json();
+    const { 
+      user_id, 
+      device_id, 
+      public_key, 
+      recovery_phrase_hash, 
+      device_fingerprint, 
+      username 
+    } = await req.json();
 
-    console.log('Registering new crypto user:', { user_id, has_recovery: !!recovery_phrase_hash });
+    console.log('Registering new crypto user:', { 
+      user_id, 
+      device_id,
+      username,
+      has_recovery: !!recovery_phrase_hash,
+      has_fingerprint: !!device_fingerprint
+    });
 
     // Validate input
     if (!user_id || !public_key) {
@@ -49,13 +62,16 @@ serve(async (req) => {
       );
     }
 
-    // Insert new crypto user
+    // Insert new crypto user with enhanced data
     const { data, error } = await supabase
       .from('crypto_users')
       .insert({
         user_id,
+        device_id,
         public_key,
-        recovery_phrase_hash
+        recovery_phrase_hash,
+        device_fingerprint,
+        username
       })
       .select()
       .single();
@@ -71,12 +87,31 @@ serve(async (req) => {
       );
     }
 
+    // Create device record if device_id is provided
+    if (device_id) {
+      const { error: deviceError } = await supabase
+        .from('crypto_devices')
+        .insert({
+          user_id,
+          device_id,
+          public_key,
+          device_fingerprint,
+          device_name: `Device ${device_id.substring(0, 8)}`
+        });
+
+      if (deviceError) {
+        console.warn('Failed to create device record:', deviceError);
+        // Don't fail the whole registration for device record issues
+      }
+    }
+
     console.log('User registered successfully:', data.user_id);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         user_id: data.user_id,
+        username: data.username,
         message: 'User registered successfully' 
       }),
       { 
