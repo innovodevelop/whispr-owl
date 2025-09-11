@@ -650,6 +650,13 @@ export type Database = {
           public_key: string
         }[]
       }
+      get_user_public_identity_key_secure: {
+        Args: { target_user_id: string }
+        Returns: {
+          identity_key_public: string
+          registration_id: number
+        }[]
+      }
       get_user_signed_prekey: {
         Args: { target_user_id: string }
         Returns: {
