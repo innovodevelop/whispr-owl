@@ -62,7 +62,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
 
   return (
     <>
-      <header className="w-full border border-border rounded-lg sticky top-0 z-50 m-4">
+      <header className="w-full border border-border rounded-lg sticky top-0 z-50">
         <div className="container flex items-center justify-between py-3 md:py-4 px-4">
           <div className="flex items-center gap-3">
             {showBackButton && (
