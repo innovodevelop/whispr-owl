@@ -59,6 +59,7 @@ enable_anonymous_sign_ins = false
 minimum_password_length = 8
 password_min_length = 8
 enable_leaked_password_protection = true
+password_strength_requirement = "strong"
 
 [auth.email]
 enable_signup = true

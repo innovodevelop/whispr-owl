@@ -437,6 +437,69 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          action_type: string
+          attempt_count: number | null
+          blocked_until: string | null
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          user_id: string | null
+          window_start: string
+        }
+        Insert: {
+          action_type: string
+          attempt_count?: number | null
+          blocked_until?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          user_id?: string | null
+          window_start?: string
+        }
+        Update: {
+          action_type?: string
+          attempt_count?: number | null
+          blocked_until?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          user_id?: string | null
+          window_start?: string
+        }
+        Relationships: []
+      }
+      security_audit_log: {
+        Row: {
+          created_at: string
+          event_details: Json | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_details?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_details?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       signal_identity_keys: {
         Row: {
           created_at: string
@@ -717,6 +780,14 @@ export type Database = {
           p_user_id: string
         }
         Returns: undefined
+      }
+      validate_phone_privacy: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      validate_private_key_security: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       validate_view_security: {
         Args: Record<PropertyKey, never>

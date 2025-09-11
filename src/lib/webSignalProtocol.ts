@@ -396,7 +396,8 @@ export const getPreKeyBundle = async (userId: string): Promise<SignalPreKeyBundl
 
 export const getUserIdentityKeys = async (userId: string): Promise<SignalIdentityKeyPair | null> => {
   try {
-    // Try local storage first
+    // Private keys are now ONLY stored client-side for security
+    // Try local storage first (this is now the only option for private keys)
     const localData = loadSessionData(`${STORAGE_KEYS.IDENTITY_KEYS}_${userId}`);
     if (localData) {
       return {
@@ -405,42 +406,10 @@ export const getUserIdentityKeys = async (userId: string): Promise<SignalIdentit
       };
     }
     
-    // Fallback to database - use secure view that protects private keys
-    const { data, error } = await supabase
-      .from('signal_identity_keys_secure')
-      .select('identity_key_public, identity_key_private')
-      .eq('user_id', userId)
-      .single();
-
-    if (error || !data) return null;
-
-    // Decrypt private key with device secret; fall back to base64 if needed
-    let deviceSecret = localStorage.getItem('signal_device_secret');
-    if (!deviceSecret) {
-      console.warn('[Signal] Missing device secret for decrypting identity key');
-      return null;
-    }
-
-    let privateB64: string;
-    try {
-      privateB64 = await decryptWithPassword(data.identity_key_private, deviceSecret);
-    } catch (e) {
-      // Legacy data may be stored as base64
-      privateB64 = data.identity_key_private;
-    }
-
-    const identityKeys = {
-      publicKey: Uint8Array.from(atob(data.identity_key_public), c => c.charCodeAt(0)),
-      privateKey: Uint8Array.from(atob(privateB64), c => c.charCodeAt(0))
-    };
-    
-    // Cache locally
-    saveSessionData(`${STORAGE_KEYS.IDENTITY_KEYS}_${userId}`, {
-      publicKey: Array.from(identityKeys.publicKey),
-      privateKey: Array.from(identityKeys.privateKey)
-    });
-    
-    return identityKeys;
+    // SECURITY: Private keys are never stored server-side anymore
+    // If no local data exists, the keys need to be regenerated or restored from client-side backup
+    console.warn('[Signal] No local identity keys found for user. Private keys are never stored server-side for security.');
+    return null;
   } catch (error) {
     console.error('Failed to get user identity keys:', error);
     return null;
