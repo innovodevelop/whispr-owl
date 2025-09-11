@@ -3,9 +3,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { CryptoAuthProvider, useCryptoAuth } from "@/hooks/useCryptoAuthProvider";
+import { CryptoAuthProvider, useCryptoAuth } from "@/hooks/useCryptoAuth";
 import Index from "./pages/Index";
-import { CryptoAuthFlow } from "./pages/CryptoAuthFlow";
+import { CryptoAuth } from "./pages/CryptoAuth";
 import Contacts from "./pages/Contacts";
 import Settings from "./pages/Settings";
 import Financial from "./pages/Financial";
@@ -15,7 +15,7 @@ import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading, isAuthenticated } = useCryptoAuth();
+  const { loading, isAuthenticated } = useCryptoAuth();
 
   console.log("ProtectedRoute: loading=", loading, "isAuthenticated=", isAuthenticated);
 
@@ -33,10 +33,10 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (!isAuthenticated) {
     console.log("ProtectedRoute: Redirecting to crypto auth");
-    return <CryptoAuthFlow />;
+    return <CryptoAuth />;
   }
 
-  console.log("ProtectedRoute: Showing protected content for user:", user?.username);
+  console.log("ProtectedRoute: Showing protected content");
   return <>{children}</>;
 };
 
@@ -47,7 +47,7 @@ const App = () => (
         <TooltipProvider>
           <BrowserRouter>
             <Routes>
-              <Route path="/auth" element={<CryptoAuthFlow />} />
+              <Route path="/auth" element={<CryptoAuth />} />
               <Route path="/" element={
                 <ProtectedRoute>
                   <Index />
