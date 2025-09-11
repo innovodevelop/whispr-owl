@@ -604,7 +604,36 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      signal_identity_keys_secure: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          identity_key_private: string | null
+          identity_key_public: string | null
+          registration_id: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          identity_key_private?: never
+          identity_key_public?: string | null
+          registration_id?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          identity_key_private?: never
+          identity_key_public?: string | null
+          registration_id?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_expired_crypto_data: {

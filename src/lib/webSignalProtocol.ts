@@ -392,9 +392,9 @@ export const getUserIdentityKeys = async (userId: string): Promise<SignalIdentit
       };
     }
     
-    // Fallback to database
+    // Fallback to database - use secure view that protects private keys
     const { data, error } = await supabase
-      .from('signal_identity_keys')
+      .from('signal_identity_keys_secure')
       .select('identity_key_public, identity_key_private')
       .eq('user_id', userId)
       .single();
@@ -422,15 +422,13 @@ export const getUserIdentityKeys = async (userId: string): Promise<SignalIdentit
 
 export const getUserPublicKey = async (userId: string): Promise<Uint8Array | null> => {
   try {
+    // Use the secure function instead of direct table access
     const { data, error } = await supabase
-      .from('signal_identity_keys')
-      .select('identity_key_public')
-      .eq('user_id', userId)
-      .single();
+      .rpc('get_user_identity_public_key', { target_user_id: userId });
 
-    if (error || !data) return null;
+    if (error || !data || data.length === 0) return null;
 
-    return Uint8Array.from(atob(data.identity_key_public), c => c.charCodeAt(0));
+    return Uint8Array.from(atob(data[0].identity_key_public), c => c.charCodeAt(0));
   } catch (error) {
     console.error('Failed to get user public key:', error);
     return null;
