@@ -706,6 +706,10 @@ export type Database = {
           disappearing_enabled: boolean
         }[]
       }
+      get_security_headers: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_user_identity_public_key: {
         Args: { target_user_id: string }
         Returns: {
@@ -788,6 +792,14 @@ export type Database = {
       validate_private_key_security: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      validate_security_configuration: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          check_name: string
+          details: string
+          status: string
+        }[]
       }
       validate_view_security: {
         Args: Record<PropertyKey, never>
