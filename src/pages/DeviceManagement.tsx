@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { CryptoAuthManager } from '@/lib/cryptoAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -46,10 +47,54 @@ export default function DeviceManagement() {
 
   useEffect(() => {
     if (user) {
-      fetchDevices();
+      initialize();
     }
   }, [user]);
 
+  const initialize = async () => {
+    setLoading(true);
+    await ensureCurrentDeviceRecord();
+    await fetchDevices();
+  };
+
+  const ensureCurrentDeviceRecord = async () => {
+    if (!user) return;
+    try {
+      const localId = CryptoAuthManager.getDeviceId() || await CryptoAuthManager.generateDeviceId();
+      const { data: existing } = await supabase
+        .from('crypto_devices')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('device_id', localId)
+        .maybeSingle();
+
+      if (!existing) {
+        const { data: cryptoUser } = await supabase
+          .from('crypto_users')
+          .select('public_key, device_fingerprint')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        const fingerprint =
+          (cryptoUser?.device_fingerprint as any) ??
+          CryptoAuthManager.getDeviceFingerprint() ??
+          CryptoAuthManager.generateDeviceFingerprint();
+
+        const deviceName =
+          (fingerprint as any)?.platform || 'This device';
+
+        await supabase.from('crypto_devices').insert({
+          user_id: user.id,
+          device_id: localId,
+          device_name: deviceName,
+          public_key: (cryptoUser as any)?.public_key || '',
+          device_fingerprint: fingerprint
+        } as any);
+      }
+    } catch (e) {
+      console.error('Error ensuring current device record:', e);
+    }
+  };
   const fetchDevices = async () => {
     try {
       const { data, error } = await supabase
