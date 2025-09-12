@@ -3,7 +3,7 @@ import { Settings, UserPlus, LogOut, Moon, Sun, Monitor, User, Edit, ArrowLeft }
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/hooks/useAuth";
+import { useCryptoAuth } from "@/hooks/useCryptoAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useTheme } from "@/hooks/useTheme";
 import { useNavigate } from "react-router-dom";
@@ -26,7 +26,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   showBackButton = false,
   onBack
 }) => {
-  const { signOut, user } = useAuth();
+  const { logout, user } = useCryptoAuth();
   const { profile } = useProfile();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
@@ -43,7 +43,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+      logout();
     } finally {
       navigate('/auth');
     }
@@ -85,7 +85,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={profile?.avatar_url} alt="Profile" />
                   <AvatarFallback className="text-sm bg-muted">
-                    {profile?.display_name?.charAt(0) || profile?.username?.charAt(0) || user?.email?.charAt(0).toUpperCase() || "U"}
+                    {profile?.display_name?.charAt(0) || profile?.username?.charAt(0) || user?.username?.charAt(0).toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -97,7 +97,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
                   {profile?.display_name || profile?.username || "No name set"}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {user?.email}
+                  {user?.username ? `@${user.username}` : user?.userId.substring(0, 8) + '...'}
                 </p>
               </div>
               <DropdownMenuSeparator />

@@ -3,7 +3,7 @@ import { MessageCircle, Search, Plus, ArrowLeft, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth } from "@/hooks/useAuth";
+import { useCryptoAuth } from "@/hooks/useCryptoAuth";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useConversations } from "@/hooks/useConversations";
 import { useContacts } from "@/hooks/useContacts";
@@ -25,7 +25,7 @@ interface SearchResult {
 }
 
 const Index = () => {
-  const { user } = useAuth();
+  const { user } = useCryptoAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { conversations, loading, pendingSentRequests } = useConversations();
@@ -65,8 +65,8 @@ const Index = () => {
     if (routerState?.selectedContact?.id && user) {
       const contactId = routerState.selectedContact.id as string;
       const conv = conversations.find(c =>
-        (c.participant_one === user.id && c.participant_two === contactId) ||
-        (c.participant_two === user.id && c.participant_one === contactId)
+        (c.participant_one === user.userId && c.participant_two === contactId) ||
+        (c.participant_two === user.userId && c.participant_one === contactId)
       );
       console.log('Index: lookup by selectedContact.id =', contactId, '; found conversation =', conv?.id);
       if (conv) {
