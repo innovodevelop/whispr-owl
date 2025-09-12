@@ -18,12 +18,11 @@ import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { loading: cryptoLoading, isAuthenticated } = useCryptoAuth();
-  const { loading: supaLoading, user: supaUser } = useAuth();
+  const { loading, isAuthenticated } = useCryptoAuth();
 
-  console.log("ProtectedRoute:", { cryptoLoading, supaLoading, isAuthenticated, hasSupa: !!supaUser });
+  console.log("ProtectedRoute: loading=", loading, "isAuthenticated=", isAuthenticated);
 
-  if (cryptoLoading || supaLoading) {
+  if (loading) {
     console.log("ProtectedRoute: Showing loading state");
     return (
       <div className="h-screen flex items-center justify-center bg-background">
@@ -35,7 +34,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  if (!isAuthenticated || !supaUser) {
+  if (!isAuthenticated) {
     console.log("ProtectedRoute: Redirecting to crypto auth");
     return <CryptoAuthFlow />;
   }

@@ -44,14 +44,16 @@ export const CryptoAuthFlow: React.FC = () => {
   const handleLogin = async () => {
     setLoading(true);
     setError('');
-    
+
     const result = await login();
-    
+
     if (result.success) {
-      // Login success - auth provider will handle state update
-      window.location.reload();
+      toast.success('Authenticated with device keys');
+      setMode('success');
     } else {
-      setError(result.error || 'Login failed');
+      const msg = result.error || 'Login failed';
+      setError(msg);
+      toast.error(msg);
     }
     setLoading(false);
   };
