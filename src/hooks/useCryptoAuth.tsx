@@ -1,21 +1,28 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { CryptoAuthManager } from '@/lib/cryptoAuth';
+import { isDryRun } from '@/config/featureFlags';
+import { mockRegisterUser, mockRequestChallenge, mockVerifyChallenge } from '@/lib/dryRunStubs';
+
+interface CryptoAuthUser {
+  userId: string;
+  username?: string;
+}
 
 interface CryptoAuthContextType {
   isAuthenticated: boolean;
-  userId: string | null;
-  token: string | null;
+  user: CryptoAuthUser | null;
   loading: boolean;
-  login: () => Promise<void>;
+  register: (generateRecovery?: boolean) => Promise<{ success: boolean; error?: string; recoveryPhrase?: string[] }>;
+  login: () => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
+  hasStoredKeys: () => boolean;
 }
 
 const CryptoAuthContext = createContext<CryptoAuthContextType | undefined>(undefined);
 
 export const CryptoAuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<CryptoAuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,55 +32,124 @@ export const CryptoAuthProvider = ({ children }: { children: React.ReactNode }) 
   const checkAuthStatus = async () => {
     const storedUserId = CryptoAuthManager.getUserId();
     const hasKeys = CryptoAuthManager.hasStoredKeys();
+    const username = localStorage.getItem('whispr_username');
     
     if (storedUserId && hasKeys) {
-      setUserId(storedUserId);
+      setUser({ 
+        userId: storedUserId, 
+        username: username || undefined 
+      });
       setIsAuthenticated(true);
     }
     
     setLoading(false);
   };
 
-  const login = async () => {
-    const storedUserId = CryptoAuthManager.getUserId();
-    if (storedUserId) {
-      const challenge = await CryptoAuthManager.requestChallenge(storedUserId);
-      if (challenge) {
-        const keyPair = await CryptoAuthManager.getStoredKeyPair();
-        if (keyPair) {
-          const signature = await CryptoAuthManager.signChallenge(
-            challenge.challenge_string,
-            keyPair.privateKey
-          );
-          const result = await CryptoAuthManager.verifyChallenge(
-            challenge.challenge_id,
-            signature
-          );
-          if (result.success) {
-            setIsAuthenticated(true);
-            setUserId(storedUserId);
-            setToken(result.token || null);
-          }
-        }
+  const register = async (generateRecovery: boolean = false): Promise<{ success: boolean; error?: string; recoveryPhrase?: string[] }> => {
+    setLoading(true);
+    try {
+      const keyPair = await CryptoAuthManager.generateKeyPair();
+      await CryptoAuthManager.storeKeyPair(keyPair);
+      
+      let recoveryPhrase: string[] | undefined;
+      if (generateRecovery) {
+        recoveryPhrase = CryptoAuthManager.generateRecoveryPhrase();
       }
+      
+      const result = isDryRun() 
+        ? await mockRegisterUser(keyPair.publicKey, recoveryPhrase)
+        : await CryptoAuthManager.registerUser(keyPair.publicKey, recoveryPhrase);
+      
+      if (result.success) {
+        const userId = CryptoAuthManager.getUserId();
+        if (userId) {
+          setUser({ 
+            userId, 
+            username: result.username 
+          });
+          // Note: Don't set isAuthenticated true here - let the flow complete first
+        }
+        return { success: true, recoveryPhrase };
+      } else {
+        return { success: false, error: result.error };
+      }
+    } catch (error) {
+      console.error('Registration failed:', error);
+      return { success: false, error: 'Registration failed' };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const login = async (): Promise<{ success: boolean; error?: string }> => {
+    setLoading(true);
+    try {
+      const storedUserId = CryptoAuthManager.getUserId();
+      if (!storedUserId) {
+        return { success: false, error: 'No stored user ID' };
+      }
+
+      const challenge = isDryRun() 
+        ? await mockRequestChallenge(storedUserId)
+        : await CryptoAuthManager.requestChallenge(storedUserId);
+        
+      if (!challenge) {
+        return { success: false, error: 'Failed to get challenge' };
+      }
+
+      const keyPair = await CryptoAuthManager.getStoredKeyPair();
+      if (!keyPair) {
+        return { success: false, error: 'No stored key pair' };
+      }
+
+      const signature = await CryptoAuthManager.signChallenge(
+        challenge.challenge_string,
+        keyPair.privateKey
+      );
+
+      const result = isDryRun()
+        ? await mockVerifyChallenge(challenge.challenge_id, signature)
+        : await CryptoAuthManager.verifyChallenge(challenge.challenge_id, signature);
+
+      if (result.success) {
+        const username = localStorage.getItem('whispr_username');
+        setUser({ 
+          userId: storedUserId, 
+          username: username || undefined 
+        });
+        setIsAuthenticated(true);
+        return { success: true };
+      } else {
+        return { success: false, error: result.error };
+      }
+    } catch (error) {
+      console.error('Login failed:', error);
+      return { success: false, error: 'Login failed' };
+    } finally {
+      setLoading(false);
     }
   };
 
   const logout = () => {
     CryptoAuthManager.clearStoredData();
+    localStorage.removeItem('whispr_username');
     setIsAuthenticated(false);
-    setUserId(null);
-    setToken(null);
+    setUser(null);
+  };
+
+  const hasStoredKeys = (): boolean => {
+    return CryptoAuthManager.hasStoredKeys();
   };
 
   return (
     <CryptoAuthContext.Provider value={{
       isAuthenticated,
-      userId,
-      token,
+      user,
       loading,
+      register,
       login,
-      logout
+      logout,
+      hasStoredKeys
     }}>
       {children}
     </CryptoAuthContext.Provider>

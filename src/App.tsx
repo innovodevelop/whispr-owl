@@ -6,8 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CryptoAuthProvider, useCryptoAuth } from "@/hooks/useCryptoAuth";
 import { PinPrompt } from "@/components/PinPrompt";
 import { usePinGate } from "@/hooks/usePinGate";
+import { CryptoAuthFlow } from "./pages/CryptoAuthFlow";
 import Index from "./pages/Index";
-import { CryptoAuth } from "./pages/CryptoAuth";
 import Contacts from "./pages/Contacts";
 import Settings from "./pages/Settings";
 import Financial from "./pages/Financial";
@@ -35,7 +35,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (!isAuthenticated) {
     console.log("ProtectedRoute: Redirecting to crypto auth");
-    return <CryptoAuth />;
+    return <CryptoAuthFlow />;
   }
 
   console.log("ProtectedRoute: Showing protected content");
@@ -49,7 +49,7 @@ const App = () => (
         <TooltipProvider>
           <BrowserRouter>
             <Routes>
-              <Route path="/auth" element={<CryptoAuth />} />
+              <Route path="/auth" element={<CryptoAuthFlow />} />
               <Route path="/" element={
                 <ProtectedRoute>
                   <Index />

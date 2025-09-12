@@ -22,7 +22,7 @@ export const CryptoAuthFlow: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [showDevTools, setShowDevTools] = useState(false);
 
-  const { register, login, hasStoredKeys } = useCryptoAuth();
+  const { register, login, hasStoredKeys, user } = useCryptoAuth();
   const dryRun = isDryRun();
   const canShowDevTools = shouldShowDevTools();
 
@@ -48,7 +48,8 @@ export const CryptoAuthFlow: React.FC = () => {
     const result = await login();
     
     if (result.success) {
-      setMode('success');
+      // Login success - auth provider will handle state update
+      window.location.reload();
     } else {
       setError(result.error || 'Login failed');
     }
@@ -98,7 +99,8 @@ export const CryptoAuthFlow: React.FC = () => {
   };
 
   const handleUsernameComplete = (username: string) => {
-    setMode('success');
+    // Mark as authenticated after username is set
+    window.location.reload(); // This will trigger auth check and redirect to main app
   };
 
   // Welcome screen - entry point
