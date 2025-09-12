@@ -83,12 +83,23 @@ export default function DeviceManagement() {
         const deviceName =
           (fingerprint as any)?.platform || 'This device';
 
+        // Get user's IP address
+        let userIP = null;
+        try {
+          const ipResponse = await fetch('https://api.ipify.org?format=json');
+          const ipData = await ipResponse.json();
+          userIP = ipData.ip;
+        } catch (ipError) {
+          console.log('Could not fetch IP address:', ipError);
+        }
+
         await supabase.from('crypto_devices').insert({
           user_id: user.id,
           device_id: localId,
           device_name: deviceName,
           public_key: (cryptoUser as any)?.public_key || '',
-          device_fingerprint: fingerprint
+          device_fingerprint: fingerprint,
+          last_ip: userIP
         } as any);
       }
     } catch (e) {
