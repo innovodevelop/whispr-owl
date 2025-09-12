@@ -7,7 +7,7 @@ import { DeviceLinkQR } from '@/components/DeviceLinkQR';
 import { DeviceReview } from '@/components/DeviceReview';
 import { UsernameSetup } from '@/components/UsernameSetup';
 import { DevTools } from '@/components/DevTools';
-import { useCryptoAuth } from '@/hooks/useCryptoAuthProvider';
+import { useCryptoAuth } from '@/hooks/useCryptoAuth';
 import { isDryRun, shouldShowDevTools } from '@/config/featureFlags';
 import { toast } from 'sonner';
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useCryptoAuth } from "@/hooks/useCryptoAuthProvider";
+import { useCryptoAuth } from "@/hooks/useCryptoAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useTheme } from "@/hooks/useTheme";
@@ -32,6 +32,7 @@ import { NotificationSettingsDialog } from "@/components/dialogs/NotificationSet
 import { ThemeDialog } from "@/components/dialogs/ThemeDialog";
 import { BlockedUsersDialog } from "@/components/dialogs/BlockedUsersDialog";
 import { UserSearchDialog } from "@/components/dialogs/UserSearchDialog";
+import { CryptoAuthManager } from "@/lib/cryptoAuth";
 
 const Settings = () => {
   const { user, logout } = useCryptoAuth();
@@ -95,7 +96,7 @@ const Settings = () => {
               {/* Identity Info */}
               <div className="flex items-center gap-4">
                 <Avatar className="h-16 w-16">
-                  <AvatarImage src={`https://api.dicebear.com/7.x/shapes/svg?seed=${user?.id}`} />
+                  <AvatarImage src={`https://api.dicebear.com/7.x/shapes/svg?seed=${user?.userId}`} />
                   <AvatarFallback className="text-lg">
                     {user?.username?.charAt(0).toUpperCase() || "U"}
                   </AvatarFallback>
@@ -124,7 +125,7 @@ const Settings = () => {
                     <span className="text-sm">Device ID</span>
                   </div>
                   <Badge variant="outline" className="font-mono text-xs">
-                    {user?.deviceId?.substring(0, 8)}...
+                    {(CryptoAuthManager.getDeviceId() || 'unknown').substring(0, 8)}...
                   </Badge>
                 </div>
                 
