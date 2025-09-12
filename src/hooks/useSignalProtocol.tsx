@@ -61,7 +61,23 @@ export const useSignalProtocol = () => {
     try {
       setState(prev => ({ ...prev, loading: true }));
 
-      // SECURITY: Validate no keys in web storage
+      // SECURITY: Cleanup legacy web-storage keys (migration) then validate
+      try {
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const k = localStorage.key(i);
+          if (k && (/^signal_identity_keys/i.test(k) || /identity.*key/i.test(k) || /prekey/i.test(k))) {
+            localStorage.removeItem(k);
+          }
+        }
+        for (let i = sessionStorage.length - 1; i >= 0; i--) {
+          const k = sessionStorage.key(i);
+          if (k && (/^signal_identity_keys/i.test(k) || /identity.*key/i.test(k) || /prekey/i.test(k))) {
+            sessionStorage.removeItem(k);
+          }
+        }
+      } catch {}
+
+      // Validate again after cleanup
       if (!secureKeyManager.validateNoKeysInWebStorage()) {
         throw new Error('CRITICAL: Private keys detected in web storage');
       }

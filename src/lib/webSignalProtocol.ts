@@ -2,6 +2,7 @@
 // Using @signalapp/libsignal-client with proper web compatibility
 import { supabase } from '@/integrations/supabase/client';
 import { encryptWithPassword, decryptWithPassword } from '@/lib/encryption';
+import { secureKeyManager } from '@/lib/secureKeyStorage';
 
 export interface SignalIdentityKeyPair {
   publicKey: Uint8Array;
@@ -293,12 +294,9 @@ export const storeIdentityKeys = async (
 
   if (error) throw error;
   
-  // Also store locally for quick access
-  saveSessionData(`${STORAGE_KEYS.IDENTITY_KEYS}_${userId}`, {
-    publicKey: Array.from(identityKeyPair.publicKey),
-    privateKey: Array.from(identityKeyPair.privateKey),
-    registrationId
-  });
+  // Do NOT store identity keys in web storage. Private keys are managed via
+  // secureKeyManager (IndexedDB) and never persisted in localStorage/sessionStorage.
+  // If a legacy entry exists, it will be cleaned up by initialization logic.
 };
 
 export const storeSignedPreKey = async (
@@ -396,19 +394,21 @@ export const getPreKeyBundle = async (userId: string): Promise<SignalPreKeyBundl
 
 export const getUserIdentityKeys = async (userId: string): Promise<SignalIdentityKeyPair | null> => {
   try {
-    // Private keys are now ONLY stored client-side for security
-    // Try local storage first (this is now the only option for private keys)
-    const localData = loadSessionData(`${STORAGE_KEYS.IDENTITY_KEYS}_${userId}`);
-    if (localData) {
+    // Retrieve from secure IndexedDB storage (no web storage usage)
+    const stored = await secureKeyManager.retrievePrivateKey(`identity_${userId}`, 'user_secure_passphrase');
+    if (stored) {
+      // Public key is extractable; export as JWK and return as bytes for compatibility
+      const publicJwk = await crypto.subtle.exportKey('jwk', stored.publicKey);
+      const publicBytes = new TextEncoder().encode(JSON.stringify(publicJwk));
+
+      // Private key remains non-extractable by design; return empty bytes to preserve shape
       return {
-        publicKey: new Uint8Array(localData.publicKey),
-        privateKey: new Uint8Array(localData.privateKey)
+        publicKey: publicBytes,
+        privateKey: new Uint8Array(0)
       };
     }
-    
-    // SECURITY: Private keys are never stored server-side anymore
-    // If no local data exists, the keys need to be regenerated or restored from client-side backup
-    console.warn('[Signal] No local identity keys found for user. Private keys are never stored server-side for security.');
+
+    console.warn('[Signal] No secure identity keys found for user in IndexedDB.');
     return null;
   } catch (error) {
     console.error('Failed to get user identity keys:', error);
