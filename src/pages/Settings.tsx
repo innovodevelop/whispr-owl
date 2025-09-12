@@ -80,10 +80,10 @@ const Settings = () => {
 
   return (
     <div className="h-screen flex bg-background page-enter">
-      <div className="w-full max-w-2xl mx-auto m-1 md:m-2 rounded-3xl bg-card/90 backdrop-blur-sm shadow-2xl flex flex-col overflow-hidden">
+      <div className="w-full max-w-2xl mx-auto m-1 md:m-2 rounded-3xl bg-card/95 backdrop-blur-sm border border-border shadow-xl flex flex-col overflow-hidden">
         <AppHeader title="Settings" />
         
-        <div className="p-4 space-y-6 flex-1 overflow-auto">
+        <div className="p-4 space-y-6 flex-1 overflow-auto bg-background/50">
           {/* Cryptographic Identity Section */}
           <Card>
             <CardHeader>
