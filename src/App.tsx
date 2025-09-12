@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { CryptoAuthProvider, useCryptoAuth } from "@/hooks/useCryptoAuth";
 import { PinPrompt } from "@/components/PinPrompt";
 import { usePinGate } from "@/hooks/usePinGate";
@@ -18,11 +18,12 @@ import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { loading, isAuthenticated } = useCryptoAuth();
+  const { loading: cryptoLoading, isAuthenticated } = useCryptoAuth();
+  const { loading: supaLoading, user: supaUser } = useAuth();
 
-  console.log("ProtectedRoute: loading=", loading, "isAuthenticated=", isAuthenticated);
+  console.log("ProtectedRoute:", { cryptoLoading, supaLoading, isAuthenticated, hasSupa: !!supaUser });
 
-  if (loading) {
+  if (cryptoLoading || supaLoading) {
     console.log("ProtectedRoute: Showing loading state");
     return (
       <div className="h-screen flex items-center justify-center bg-background">
@@ -34,7 +35,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !supaUser) {
     console.log("ProtectedRoute: Redirecting to crypto auth");
     return <CryptoAuthFlow />;
   }
