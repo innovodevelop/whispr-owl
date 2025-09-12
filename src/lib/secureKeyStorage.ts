@@ -256,6 +256,13 @@ export const secureKeyManager = new SecureKeyManager();
 if (typeof window !== 'undefined') {
   const isSecure = secureKeyManager.validateNoKeysInWebStorage();
   if (!isSecure) {
-    throw new Error('CRITICAL SECURITY VIOLATION: Private keys detected in web storage!');
+    // Do not crash the app; warn and allow migration/cleanup flows to run
+    console.warn('CRITICAL SECURITY VIOLATION: Private keys detected in web storage! Allowing app to continue for cleanup.');
+    try {
+      window.localStorage.setItem('whispr_security_violation_detected', 'true');
+      window.dispatchEvent(new CustomEvent('whispr-security-violation', { detail: { source: 'secureKeyStorage' } }));
+    } catch (e) {
+      // ignore
+    }
   }
 }
