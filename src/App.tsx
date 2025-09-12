@@ -12,6 +12,7 @@ import Index from "./pages/Index";
 import Contacts from "./pages/Contacts";
 import Settings from "./pages/Settings";
 import Financial from "./pages/Financial";
+import DeviceManagement from "./pages/DeviceManagement";
 import NotFound from "./pages/NotFound";
 import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 
@@ -70,6 +71,11 @@ const App = () => (
                 <Route path="/settings" element={
                   <ProtectedRoute>
                     <Settings />
+                  </ProtectedRoute>
+                } />
+                <Route path="/settings/devices" element={
+                  <ProtectedRoute>
+                    <DeviceManagement />
                   </ProtectedRoute>
                 } />
                 <Route path="*" element={<NotFound />} />

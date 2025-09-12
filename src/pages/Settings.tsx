@@ -3,6 +3,7 @@ import { useCryptoAuth } from "@/hooks/useCryptoAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useTheme } from "@/hooks/useTheme";
+import { useNavigate } from "react-router-dom";
 import BottomNavigation from "@/components/BottomNavigation";
 import AppHeader from "@/components/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,6 +33,7 @@ import { NotificationSettingsDialog } from "@/components/dialogs/NotificationSet
 import { ThemeDialog } from "@/components/dialogs/ThemeDialog";
 import { BlockedUsersDialog } from "@/components/dialogs/BlockedUsersDialog";
 import { UserSearchDialog } from "@/components/dialogs/UserSearchDialog";
+import { AutoDisplayNameSettings } from "@/components/AutoDisplayNameSettings";
 import { CryptoAuthManager } from "@/lib/cryptoAuth";
 
 const Settings = () => {
@@ -39,6 +41,7 @@ const Settings = () => {
   const { profile, loading: profileLoading } = useProfile();
   const { settings } = useUserSettings();
   const { theme } = useTheme();
+  const navigate = useNavigate();
   
   const [showProfileEdit, setShowProfileEdit] = useState(false);
   const [showPhoneEdit, setShowPhoneEdit] = useState(false);
@@ -256,22 +259,34 @@ const Settings = () => {
                     </div>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
+                  
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-between"
+                    onClick={() => navigate('/settings/devices')}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Smartphone className="h-4 w-4" />
+                      Device Management
+                    </div>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
 
                   {/* Quick Settings */}
                   {settings && (
-                    <div className="space-y-3">
-                      <Separator />
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="read-receipts-quick" className="flex items-center gap-2">
-                          <Shield className="h-4 w-4" />
-                          Read Receipts
-                        </Label>
-                        <Switch
-                          id="read-receipts-quick"
-                          checked={settings.read_receipts}
-                          disabled
-                        />
-                      </div>
+                  <div className="space-y-3">
+                    <Separator />
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="read-receipts-quick" className="flex items-center gap-2">
+                        <Shield className="h-4 w-4" />
+                        Read Receipts
+                      </Label>
+                      <Switch
+                        id="read-receipts-quick"
+                        checked={settings.read_receipts}
+                        disabled
+                      />
+                    </div>
                       
                       <div className="flex items-center justify-between">
                         <Label htmlFor="disappearing-quick" className="flex items-center gap-2">
@@ -315,6 +330,11 @@ const Settings = () => {
                 </CardContent>
               </Card>
             </div>
+          </div>
+
+          {/* Auto Display Name Settings - Full Width */}
+          <div className="mt-8">
+            <AutoDisplayNameSettings />
           </div>
 
           {/* Sign Out Section - Full Width */}

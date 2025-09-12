@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      auto_display_names: {
+        Row: {
+          created_at: string
+          current_name_index: number | null
+          enabled: boolean
+          id: string
+          interval_type: string
+          last_rotation: string | null
+          name_pool: Json | null
+          next_rotation: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_name_index?: number | null
+          enabled?: boolean
+          id?: string
+          interval_type?: string
+          last_rotation?: string | null
+          name_pool?: Json | null
+          next_rotation?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_name_index?: number | null
+          enabled?: boolean
+          id?: string
+          interval_type?: string
+          last_rotation?: string | null
+          name_pool?: Json | null
+          next_rotation?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       blocked_users: {
         Row: {
           blocked_user_id: string
@@ -163,9 +202,13 @@ export type Database = {
           device_id: string
           device_name: string | null
           id: string
+          last_ip: unknown | null
           last_used_at: string | null
           linked_at: string
+          location_permission: boolean | null
+          locked_until: string | null
           public_key: string
+          status: string | null
           user_id: string
         }
         Insert: {
@@ -173,9 +216,13 @@ export type Database = {
           device_id: string
           device_name?: string | null
           id?: string
+          last_ip?: unknown | null
           last_used_at?: string | null
           linked_at?: string
+          location_permission?: boolean | null
+          locked_until?: string | null
           public_key: string
+          status?: string | null
           user_id: string
         }
         Update: {
@@ -183,9 +230,13 @@ export type Database = {
           device_id?: string
           device_name?: string | null
           id?: string
+          last_ip?: unknown | null
           last_used_at?: string | null
           linked_at?: string
+          location_permission?: boolean | null
+          locked_until?: string | null
           public_key?: string
+          status?: string | null
           user_id?: string
         }
         Relationships: []
@@ -258,6 +309,94 @@ export type Database = {
           requesting_device_id?: string
         }
         Relationships: []
+      }
+      device_locations: {
+        Row: {
+          device_id: string
+          encrypted_coordinates: string
+          encryption_key_id: string
+          expires_at: string
+          id: string
+          timestamp: string
+          user_id: string
+        }
+        Insert: {
+          device_id: string
+          encrypted_coordinates: string
+          encryption_key_id: string
+          expires_at?: string
+          id?: string
+          timestamp?: string
+          user_id: string
+        }
+        Update: {
+          device_id?: string
+          encrypted_coordinates?: string
+          encryption_key_id?: string
+          expires_at?: string
+          id?: string
+          timestamp?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_locations_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "crypto_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      device_sessions: {
+        Row: {
+          created_at: string
+          device_id: string
+          expires_at: string
+          id: string
+          ip_address: unknown | null
+          is_active: boolean
+          location_encrypted: string | null
+          location_updated_at: string | null
+          session_token: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_id: string
+          expires_at?: string
+          id?: string
+          ip_address?: unknown | null
+          is_active?: boolean
+          location_encrypted?: string | null
+          location_updated_at?: string | null
+          session_token: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_id?: string
+          expires_at?: string
+          id?: string
+          ip_address?: unknown | null
+          is_active?: boolean
+          location_encrypted?: string | null
+          location_updated_at?: string | null
+          session_token?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_sessions_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "crypto_devices"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       financial_entries: {
         Row: {
@@ -698,6 +837,10 @@ export type Database = {
         Returns: Json
       }
       cleanup_expired_crypto_data: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_expired_device_data: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
