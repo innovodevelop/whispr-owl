@@ -4,10 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield, Smartphone, Key, Copy, Download, CheckCircle } from 'lucide-react';
 import { DeviceLinkQR } from '@/components/DeviceLinkQR';
+import { DeviceReview } from '@/components/DeviceReview';
+import { UsernameSetup } from '@/components/UsernameSetup';
+import { DevTools } from '@/components/DevTools';
 import { useCryptoAuth } from '@/hooks/useCryptoAuthProvider';
+import { isDryRun, shouldShowDevTools } from '@/config/featureFlags';
 import { toast } from 'sonner';
 
-type FlowMode = 'welcome' | 'register' | 'login' | 'link-device' | 'recovery' | 'success';
+type FlowMode = 'welcome' | 'register' | 'login' | 'link-device' | 'recovery' | 'device-review' | 'username-setup' | 'success';
 
 export const CryptoAuthFlow: React.FC = () => {
   const [mode, setMode] = useState<FlowMode>('welcome');
@@ -16,8 +20,11 @@ export const CryptoAuthFlow: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [recoveryConfirmed, setRecoveryConfirmed] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showDevTools, setShowDevTools] = useState(false);
 
   const { register, login, hasStoredKeys } = useCryptoAuth();
+  const dryRun = isDryRun();
+  const canShowDevTools = shouldShowDevTools();
 
   const handleRegister = async () => {
     setLoading(true);
@@ -71,6 +78,26 @@ export const CryptoAuthFlow: React.FC = () => {
   };
 
   const handleRecoveryConfirmed = () => {
+    setMode('device-review');
+  };
+
+  const handleDeviceConfirmed = () => {
+    // Check if user already has a username
+    const existingUsername = localStorage.getItem('whispr_username');
+    if (existingUsername) {
+      setMode('success');
+    } else {
+      setMode('username-setup');
+    }
+  };
+
+  const handleDeviceRejected = () => {
+    setMode('welcome');
+    setError('');
+    setRecoveryPhrase([]);
+  };
+
+  const handleUsernameComplete = (username: string) => {
     setMode('success');
   };
 
@@ -81,6 +108,33 @@ export const CryptoAuthFlow: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="w-full max-w-md mx-auto space-y-6">
+          {/* Dry Run Badge */}
+          {dryRun && (
+            <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+                <span className="text-xs font-medium text-amber-700 dark:text-amber-300">DRY RUN</span>
+              </div>
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                No real data will be saved to the server
+              </p>
+            </div>
+          )}
+
+          {/* Dev Tools Button */}
+          {canShowDevTools && (
+            <div className="text-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowDevTools(true)}
+                className="text-xs"
+              >
+                Dev Tools
+              </Button>
+            </div>
+          )}
+
           <Card>
             <CardHeader className="text-center">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
@@ -147,6 +201,9 @@ export const CryptoAuthFlow: React.FC = () => {
               )}
             </CardContent>
           </Card>
+          
+          {/* Dev Tools Modal */}
+          {showDevTools && <DevTools onClose={() => setShowDevTools(false)} />}
         </div>
       </div>
     );
@@ -269,12 +326,29 @@ export const CryptoAuthFlow: React.FC = () => {
                 className="w-full"
                 disabled={!recoveryConfirmed}
               >
-                Continue to App
+                Continue to Device Review
               </Button>
             </CardContent>
           </Card>
         </div>
       </div>
+    );
+  }
+
+  // Device review screen
+  if (mode === 'device-review') {
+    return (
+      <DeviceReview
+        onConfirm={handleDeviceConfirmed}
+        onReject={handleDeviceRejected}
+      />
+    );
+  }
+
+  // Username setup screen
+  if (mode === 'username-setup') {
+    return (
+      <UsernameSetup onComplete={handleUsernameComplete} />
     );
   }
 
@@ -298,6 +372,8 @@ export const CryptoAuthFlow: React.FC = () => {
 
   // Success screen
   if (mode === 'success') {
+    const username = localStorage.getItem('whispr_username');
+    
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md mx-auto">
@@ -305,9 +381,14 @@ export const CryptoAuthFlow: React.FC = () => {
             <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
               <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
             </div>
-            <CardTitle>Welcome to Whispr-Owl</CardTitle>
+            <CardTitle>
+              {username ? `You're in, @${username}` : 'Welcome to Whispr'}
+            </CardTitle>
             <CardDescription>
-              You are now authenticated with cryptographic security
+              {dryRun 
+                ? 'Simulation complete - no real data was saved'
+                : 'You are now authenticated with cryptographic security'
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>
