@@ -28,7 +28,7 @@ export const MessageCard: React.FC<MessageCardProps> = ({
       <div
         onClick={onClick}
         className={cn(
-          "group relative p-4 bg-card hover:bg-card/80 border border-transparent hover:border-border/20 cursor-pointer transition-all duration-200 hover:rounded-3xl",
+          "group relative p-4 bg-card hover:bg-muted/30 cursor-pointer transition-all duration-200 hover:rounded-3xl",
           (selected || isUnread) && "bg-accent/30 border-border/30 rounded-3xl"
         )}
         role="button"
