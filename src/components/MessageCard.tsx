@@ -28,8 +28,8 @@ export const MessageCard: React.FC<MessageCardProps> = ({
       <div
         onClick={onClick}
         className={cn(
-          "group relative p-4 bg-card hover:bg-accent/50 cursor-pointer transition-all duration-200 hover:rounded-3xl",
-          (selected || isUnread) && "bg-accent rounded-3xl"
+          "group relative p-4 bg-card hover:bg-card/80 border border-transparent hover:border-border/20 cursor-pointer transition-all duration-200 hover:rounded-3xl",
+          (selected || isUnread) && "bg-accent/30 border-border/30 rounded-3xl"
         )}
         role="button"
         aria-label={`Open chat with ${name}`}
@@ -47,7 +47,7 @@ export const MessageCard: React.FC<MessageCardProps> = ({
         <div className="flex-1 min-w-0 space-y-1">
           <div className="flex items-start justify-between gap-2">
             <h3 className={cn(
-              "font-semibold text-sm text-foreground truncate group-hover:text-primary transition-colors duration-200",
+              "font-semibold text-sm text-foreground truncate transition-colors duration-200",
               isUnread && "font-bold"
             )}>
               {name}
