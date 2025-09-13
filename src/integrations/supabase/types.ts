@@ -466,6 +466,30 @@ export type Database = {
         }
         Relationships: []
       }
+      legacy_crypto_bridge: {
+        Row: {
+          created_at: string | null
+          crypto_user_id: string | null
+          id: string
+          legacy_user_id: string
+          migration_completed: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          crypto_user_id?: string | null
+          id?: string
+          legacy_user_id: string
+          migration_completed?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          crypto_user_id?: string | null
+          id?: string
+          legacy_user_id?: string
+          migration_completed?: boolean | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           burn_on_read_duration: number | null
@@ -747,6 +771,42 @@ export type Database = {
           public_key?: string
           signature?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_migrations: {
+        Row: {
+          backup_data: Json | null
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          legacy_user_id: string
+          migration_status: string | null
+          new_crypto_user_id: string | null
+          started_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          backup_data?: Json | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          legacy_user_id: string
+          migration_status?: string | null
+          new_crypto_user_id?: string | null
+          started_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          backup_data?: Json | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          legacy_user_id?: string
+          migration_status?: string | null
+          new_crypto_user_id?: string | null
+          started_at?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }

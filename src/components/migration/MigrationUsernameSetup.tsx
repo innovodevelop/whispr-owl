@@ -4,23 +4,29 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { User, CheckCircle, X, Loader2 } from 'lucide-react';
+import { User, UserPlus, CheckCircle, X, Loader2 } from 'lucide-react';
 import { isDryRun } from '@/config/featureFlags';
-import { mockCheckUsernameAvailability, mockCreateUsername } from '@/lib/dryRunStubs';
+import { mockCheckUsernameAvailability } from '@/lib/dryRunStubs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-interface UsernameSetupProps {
+interface MigrationUsernameSetupProps {
   onComplete: (username: string, displayName: string) => void;
+  initialUsername?: string;
+  initialDisplayName?: string;
 }
 
 type ValidationState = 'idle' | 'checking' | 'valid' | 'invalid';
 
-export const UsernameSetup: React.FC<UsernameSetupProps> = ({ onComplete }) => {
-  const [username, setUsername] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [validationState, setValidationState] = useState<ValidationState>('idle');
-  const [validationMessage, setValidationMessage] = useState('');
+export const MigrationUsernameSetup: React.FC<MigrationUsernameSetupProps> = ({ 
+  onComplete, 
+  initialUsername = '',
+  initialDisplayName = ''
+}) => {
+  const [username, setUsername] = useState(initialUsername);
+  const [displayName, setDisplayName] = useState(initialDisplayName);
+  const [usernameValidation, setUsernameValidation] = useState<ValidationState>('idle');
+  const [usernameMessage, setUsernameMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   
@@ -29,34 +35,34 @@ export const UsernameSetup: React.FC<UsernameSetupProps> = ({ onComplete }) => {
   // Debounced username validation
   useEffect(() => {
     if (!username) {
-      setValidationState('idle');
-      setValidationMessage('');
+      setUsernameValidation('idle');
+      setUsernameMessage('');
       return;
     }
 
     const validateUsername = async () => {
       // Format validation
       if (username.length < 3) {
-        setValidationState('invalid');
-        setValidationMessage('Too short (minimum 3 characters)');
+        setUsernameValidation('invalid');
+        setUsernameMessage('Too short (minimum 3 characters)');
         return;
       }
 
       if (username.length > 24) {
-        setValidationState('invalid');
-        setValidationMessage('Too long (maximum 24 characters)');
+        setUsernameValidation('invalid');
+        setUsernameMessage('Too long (maximum 24 characters)');
         return;
       }
 
       if (!/^[a-z0-9_]+$/.test(username)) {
-        setValidationState('invalid');
-        setValidationMessage('Only lowercase letters, numbers, and underscores allowed');
+        setUsernameValidation('invalid');
+        setUsernameMessage('Only lowercase letters, numbers, and underscores allowed');
         return;
       }
 
       // Check availability
-      setValidationState('checking');
-      setValidationMessage('Checking availability...');
+      setUsernameValidation('checking');
+      setUsernameMessage('Checking availability...');
 
       try {
         let result;
@@ -73,16 +79,16 @@ export const UsernameSetup: React.FC<UsernameSetupProps> = ({ onComplete }) => {
         }
 
         if (result.available) {
-          setValidationState('valid');
-          setValidationMessage('Username is available');
+          setUsernameValidation('valid');
+          setUsernameMessage('Username is available');
         } else {
-          setValidationState('invalid');
-          setValidationMessage('Username is already taken');
+          setUsernameValidation('invalid');
+          setUsernameMessage('Username is already taken');
         }
       } catch (error) {
         console.error('Username validation failed:', error);
-        setValidationState('invalid');
-        setValidationMessage('Failed to check availability');
+        setUsernameValidation('invalid');
+        setUsernameMessage('Failed to check availability');
       }
     };
 
@@ -91,7 +97,6 @@ export const UsernameSetup: React.FC<UsernameSetupProps> = ({ onComplete }) => {
   }, [username, dryRun]);
 
   const handleUsernameChange = (value: string) => {
-    // Convert to lowercase and filter allowed characters
     const cleaned = value.toLowerCase().replace(/[^a-z0-9_]/g, '');
     setUsername(cleaned);
     setError('');
@@ -105,7 +110,7 @@ export const UsernameSetup: React.FC<UsernameSetupProps> = ({ onComplete }) => {
   };
 
   const isFormValid = () => {
-    return validationState === 'valid' && 
+    return usernameValidation === 'valid' && 
            displayName.trim().length >= 2 && 
            displayName.trim().length <= 50;
   };
@@ -122,37 +127,19 @@ export const UsernameSetup: React.FC<UsernameSetupProps> = ({ onComplete }) => {
     setError('');
 
     try {
-      let result;
-      if (dryRun) {
-        result = await mockCreateUsername(username);
-      } else {
-        // In live mode, call actual API
-        const { data, error } = await supabase.functions.invoke('create-username', {
-          body: { username }
-        });
-        
-        if (error) throw error;
-        result = data;
-      }
-
-      if (result.success) {
-        // Store username locally
-        localStorage.setItem('whispr_username', username);
-        toast.success(`Welcome, @${username}!`);
-        onComplete(username, displayName.trim());
-      } else {
-        throw new Error(result.error || 'Failed to create username');
-      }
+      const trimmedDisplayName = displayName.trim();
+      toast.success(`Welcome, @${username}!`);
+      onComplete(username, trimmedDisplayName);
     } catch (error) {
-      console.error('Username creation failed:', error);
-      setError('Failed to create username. Please try again.');
+      console.error('Form submission failed:', error);
+      setError('Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const getValidationIcon = () => {
-    switch (validationState) {
+  const getUsernameIcon = () => {
+    switch (usernameValidation) {
       case 'checking':
         return <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />;
       case 'valid':
@@ -164,8 +151,8 @@ export const UsernameSetup: React.FC<UsernameSetupProps> = ({ onComplete }) => {
     }
   };
 
-  const getValidationColor = () => {
-    switch (validationState) {
+  const getUsernameColor = () => {
+    switch (usernameValidation) {
       case 'valid':
         return 'text-green-600 dark:text-green-400';
       case 'invalid':
@@ -182,10 +169,10 @@ export const UsernameSetup: React.FC<UsernameSetupProps> = ({ onComplete }) => {
           <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
-              <span className="text-xs font-medium text-amber-700 dark:text-amber-300">DRY RUN</span>
+              <span className="text-xs font-medium text-amber-700 dark:text-amber-300">MIGRATION DRY RUN</span>
             </div>
             <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-              Username will be simulated, not saved
+              Username and display name will be simulated
             </p>
           </div>
         )}
@@ -193,15 +180,16 @@ export const UsernameSetup: React.FC<UsernameSetupProps> = ({ onComplete }) => {
         <Card>
           <CardHeader className="text-center">
             <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-              <User className="w-6 h-6 text-primary" />
+              <UserPlus className="w-6 h-6 text-primary" />
             </div>
             <CardTitle>Complete Your Profile</CardTitle>
             <CardDescription>
-              Choose your username and display name to get started
+              Set your username and display name to finish the migration
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Username Field */}
               <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
                 <div className="relative">
@@ -217,16 +205,15 @@ export const UsernameSetup: React.FC<UsernameSetupProps> = ({ onComplete }) => {
                     className="pl-8 pr-10"
                     maxLength={24}
                     autoComplete="username"
-                    autoFocus
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    {getValidationIcon()}
+                    {getUsernameIcon()}
                   </div>
                 </div>
                 
-                {validationMessage && (
-                  <p className={`text-xs ${getValidationColor()}`}>
-                    {validationMessage}
+                {usernameMessage && (
+                  <p className={`text-xs ${getUsernameColor()}`}>
+                    {usernameMessage}
                   </p>
                 )}
                 
@@ -283,10 +270,10 @@ export const UsernameSetup: React.FC<UsernameSetupProps> = ({ onComplete }) => {
                 {isSubmitting ? (
                   <div className="flex items-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Creating...
+                    Completing Migration...
                   </div>
                 ) : (
-                  'Save & Continue'
+                  'Complete Migration'
                 )}
               </Button>
             </form>

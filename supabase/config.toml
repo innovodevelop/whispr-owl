@@ -108,3 +108,12 @@ verify_jwt = false
 
 [functions.link-device]
 verify_jwt = false
+
+[functions.migrate-legacy-user]
+verify_jwt = true
+
+[functions.check-username]
+verify_jwt = false
+
+[functions.create-username]
+verify_jwt = true

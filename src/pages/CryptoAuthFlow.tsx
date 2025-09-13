@@ -100,7 +100,11 @@ export const CryptoAuthFlow: React.FC = () => {
     setRecoveryPhrase([]);
   };
 
-  const handleUsernameComplete = (username: string) => {
+  const handleUsernameComplete = (username: string, displayName: string) => {
+    // Store both username and display name
+    localStorage.setItem('whispr_username', username);
+    localStorage.setItem('whispr_display_name', displayName);
+    
     // Mark as authenticated after username is set
     window.location.reload(); // This will trigger auth check and redirect to main app
   };
