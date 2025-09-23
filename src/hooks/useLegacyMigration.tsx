@@ -129,6 +129,11 @@ export const LegacyMigrationProvider = ({ children }: { children: React.ReactNod
 
       // Sign out of legacy auth after successful migration
       await supabase.auth.signOut();
+      
+      // Force a page reload to ensure crypto auth takes over properly
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       console.error('Failed to complete migration:', error);
       setMigrationStatus('failed');

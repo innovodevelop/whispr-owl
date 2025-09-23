@@ -72,10 +72,8 @@ export const LegacyMigrationFlow: React.FC = () => {
       if (legacyUser) {
         // Get the crypto user ID from the crypto auth system
         const cryptoUserId = legacyUser.id; // This will be replaced with proper crypto user ID
-        
-        await completeMigration(cryptoUserId);
 
-        // Update the profiles table with username and display name
+        // Update the profiles table BEFORE completing migration (while still authenticated)
         await supabase
           .from('profiles')
           .upsert({
@@ -87,6 +85,9 @@ export const LegacyMigrationFlow: React.FC = () => {
 
         // Store username in crypto system
         localStorage.setItem('whispr_username', username);
+        
+        // Complete the migration process (this signs out of legacy auth)
+        await completeMigration(cryptoUserId);
 
         // Clean up temporary storage
         localStorage.removeItem('migration_username');
