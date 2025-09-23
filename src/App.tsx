@@ -61,8 +61,8 @@ const App = () => {
     <GlobalErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <LegacyMigrationProvider>
-            <CryptoAuthProvider>
+          <CryptoAuthProvider>
+            <LegacyMigrationProvider>
               <TooltipProvider>
                 <BrowserRouter>
                   <Routes>
@@ -98,8 +98,8 @@ const App = () => {
                 <Toaster />
                 <Sonner />
               </TooltipProvider>
-            </CryptoAuthProvider>
-          </LegacyMigrationProvider>
+            </LegacyMigrationProvider>
+          </CryptoAuthProvider>
         </AuthProvider>
       </QueryClientProvider>
     </GlobalErrorBoundary>
