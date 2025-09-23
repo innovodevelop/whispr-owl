@@ -38,6 +38,9 @@ export const useConversations = () => {
     if (user && signalProtocol.initialized) {
       fetchConversations();
       setupRealtimeSubscription();
+    } else {
+      // Stop loading spinner if prerequisites aren't ready (e.g., no Supabase session)
+      setLoading(false);
     }
   }, [user, signalProtocol.initialized]);
 
