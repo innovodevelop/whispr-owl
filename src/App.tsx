@@ -20,88 +20,90 @@ import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 
 const queryClient = new QueryClient();
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { loading: cryptoLoading, isAuthenticated } = useCryptoAuth();
-  const { needsMigration, loading: migrationLoading } = useLegacyMigration();
+const App = () => {
+  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+    const { loading: cryptoLoading, isAuthenticated } = useCryptoAuth();
+    const { needsMigration, loading: migrationLoading } = useLegacyMigration();
 
-  console.log("ProtectedRoute: cryptoLoading=", cryptoLoading, "migrationLoading=", migrationLoading, "isAuthenticated=", isAuthenticated, "needsMigration=", needsMigration);
+    console.log("ProtectedRoute: cryptoLoading=", cryptoLoading, "migrationLoading=", migrationLoading, "isAuthenticated=", isAuthenticated, "needsMigration=", needsMigration);
 
-  // Show loading while checking authentication status
-  if (cryptoLoading || migrationLoading) {
-    console.log("ProtectedRoute: Showing loading state");
-    return (
-      <div className="h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Initializing secure authentication...</p>
+    // Show loading while checking authentication status
+    if (cryptoLoading || migrationLoading) {
+      console.log("ProtectedRoute: Showing loading state");
+      return (
+        <div className="h-screen flex items-center justify-center bg-background">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Initializing secure authentication...</p>
+          </div>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  // Priority 1: Migration needed (legacy user without crypto identity)
-  if (needsMigration) {
-    console.log("ProtectedRoute: Redirecting to migration flow");
-    return <LegacyMigrationFlow />;
-  }
+    // Priority 1: Migration needed (legacy user without crypto identity)
+    if (needsMigration) {
+      console.log("ProtectedRoute: Redirecting to migration flow");
+      return <LegacyMigrationFlow />;
+    }
 
-  // Priority 2: Not crypto authenticated (new user or returning crypto user)
-  if (!isAuthenticated) {
-    console.log("ProtectedRoute: Redirecting to crypto auth");
-    return <CryptoAuthFlow />;
-  }
+    // Priority 2: Not crypto authenticated (new user or returning crypto user)
+    if (!isAuthenticated) {
+      console.log("ProtectedRoute: Redirecting to crypto auth");
+      return <CryptoAuthFlow />;
+    }
 
-  // Priority 3: Fully authenticated, show protected content
-  console.log("ProtectedRoute: Showing protected content");
-  return <>{children}</>;
+    // Priority 3: Fully authenticated, show protected content
+    console.log("ProtectedRoute: Showing protected content");
+    return <>{children}</>;
+  };
+
+  return (
+    <GlobalErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <LegacyMigrationProvider>
+            <CryptoAuthProvider>
+              <TooltipProvider>
+                <BrowserRouter>
+                  <Routes>
+                    <Route path="/auth" element={<CryptoAuthFlow />} />
+                    <Route path="/" element={
+                      <ProtectedRoute>
+                        <Index />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/contacts" element={
+                      <ProtectedRoute>
+                        <Contacts />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/financial" element={
+                      <ProtectedRoute>
+                        <Financial />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/settings" element={
+                      <ProtectedRoute>
+                        <Settings />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/settings/devices" element={
+                      <ProtectedRoute>
+                        <DeviceManagement />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </BrowserRouter>
+                <Toaster />
+                <Sonner />
+              </TooltipProvider>
+            </CryptoAuthProvider>
+          </LegacyMigrationProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </GlobalErrorBoundary>
+  );
 };
-
-const App = () => (
-  <GlobalErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <LegacyMigrationProvider>
-          <CryptoAuthProvider>
-            <TooltipProvider>
-            <BrowserRouter>
-              <Routes>
-                <Route path="/auth" element={<CryptoAuthFlow />} />
-                <Route path="/" element={
-                  <ProtectedRoute>
-                    <Index />
-                  </ProtectedRoute>
-                } />
-                <Route path="/contacts" element={
-                  <ProtectedRoute>
-                    <Contacts />
-                  </ProtectedRoute>
-                } />
-                <Route path="/financial" element={
-                  <ProtectedRoute>
-                    <Financial />
-                  </ProtectedRoute>
-                } />
-                <Route path="/settings" element={
-                  <ProtectedRoute>
-                    <Settings />
-                  </ProtectedRoute>
-                } />
-                <Route path="/settings/devices" element={
-                  <ProtectedRoute>
-                    <DeviceManagement />
-                  </ProtectedRoute>
-                } />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-            <Toaster />
-            <Sonner />
-          </TooltipProvider>
-        </CryptoAuthProvider>
-      </LegacyMigrationProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-</GlobalErrorBoundary>
-);
 
 export default App;
