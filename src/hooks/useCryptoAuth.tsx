@@ -2,6 +2,7 @@ import { useState, useEffect, createContext, useContext } from 'react';
 import { CryptoAuthManager } from '@/lib/cryptoAuth';
 import { isDryRun } from '@/config/featureFlags';
 import { mockRegisterUser, mockRequestChallenge, mockVerifyChallenge } from '@/lib/dryRunStubs';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CryptoAuthUser {
   userId: string;
@@ -118,6 +119,19 @@ export const CryptoAuthProvider = ({ children }: { children: React.ReactNode }) 
           username: username || undefined 
         });
         setIsAuthenticated(true);
+        
+        // Establish Supabase session for crypto-authenticated user
+        if (result.token) {
+          try {
+            await supabase.auth.setSession({
+              access_token: result.token,
+              refresh_token: result.token
+            });
+          } catch (error) {
+            console.error('Failed to set Supabase session:', error);
+          }
+        }
+        
         return { success: true };
       } else {
         return { success: false, error: result.error };
@@ -130,11 +144,14 @@ export const CryptoAuthProvider = ({ children }: { children: React.ReactNode }) 
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
     CryptoAuthManager.clearStoredData();
     localStorage.removeItem('whispr_username');
     setIsAuthenticated(false);
     setUser(null);
+    
+    // Also sign out from Supabase
+    await supabase.auth.signOut();
   };
 
   const hasStoredKeys = (): boolean => {
